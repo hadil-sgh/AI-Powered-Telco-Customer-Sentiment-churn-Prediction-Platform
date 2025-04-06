@@ -1,0 +1,147 @@
+pipeline {
+    agent any
+    tools {
+        jdk 'JAVA_HOME'
+        maven 'M2_HOME'
+        nodejs 'NODE_JS'
+    }
+
+    environment {
+        MAVEN_OPTS = '-Xmx1024m'
+        
+    }
+
+    stages {
+        stage('Source Code Management') {
+            steps {
+                echo 'Cloning source code from GitHub...'
+                git(
+                    branch: 'main',
+                    credentialsId: 'git-cred',
+                    url: 'https://github.com/hadil-sgh/AI-Powered-Telco-Customer-Sentiment-churn-Prediction-Platform.git'
+                )
+                echo 'Source code cloned successfully.'
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                script {
+                    echo 'Installing Backend dependencies...'
+                    sh 'cd BackEnd-SpringBoot && mvn clean  '
+
+                    echo 'Installing Frontend dependencies...'
+                    sh 'cd FrontEnd-Angular && npm install -g @angular/cli && npm install '
+                }
+            }
+        }
+
+        stage('Compile Code') {
+            steps {
+                script {
+                    echo 'Starting code compilation...'
+
+                    echo 'Compiling Backend...'
+                    sh 'cd BackEnd-SpringBoot && mvn clean compile'
+
+                    echo 'Compiling Frontend...'
+                    sh '''
+                        cd FrontEnd-Angular
+                        export PATH=$PWD/node_modules/.bin:$PATH
+                        ng build --configuration production 
+                    '''
+                }
+            }
+        }
+
+       stage('SonarQube Code Analysis') {
+    steps {
+        echo 'Starting SonarQube analysis...'
+        
+        withSonarQubeEnv('SonarQube1') {  
+            
+            dir('BackEnd-SpringBoot') {
+                sh 'mvn  sonar:sonar -Dsonar.projectKey=AI-Powered-Telco-Customer-Sentiment-churn-Prediction-Platform -Dsonar.host.url=http://192.168.122.128:9000'
+            }
+        }
+        echo 'SonarQube analysis completed.'
+    }
+}
+
+
+    }
+
+    post {
+        always {
+            echo 'Starting post-build actions...'
+            script {
+                def jobName = env.JOB_NAME
+                def buildNumber = env.BUILD_NUMBER
+                def pipelineStatus = currentBuild.result ?: 'SUCCESS'
+                def bannerColor = pipelineStatus.toUpperCase() == 'SUCCESS' ? 'green' : 'red'
+
+              
+                def stagesStatus = [
+                    'Source Code Management': currentBuild.getBuildVariables()['SOURCE_CODE_MANAGEMENT'] ?: 'SUCCESS',
+                    'Compile Code': currentBuild.getBuildVariables()['COMPILE_CODE'] ?: 'SUCCESS',
+                    'Run Unit Tests': currentBuild.getBuildVariables()['UNIT_TESTS'] ?: 'SUCCESS',
+                    'Generate Code Coverage Report': currentBuild.getBuildVariables()['CODE_COVERAGE'] ?: 'SUCCESS',
+                    'File System Scan': currentBuild.getBuildVariables()['FS_SCAN'] ?: 'SUCCESS',
+                    'SonarQube Code Analysis': currentBuild.getBuildVariables()['SONARQUBE_ANALYSIS'] ?: 'SUCCESS',
+                    'Quality Gate': currentBuild.getBuildVariables()['QUALITY_GATE'] ?: 'SUCCESS',
+                    'Build': currentBuild.getBuildVariables()['BUILD'] ?: 'SUCCESS',
+                    'Deploy to Nexus': currentBuild.getBuildVariables()['DEPLOY_TO_NEXUS'] ?: 'SUCCESS',
+                    'Build and Tag Docker Image': currentBuild.getBuildVariables()['DOCKER_IMAGE_TAG'] ?: 'SUCCESS',
+                    'Docker Image Scan': currentBuild.getBuildVariables()['DOCKER_IMAGE_SCAN'] ?: 'SUCCESS',
+                    'Push Docker Image': currentBuild.getBuildVariables()['PUSH_DOCKER_IMAGE'] ?: 'SUCCESS',
+                    'Deploy with Docker Compose': currentBuild.getBuildVariables()['DOCKER_COMPOSE'] ?: 'SUCCESS'
+                ]
+
+            
+                def stagesTable = '''<table border="1" cellpadding="10" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+                                        <thead>
+                                            <tr>
+                                                <th style="background-color: #4CAF50; color: white;">Stage</th>
+                                                <th style="background-color: #4CAF50; color: white;">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>'''
+
+                stagesStatus.each { stage, status ->
+                    def color = status == 'SUCCESS' ? '#4CAF50' : '#F44336'
+                    stagesTable += "<tr><td style='padding: 8px;'>${stage}</td><td style='color: ${color}; padding: 8px;'>${status}</td></tr>"
+                }
+                
+                stagesTable += '''</tbody>
+                                </table>'''
+
+           
+                def body = """<html>
+                <body style="font-family: Arial, sans-serif; font-size: 14px;">
+                    <div style="border: 4px solid ${bannerColor}; padding: 20px; background-color: #f9f9f9; border-radius: 10px;">
+                        <h2 style="color: #333;">${jobName} - Build ${buildNumber}</h2>
+                        <div style="background-color: ${bannerColor}; color: white; padding: 15px; border-radius: 5px;">
+                            <h3 style="margin: 0;">Pipeline Status: ${pipelineStatus.toUpperCase()}</h3>
+                        </div>
+                        <p style="margin-top: 20px;">You can view the full build details at <a href="${env.BUILD_URL}" style="color: #1E90FF;">Build Console</a>.</p>
+                        <h3 style="margin-top: 30px;">Pipeline Stages Status</h3>
+                        ${stagesTable}
+                    </div>
+                </body>
+                </html>"""
+
+            
+                emailext (
+                    subject: "${jobName} - Build ${buildNumber} - ${pipelineStatus.toUpperCase()}",
+                    body: body,
+                    to: 'hadil.sghair@esprit.tn',
+                    from: 'jenkins@example.com',
+                    replyTo: 'jenkins@example.com',
+                    mimeType: 'text/html',
+                    //attachmentsPattern: "test-output.txt, trivy-fs-scan-${DOCKER_IMAGE_TAG}.txt, trivy-image-scan-${DOCKER_IMAGE_TAG}.txt"
+                )
+            }
+            echo 'Post-build actions completed.'
+        }
+    }
+}
