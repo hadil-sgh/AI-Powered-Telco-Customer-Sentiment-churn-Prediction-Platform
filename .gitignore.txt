@@ -1,1 +1,0 @@
-BackEnd-API/Speech-to-Text API/venv/
