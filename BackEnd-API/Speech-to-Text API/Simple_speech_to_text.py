@@ -128,9 +128,13 @@ print("🎤 Hold [SPACE] to record, release to transcribe. Press [ESC] to exit."
 print("🔴 Press [CTRL+C] to exit safely.")
 
 try:
-    with stream:
-        listener = keyboard.Listener(on_press=on_press, on_release=on_release)
-        listener.start()
-        listener.join()
+    stream.start()  # Start the stream
+    listener = keyboard.Listener(on_press=on_press, on_release=on_release)
+    listener.start()
+
+    # Keep the main thread alive and responsive to signals
+    while True:
+        time.sleep(0.1)
+
 except KeyboardInterrupt:
     cleanup()
