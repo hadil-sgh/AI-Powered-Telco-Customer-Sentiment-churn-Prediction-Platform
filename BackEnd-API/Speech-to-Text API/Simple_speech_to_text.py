@@ -1,140 +1,113 @@
 import sounddevice as sd
 import numpy as np
 import asyncio
-import time
 import signal
-from pynput import keyboard
+import queue
 from faster_whisper import WhisperModel
 
-# 🔽 MODEL SETTINGS 🔽
-MODEL_SIZE = "small"
-DEVICE = "cpu"  # Change to "cpu" if you don't have a CUDA GPU
-COMPUTE_TYPE = "float16" if DEVICE == "cuda" else "int8"
+# 🔧 Configuration
+MODEL_SIZE = "medium"
+DEVICE = "cpu"  # Change to "cuda" if you have a GPU
+COMPUTE_TYPE = "float32" if DEVICE == "cuda" else "int8"
 
-# ✅ Initialize Whisper Model
+SAMPLE_RATE = 16000
+CHANNELS = 1
+DEVICE_INDEX = 1  # You can change this manually if needed
+DEBUG_SAVE_AUDIO = True  # Save chunks to .wav files for debugging
+
+# 🧠 Load Whisper model
 whisper_model = WhisperModel(MODEL_SIZE, device=DEVICE, compute_type=COMPUTE_TYPE)
 print(f"✅ Whisper Model Loaded: {MODEL_SIZE} | Device: {DEVICE} | Precision: {COMPUTE_TYPE}")
 
-# 🎧 Audio Settings
-SAMPLE_RATE = 16000
-CHANNELS = 1
-RECORDING = False
-audio_buffer = []
-recording_start_time = None
-MIN_RECORD_TIME = 1  # seconds
-
-# 🔍 Try selecting input device manually
-DEVICE_INDEX = 1  # Microphone Array (Realtek Audio)
-
-# ✅ Attempt to verify the device
+# 🎙️ Validate and select audio input device
 try:
-    device_info = sd.query_devices(DEVICE_INDEX)
-    if device_info['max_input_channels'] < CHANNELS:
-        raise ValueError("Selected device does not support enough input channels.")
+    info = sd.query_devices(DEVICE_INDEX)
+    if info['max_input_channels'] < CHANNELS:
+        raise ValueError("Device does not support enough input channels.")
 except Exception as e:
-    print(f"⚠️ Failed to use device {DEVICE_INDEX}: {e}")
-    print("🔍 Searching for a valid input device...")
-    # Auto-detect the first available input device
+    print(f"⚠️ Device #{DEVICE_INDEX} error: {e}")
     for i, d in enumerate(sd.query_devices()):
         if d['max_input_channels'] >= CHANNELS:
             DEVICE_INDEX = i
             print(f"✅ Auto-selected input device #{i}: {d['name']}")
             break
     else:
-        raise RuntimeError("❌ No suitable input device found.")
+        raise RuntimeError("❌ No suitable audio input device found.")
 
-# 🎤 Audio Callback
-def callback(indata, frames, time, status):
-    global RECORDING, audio_buffer
-    if RECORDING:
-        audio_buffer.append(indata.copy())
+# 📦 Audio stream and buffer
+audio_queue = queue.Queue()
+chunk_counter = 0  # For debugging saved files
 
-# 🧠 Transcription Logic
+def callback(indata, frames, time_info, status):
+    global chunk_counter
+    if status:
+        print(f"⚠️ Stream Status: {status}")
+
+    audio_chunk = indata.copy()
+    audio_queue.put(audio_chunk)
+
+    if DEBUG_SAVE_AUDIO:
+        filename = f"debug_input_{chunk_counter}.wav"
+        chunk_counter += 1
+        write(filename, SAMPLE_RATE, audio_chunk[:, 0].astype(np.int16))
+
+# 📝 Transcription logic
 async def transcribe_audio():
-    global audio_buffer
-    if not audio_buffer:
-        print("⚠️ No audio recorded. Skipping transcription...")
+    chunks = []
+    while not audio_queue.empty():
+        chunks.append(audio_queue.get())
+
+    if not chunks:
         return
 
-    print("🎙️ Processing transcription...")
-    audio_data = np.concatenate(audio_buffer, axis=0).flatten()
-    audio_data = audio_data / np.max(np.abs(audio_data))  # Normalize
+    audio_data = np.concatenate(chunks, axis=0).flatten()
+    audio_data = audio_data.astype(np.float32) / np.max(np.abs(audio_data))
 
-    segments, _ = whisper_model.transcribe(audio_data)
+    segments, _ = whisper_model.transcribe(audio_data, language="en")
     transcript = " ".join(segment.text for segment in segments).strip()
-
     if transcript:
-        print(f"📝 Whisper Transcript: {transcript}")
-    else:
-        print("🤔 No words detected.")
+        print(f"📝 {transcript}")
 
-    audio_buffer = []
+# 🔁 Main transcription loop
+async def transcription_loop():
+    while True:
+        await asyncio.sleep(2)
+        await transcribe_audio()
 
-# ⌨️ Keyboard Handlers
-def on_press(key):
-    global RECORDING, recording_start_time, audio_buffer
-    if key == keyboard.Key.esc:
-        cleanup()
-        exit(0)
-    elif key == keyboard.Key.space and not RECORDING:
-        RECORDING = True
-        recording_start_time = time.time()
-        audio_buffer.clear()
-        print("🎤 Recording started...")
-
-def on_release(key):
-    global RECORDING, recording_start_time
-    if key == keyboard.Key.space and RECORDING:
-        elapsed_time = time.time() - recording_start_time
-        if elapsed_time < MIN_RECORD_TIME:
-            print(f"⏳ Hold space at least {MIN_RECORD_TIME} sec to record.")
-            return
-        RECORDING = False
-        print("🛑 Recording stopped. Processing...")
-        asyncio.run(transcribe_audio())
-
-# 🧹 Cleanup
-listener = None
+# 🧹 Graceful shutdown
 def cleanup():
-    global listener, stream
-    print("\n🛑 Exiting... Cleaning up resources.")
+    print("\n🛑 Exiting... Cleaning up.")
     try:
         if stream.active:
+            stream.stop()
             stream.close()
-        if listener and listener.running:
-            listener.stop()
     except Exception as e:
         print(f"⚠️ Cleanup error: {e}")
     print("✅ Cleanup complete. Goodbye!")
 
-# 🔌 Ctrl+C Handler
+# 🛑 Signal handling
 def signal_handler(sig, frame):
     cleanup()
     exit(0)
 
 signal.signal(signal.SIGINT, signal_handler)
 
-# 🎙️ Create Stream
+# 🔊 Setup audio stream
 stream = sd.InputStream(
     samplerate=SAMPLE_RATE,
     channels=CHANNELS,
     callback=callback,
     dtype=np.int16,
-    device=DEVICE_INDEX
+    device=DEVICE_INDEX,
+    blocksize=0,
+    latency="low"
 )
 
-# 🚀 Main Execution
-print("🎤 Hold [SPACE] to record, release to transcribe. Press [ESC] to exit.")
-print("🔴 Press [CTRL+C] to exit safely.")
-
-try:
-    stream.start()  # Start the stream
-    listener = keyboard.Listener(on_press=on_press, on_release=on_release)
-    listener.start()
-
-    # Keep the main thread alive and responsive to signals
-    while True:
-        time.sleep(0.1)
-
-except KeyboardInterrupt:
-    cleanup()
+# 🚀 Start the transcription system
+if __name__ == "__main__":
+    print("🔴 Real-time transcription started. Press [CTRL+C] to stop.")
+    try:
+        stream.start()
+        asyncio.run(transcription_loop())
+    except KeyboardInterrupt:
+        cleanup()
