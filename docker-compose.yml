@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   mysqlDB:
+    container_name: pfeplatformpipeline-mysqlDB
     image: mysql:5.7
     environment:
       MYSQL_ROOT_PASSWORD: root
@@ -16,6 +17,7 @@ services:
       - app-network
 
   prometheus:
+    container_name: pfeplatformpipeline-prometheus
     image: prom/prometheus
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
@@ -26,6 +28,7 @@ services:
       - app-network
 
   grafana:
+    container_name: pfeplatformpipeline-grafana
     image: grafana/grafana
     volumes:
       - grafana_data:/var/lib/grafana
@@ -35,6 +38,7 @@ services:
       - app-network
 
   nexus:
+    container_name: pfeplatformpipeline-nexus
     image: sonatype/nexus3
     volumes:
       - nexus_data:/nexus-data
@@ -44,6 +48,7 @@ services:
       - app-network
 
   sonarqube:
+    container_name: pfeplatformpipeline-sonarqube
     image: sonarqube
     volumes:
       - sonarqube_data:/opt/sonarqube/data
