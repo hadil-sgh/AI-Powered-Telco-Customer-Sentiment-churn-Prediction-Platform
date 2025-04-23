@@ -1,74 +1,45 @@
-version: '3.8'
+version: '3'
 
 services:
-  mysqlDB:
-    container_name: pfeplatformpipeline-mysqlDB
-    image: mysql:5.7
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: app_db
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-    networks:
-      - app-network
-
   prometheus:
     container_name: pfeplatformpipeline-prometheus
-    image: prom/prometheus
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus_data:/prometheus
+    image: prom/prometheus:latest
     ports:
       - "9090:9090"
-    networks:
-      - app-network
-
-  grafana:
-    container_name: pfeplatformpipeline-grafana
-    image: grafana/grafana
     volumes:
-      - grafana_data:/var/lib/grafana
-    ports:
-      - "3000:3000"
+      - prometheus_data:/prometheus
     networks:
-      - app-network
+      - devops-network
 
   nexus:
     container_name: pfeplatformpipeline-nexus
-    image: sonatype/nexus3
-    volumes:
-      - nexus_data:/nexus-data
+    image: sonatype/nexus3:latest
     ports:
       - "8081:8081"
     networks:
-      - app-network
+      - devops-network
+
+  grafana:
+    container_name: pfeplatformpipeline-grafana
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    networks:
+      - devops-network
+    depends_on:
+      - prometheus
 
   sonarqube:
     container_name: pfeplatformpipeline-sonarqube
-    image: sonarqube
-    volumes:
-      - sonarqube_data:/opt/sonarqube/data
-      - sonarqube_extensions:/opt/sonarqube/extensions
-      - sonarqube_logs:/opt/sonarqube/logs
+    image: sonarqube:latest
     ports:
       - "9000:9000"
-      - "9092:9092"
     networks:
-      - app-network
-
-networks:
-  app-network:
-    driver: bridge
+      - devops-network
 
 volumes:
-  mysql_data:
   prometheus_data:
-  grafana_data:
-  nexus_data:
-  sonarqube_data:
-  sonarqube_extensions:
-  sonarqube_logs:
+
+networks:
+  devops-network:
+    driver: bridge
