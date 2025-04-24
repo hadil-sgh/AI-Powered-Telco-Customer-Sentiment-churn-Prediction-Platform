@@ -32,7 +32,13 @@
         <sonar.projectKey>AI-Powered-Telco-Customer-Sentiment-churn-Prediction-Platform</sonar.projectKey>
         <sonar.host.url>http://192.168.122.128:9000</sonar.host.url>
     </properties>
-
+    <!-- Deploy to Nexus -->
+    <distributionManagement>
+        <repository>
+            <id>Hadil-Repo</id>
+            <url>http://192.168.33.10:8081/repository/Hadil-Repo/</url>
+        </repository>
+    </distributionManagement>
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
