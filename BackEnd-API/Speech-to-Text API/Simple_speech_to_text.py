@@ -5,22 +5,19 @@ import threading
 import numpy as np
 import sounddevice as sd
 from faster_whisper import WhisperModel
-import os
-from dotenv import load_dotenv
-
-# Load environment variables from .env
-load_dotenv()
-hf_token = os.getenv("HUGGINGFACE_TOKEN")  # Ensure you have a .env file with this token
-if not hf_token:
-    raise ValueError("Hugging Face token is missing! Please check your .env file.")
-
-# diart imports
 from diart import SpeakerDiarization
 from diart.sources import MicrophoneAudioSource
 from diart.inference import StreamingInference
-from diart.sinks import RTTMWriter
+import os
+from dotenv import load_dotenv
 
-# Optional: Programmatically log in to Hugging Face
+# Load environment
+load_dotenv()
+hf_token = os.getenv("HUGGINGFACE_TOKEN")
+if not hf_token:
+    raise ValueError("Hugging Face token is missing!")
+
+# Login if needed
 def login_to_hf(token):
     try:
         from huggingface_hub import login
@@ -29,105 +26,97 @@ def login_to_hf(token):
         pass
 login_to_hf(hf_token)
 
-# 🔧 Configuration
+# 🔧 Settings
 MODEL_SIZE = "medium"
-DEVICE = "cpu"  # Change to "cuda" if you have a GPU
-COMPUTE_TYPE = "float32" if DEVICE == "cuda" else "int8"
+DEVICE = "cuda"
 SAMPLE_RATE = 16000
-DEVICE_INDEX = 1  # Adjust as needed
-DIART_STEP = 0.5  # diarization update step in seconds
+DEVICE_INDEX = 1
+DIART_STEP = 0.5
 
-# 🧠 Load Whisper model
-whisper_model = WhisperModel(MODEL_SIZE, device=DEVICE, compute_type=COMPUTE_TYPE)
-print(f"✅ Whisper Model Loaded: {MODEL_SIZE} | Device: {DEVICE} | Precision: {COMPUTE_TYPE}")
+# Load models
+whisper_model = WhisperModel(MODEL_SIZE, device=DEVICE, compute_type="int8")
+print(f"✅ Whisper model loaded: {MODEL_SIZE} on {DEVICE}")
 
-# 📦 Audio buffer
+# Diarization pipeline
+pipeline = SpeakerDiarization()
+audio_source = MicrophoneAudioSource(SAMPLE_RATE)
+diarization_inference = StreamingInference(pipeline, audio_source)
+
+# Buffers
 audio_queue = queue.Queue()
-
-# Map speaker IDs to roles
+diarization_segments = []
 role_map = {}
 
-# Construct diart diarization pipeline
-pipeline = SpeakerDiarization()
-# 🔊 Audio source
-diar_source = MicrophoneAudioSource(SAMPLE_RATE)
-# Set up StreamingInference
-diar_inference = StreamingInference(pipeline, diar_source)
-
-# In-memory storage for diarization segments
-diarization_results = []
-
-# Sink callback builds role map and stores segments
-def diarization_sink(annotation):
+# Diarization results handler
+def diarization_callback(annotation):
     uri, ann = annotation
+    diarization_segments.clear()
     for segment, _, speaker in ann.itertracks(yield_label=True):
-        # Assign roles on first encounter
         if speaker not in role_map:
             if not role_map:
                 role_map[speaker] = "Agent"
-            elif len(role_map) == 1:
-                role_map[speaker] = "Customer"
             else:
-                role_map[speaker] = f"Speaker_{len(role_map)+1}"
-        diarization_results.append((segment.start, segment.end, speaker))
+                role_map[speaker] = "Customer"
+        diarization_segments.append((segment.start, segment.end, speaker))
 
-# Attach sinks
-diar_inference.attach_observers(
-    # Write RTTM if desired
-    # RTTMWriter(diar_source.uri, "diar_output.rttm"),
-    # Custom callback observer
+# Attach observer
+diarization_inference.attach_observers(
     type(
         "CallbackObserver",
-        (),
+        (object,),
         {
-            "on_next": staticmethod(lambda uri, annotation: diarization_sink((uri, annotation))),
-            "on_error": staticmethod(lambda err: print(f"⚠️ Diarization error: {err}")),
+            "on_next": staticmethod(lambda uri, ann: diarization_callback((uri, ann))),
+            "on_error": staticmethod(lambda e: print(f"⚠️ Diarization error: {e}")),
             "on_completed": staticmethod(lambda: None)
         }
     )
 )
 
-# 🎙️ Sounddevice callback
-def sd_callback(indata, frames, time_info, status):
+# SoundDevice callback
+def audio_callback(indata, frames, time_info, status):
     if status:
-        print(f"⚠️ Stream Status: {status}")
+        print(f"⚠️ SoundDevice error: {status}")
     audio_queue.put(indata.copy())
 
-# 📝 Whisper transcription
-def transcribe_audio():
+# Transcription
+def transcribe():
+    if audio_queue.empty():
+        return
+
     chunks = []
     while not audio_queue.empty():
         chunks.append(audio_queue.get())
-    if not chunks:
-        return
 
     audio_data = np.concatenate(chunks, axis=0).flatten()
-    audio_data = audio_data.astype(np.float32) / np.max(np.abs(audio_data))
+    audio_data = audio_data.astype(np.float32)
+    audio_data /= np.max(np.abs(audio_data))
+
     segments, _ = whisper_model.transcribe(audio_data, language="en")
 
-    for seg in segments:
-        start = seg.start
+    for segment in segments:
+        start_time = segment.start
         speaker = None
-        for ds, de, spk in diarization_results:
-            if ds <= start < de:
+        for seg_start, seg_end, spk in diarization_segments:
+            if seg_start <= start_time < seg_end:
                 speaker = spk
                 break
         role = role_map.get(speaker, "Unknown")
-        print(f"[{role}] {seg.text.strip()}")
+        print(f"[{role}] {segment.text.strip()}")
 
-# 🔁 Main loop
-async def transcription_loop():
+# Main transcription loop
+async def main_loop():
     while True:
         await asyncio.sleep(DIART_STEP)
-        transcribe_audio()
+        transcribe()
 
-# 🛑 Cleanup
+# Cleanup
 stream = sd.InputStream(
     samplerate=SAMPLE_RATE,
     channels=1,
+    dtype='float32',
     device=DEVICE_INDEX,
     blocksize=int(SAMPLE_RATE * DIART_STEP),
-    callback=sd_callback
+    callback=audio_callback
 )
 
 def cleanup():
@@ -142,13 +131,12 @@ def cleanup():
 
 signal.signal(signal.SIGINT, lambda sig, frame: (cleanup(), exit(0)))
 
-# 🔊 Start streaming
+# Start everything
 def main():
-    print("🔴 Real-time transcription & diarization started. Press [CTRL+C] to stop.")
-    # Start diarization
-    threading.Thread(target=lambda: diar_inference(), daemon=True).start()
+    print("🔴 Real-time transcription and diarization started. Press [CTRL+C] to stop.")
+    threading.Thread(target=diarization_inference, daemon=True).start()
     stream.start()
-    asyncio.run(transcription_loop())
+    asyncio.run(main_loop())
 
 if __name__ == "__main__":
     main()
