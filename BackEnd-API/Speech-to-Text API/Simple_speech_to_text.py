@@ -1,142 +1,157 @@
-import asyncio
+import os
 import signal
 import queue
 import threading
+import time
+from datetime import timedelta
+
 import numpy as np
 import sounddevice as sd
 from faster_whisper import WhisperModel
 from diart import SpeakerDiarization
-from diart.sources import MicrophoneAudioSource
-from diart.inference import StreamingInference
-import os
-from dotenv import load_dotenv
 
-# Load environment
-load_dotenv()
-hf_token = os.getenv("HUGGINGFACE_TOKEN")
-if not hf_token:
-    raise ValueError("Hugging Face token is missing!")
-
-# Login if needed
-def login_to_hf(token):
+# Load environment variables (Hugging Face token)
+def setup_env():
+    from dotenv import load_dotenv
+    load_dotenv()
+    token = os.getenv("HUGGINGFACE_TOKEN")
+    if not token:
+        raise ValueError("Hugging Face token is missing!")
     try:
         from huggingface_hub import login
         login(token=token)
     except ImportError:
         pass
-login_to_hf(hf_token)
 
-# 🔧 Settings
+# Constants
 MODEL_SIZE = "medium"
 DEVICE = "cuda"
 SAMPLE_RATE = 16000
-DEVICE_INDEX = 1
-DIART_STEP = 0.5
+device_index = 1
+CHUNK_DURATION = 30           # seconds (30 seconds per slot)
+CHUNK_SAMPLES = SAMPLE_RATE * CHUNK_DURATION  # total samples per chunk
 
-# Load models
-whisper_model = WhisperModel(MODEL_SIZE, device=DEVICE, compute_type="int8")
-print(f"✅ Whisper model loaded: {MODEL_SIZE} on {DEVICE}")
+# Global buffers and state
+audio_buffer = []                     # raw audio frames (flattened)
+buffer_lock = threading.Lock()        # protect audio_buffer
+fingerprints = {}                     # {'agent': vector, 'customer': vector}
 
-# Diarization pipeline
-pipeline = SpeakerDiarization()
-audio_source = MicrophoneAudioSource(SAMPLE_RATE)
-diarization_inference = StreamingInference(pipeline, audio_source)
+# Placeholder: extract a speaker fingerprint (embedding) from raw audio
+def extract_fingerprint(audio: np.ndarray, sample_rate: int) -> np.ndarray:
+    # TODO: Replace with real embedding extraction
+    return np.mean(audio)
 
-# Buffers
-audio_queue = queue.Queue()
-diarization_segments = []
-role_map = {}
+# Format seconds to HH:MM:SS.mmm
+def format_time(sec: float) -> str:
+    td = timedelta(seconds=sec)
+    total_seconds = int(td.total_seconds())
+    hours = total_seconds // 3600
+    minutes = (total_seconds % 3600) // 60
+    seconds = total_seconds % 60
+    milliseconds = int(td.microseconds / 1000)
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d}.{milliseconds:03d}"
 
-# Diarization results handler
-def diarization_callback(annotation):
-    uri, ann = annotation
-    diarization_segments.clear()
-    for segment, _, speaker in ann.itertracks(yield_label=True):
-        if speaker not in role_map:
-            if not role_map:
-                role_map[speaker] = "Agent"
-            else:
-                role_map[speaker] = "Customer"
-        diarization_segments.append((segment.start, segment.end, speaker))
+# Process a single slot of audio
+def process_chunk(idx: int, audio_np: np.ndarray, whisper_model, diarizer):
+    print(f"\n▶️ Processing slot #{idx}")
+    start_proc = time.time()
 
-# Attach observer
-diarization_inference.attach_observers(
-    type(
-        "CallbackObserver",
-        (object,),
-        {
-            "on_next": staticmethod(lambda uri, ann: diarization_callback((uri, ann))),
-            "on_error": staticmethod(lambda e: print(f"⚠️ Diarization error: {e}")),
-            "on_completed": staticmethod(lambda: None)
-        }
-    )
-)
+    # 1) Diarization (offline)
+    diarization = diarizer(audio_np, SAMPLE_RATE)
+    segments = [(seg.start, seg.end, spk) for seg, _, spk in
+                diarization.itertracks(yield_label=True)]
 
-# SoundDevice callback
+    # 2) On first slot, derive fingerprints for two speakers
+    if idx == 0 and len(segments) >= 2:
+        seg0, seg1 = segments[0], segments[1]
+        a0 = audio_np[int(seg0[0]*SAMPLE_RATE): int(seg0[1]*SAMPLE_RATE)]
+        a1 = audio_np[int(seg1[0]*SAMPLE_RATE): int(seg1[1]*SAMPLE_RATE)]
+        fingerprints['agent'] = extract_fingerprint(a0, SAMPLE_RATE)
+        fingerprints['customer'] = extract_fingerprint(a1, SAMPLE_RATE)
+        print("✅ Speaker fingerprints initialized.")
+
+    # 3) Transcription
+    max_val = np.max(np.abs(audio_np)) if audio_np.size else 0
+    if max_val > 0:
+        audio_np = audio_np / max_val
+    segments_text, _ = whisper_model.transcribe(audio_np, language='en')
+
+    # 4) Match to agent/customer and print
+    for seg in segments_text:
+        ts = seg.start
+        txt = seg.text.strip()
+        spk = next((s for s0, s1, s in segments if s0 <= ts < s1), None)
+        role = 'Unknown'
+        if spk is not None and fingerprints:
+            audio_seg = audio_np[int(ts*SAMPLE_RATE): int((ts+seg.duration)*SAMPLE_RATE)]
+            fp = extract_fingerprint(audio_seg, SAMPLE_RATE)
+            d_agent = abs(fp - fingerprints['agent'])
+            d_cust = abs(fp - fingerprints['customer'])
+            role = 'Agent' if d_agent <= d_cust else 'Customer'
+        print(f"{format_time(ts)} - {role} - {txt}")
+
+    # 5) Throttle to roughly CHUNK_DURATION
+    elapsed = time.time() - start_proc
+    to_wait = CHUNK_DURATION - elapsed
+    if to_wait > 0:
+        print(f"⏳ Slot #{idx} done in {elapsed:.1f}s, sleeping {to_wait:.1f}s to sync.")
+        time.sleep(to_wait)
+    else:
+        print(f"⚡ Slot #{idx} processed in {elapsed:.1f}s.")
+
+# Worker: slice buffer into fixed-size slots every second
+def chunk_worker(whisper_model, diarizer):
+    idx = 0
+    global audio_buffer
+    while True:
+        time.sleep(1)
+        with buffer_lock:
+            flat = np.concatenate(audio_buffer) if audio_buffer else np.array([], dtype=np.float32)
+            if flat.size >= CHUNK_SAMPLES:
+                chunk = flat[:CHUNK_SAMPLES].copy()
+                remainder = flat[CHUNK_SAMPLES:]
+                audio_buffer = [remainder]
+                threading.Thread(target=process_chunk,
+                                 args=(idx, chunk, whisper_model, diarizer),
+                                 daemon=True).start()
+                idx += 1
+
+# Audio callback: append incoming frames to buffer
 def audio_callback(indata, frames, time_info, status):
     if status:
         print(f"⚠️ SoundDevice error: {status}")
-    audio_queue.put(indata.copy())
+    data = indata.flatten().copy()
+    with buffer_lock:
+        audio_buffer.append(data)
 
-# Transcription
-def transcribe():
-    if audio_queue.empty():
-        return
-
-    chunks = []
-    while not audio_queue.empty():
-        chunks.append(audio_queue.get())
-
-    audio_data = np.concatenate(chunks, axis=0).flatten()
-    audio_data = audio_data.astype(np.float32)
-    audio_data /= np.max(np.abs(audio_data))
-
-    segments, _ = whisper_model.transcribe(audio_data, language="en")
-
-    for segment in segments:
-        start_time = segment.start
-        speaker = None
-        for seg_start, seg_end, spk in diarization_segments:
-            if seg_start <= start_time < seg_end:
-                speaker = spk
-                break
-        role = role_map.get(speaker, "Unknown")
-        print(f"[{role}] {segment.text.strip()}")
-
-# Main transcription loop
-async def main_loop():
-    while True:
-        await asyncio.sleep(DIART_STEP)
-        transcribe()
-
-# Cleanup
-stream = sd.InputStream(
-    samplerate=SAMPLE_RATE,
-    channels=1,
-    dtype='float32',
-    device=DEVICE_INDEX,
-    blocksize=int(SAMPLE_RATE * DIART_STEP),
-    callback=audio_callback
-)
-
-def cleanup():
-    print("\n🛑 Exiting... Cleaning up.")
+# Cleanup on CTRL+C
+def cleanup(stream):
+    print("\n🛑 Stopping...")
     try:
-        if stream.active:
-            stream.stop()
-            stream.close()
+        stream.stop()
+        stream.close()
     except Exception as e:
         print(f"⚠️ Cleanup error: {e}")
-    print("✅ Cleanup complete. Goodbye!")
+    print("✅ Cleanup done.")
 
-signal.signal(signal.SIGINT, lambda sig, frame: (cleanup(), exit(0)))
+if __name__ == '__main__':
+    setup_env()
+    whisper_model = WhisperModel(MODEL_SIZE, device=DEVICE, compute_type='int8')
+    print(f"✅ Whisper model loaded: {MODEL_SIZE} on {DEVICE}")
+    diarizer = SpeakerDiarization()
 
-# Start everything
-def main():
-    print("🔴 Real-time transcription and diarization started. Press [CTRL+C] to stop.")
-    threading.Thread(target=diarization_inference, daemon=True).start()
+    stream = sd.InputStream(
+        samplerate=SAMPLE_RATE,
+        channels=1,
+        dtype='float32',
+        device=device_index,
+        callback=audio_callback,
+        blocksize=int(SAMPLE_RATE * 0.5)
+    )
+
+    signal.signal(signal.SIGINT, lambda sig, frame: (cleanup(stream), exit(0)))
+
+    print("🔴 Real-time call processing started—agent/customer fingerprinting + 30-second slots.")
+    threading.Thread(target=chunk_worker, args=(whisper_model, diarizer), daemon=True).start()
     stream.start()
-    asyncio.run(main_loop())
-
-if __name__ == "__main__":
-    main()
+    threading.Event().wait()
