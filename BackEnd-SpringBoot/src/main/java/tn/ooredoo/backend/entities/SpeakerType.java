@@ -1,4 +1,6 @@
 package tn.ooredoo.backend.entities;
 
-public enum speakerType {
+public enum SpeakerType {
+    AGENT,
+    CUSTOMER,
 }
