@@ -1,157 +1,339 @@
 import os
-import signal
-import queue
-import threading
-import time
-from datetime import timedelta
-
+import torch
 import numpy as np
+import logging
+import time
 import sounddevice as sd
+from datetime import datetime
 from faster_whisper import WhisperModel
-from diart import SpeakerDiarization
+from threading import Thread, Event
+import queue
+from scipy.io import wavfile
+import threading
+import pickle
+import signal
+import sys
 
-# Load environment variables (Hugging Face token)
-def setup_env():
-    from dotenv import load_dotenv
-    load_dotenv()
-    token = os.getenv("HUGGINGFACE_TOKEN")
-    if not token:
-        raise ValueError("Hugging Face token is missing!")
-    try:
-        from huggingface_hub import login
-        login(token=token)
-    except ImportError:
-        pass
+# Suppress unnecessary logging
+logging.getLogger("faster_whisper").setLevel(logging.WARNING)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[logging.FileHandler("transcription.log")]
+)
+logger = logging.getLogger("AudioAnalysisSystem")
 
-# Constants
-MODEL_SIZE = "medium"
-DEVICE = "cuda"
+# Configuration
+MODEL_SIZE = "base.en"
+DEVICE = "cuda" 
 SAMPLE_RATE = 16000
-device_index = 1
-CHUNK_DURATION = 30           # seconds (30 seconds per slot)
-CHUNK_SAMPLES = SAMPLE_RATE * CHUNK_DURATION  # total samples per chunk
+CHUNK_DURATION = 1
+STEP = 0.5
+NUM_SPEAKERS = 2
+OUTPUT_DIR = "output"
+EMBEDDING_DIR = "embeddings"
 
-# Global buffers and state
-audio_buffer = []                     # raw audio frames (flattened)
-buffer_lock = threading.Lock()        # protect audio_buffer
-fingerprints = {}                     # {'agent': vector, 'customer': vector}
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+os.makedirs(EMBEDDING_DIR, exist_ok=True)
 
-# Placeholder: extract a speaker fingerprint (embedding) from raw audio
-def extract_fingerprint(audio: np.ndarray, sample_rate: int) -> np.ndarray:
-    # TODO: Replace with real embedding extraction
-    return np.mean(audio)
+transcription_system = None
 
-# Format seconds to HH:MM:SS.mmm
-def format_time(sec: float) -> str:
-    td = timedelta(seconds=sec)
-    total_seconds = int(td.total_seconds())
-    hours = total_seconds // 3600
-    minutes = (total_seconds % 3600) // 60
-    seconds = total_seconds % 60
-    milliseconds = int(td.microseconds / 1000)
-    return f"{hours:02d}:{minutes:02d}:{seconds:02d}.{milliseconds:03d}"
+class AudioBuffer:
+    def __init__(self, max_size=30):
+        self.buffer = np.array([], dtype=np.float32)
+        self.lock = threading.Lock()
+        self.max_size = max_size * SAMPLE_RATE
+        
+    def add(self, audio):
+        with self.lock:
+            self.buffer = np.append(self.buffer, audio)
+            if len(self.buffer) > self.max_size:
+                self.buffer = self.buffer[-self.max_size:]
+                
+    def get(self, duration=CHUNK_DURATION):
+        chunk_size = int(duration * SAMPLE_RATE)
+        with self.lock:
+            if len(self.buffer) < chunk_size:
+                return None
+            chunk = self.buffer[:chunk_size].copy()
+            self.buffer = self.buffer[int(STEP * SAMPLE_RATE):]
+            return chunk
+            
+    def clear(self):
+        with self.lock:
+            self.buffer = np.array([], dtype=np.float32)
 
-# Process a single slot of audio
-def process_chunk(idx: int, audio_np: np.ndarray, whisper_model, diarizer):
-    print(f"\n▶️ Processing slot #{idx}")
-    start_proc = time.time()
+class SileroVAD:
+    def __init__(self, threshold=0.5):
+        self.threshold = threshold
+        self.sample_rate = SAMPLE_RATE
+        self.model = None
+        
+        try:
+            model, utils = torch.hub.load(
+                repo_or_dir='snakers4/silero-vad',
+                model='silero_vad',
+                force_reload=False
+            )
+            self.model = model.to(DEVICE)
+            self.get_speech_timestamps = utils[0]
+        except Exception as e:
+            logger.warning("Using energy-based VAD fallback")
 
-    # 1) Diarization (offline)
-    diarization = diarizer(audio_np, SAMPLE_RATE)
-    segments = [(seg.start, seg.end, spk) for seg, _, spk in
-                diarization.itertracks(yield_label=True)]
+    def is_speech(self, audio):
+        if len(audio) < 1024:
+            return False
+        if self.model is None:
+            return np.mean(np.abs(audio)) > 0.02
+            
+        audio_tensor = torch.from_numpy(audio).float().to(DEVICE)
+        return len(self.get_speech_timestamps(audio_tensor, self.model, threshold=self.threshold)) > 0
 
-    # 2) On first slot, derive fingerprints for two speakers
-    if idx == 0 and len(segments) >= 2:
-        seg0, seg1 = segments[0], segments[1]
-        a0 = audio_np[int(seg0[0]*SAMPLE_RATE): int(seg0[1]*SAMPLE_RATE)]
-        a1 = audio_np[int(seg1[0]*SAMPLE_RATE): int(seg1[1]*SAMPLE_RATE)]
-        fingerprints['agent'] = extract_fingerprint(a0, SAMPLE_RATE)
-        fingerprints['customer'] = extract_fingerprint(a1, SAMPLE_RATE)
-        print("✅ Speaker fingerprints initialized.")
+class SpeechEmbeddingExtractor:
+    def __init__(self):
+        self.device = DEVICE
+        self.model = None
+        self.embedding_db = {}
+        self.embedding_file = os.path.join(EMBEDDING_DIR, "speaker_embeddings.pkl")
+        self._load_embeddings()
+        self._initialize_model()
+        
+    def _initialize_model(self):
+        try:
+            # Try SpeechBrain first
+            try:
+                from speechbrain.pretrained import EncoderClassifier
+                self.model = EncoderClassifier.from_hparams(
+                    source="speechbrain/spkrec-ecapa-voxceleb",
+                    savedir=os.path.join(EMBEDDING_DIR, "ecapa_model"),
+                    run_opts={"device": self.device}
+                )
+                self.use_speechbrain = True
+                return
+            except ImportError:
+                pass
 
-    # 3) Transcription
-    max_val = np.max(np.abs(audio_np)) if audio_np.size else 0
-    if max_val > 0:
-        audio_np = audio_np / max_val
-    segments_text, _ = whisper_model.transcribe(audio_np, language='en')
+            # Fallback to diart
+            try:
+                from diart.models import EmbeddingModel
+                self.model = EmbeddingModel.from_pretrained("speechbrain/spkrec-ecapa-voxceleb")
+                self.model.to(torch.device(self.device))
+                self.use_speechbrain = False
+                return
+            except ImportError:
+                pass
 
-    # 4) Match to agent/customer and print
-    for seg in segments_text:
-        ts = seg.start
-        txt = seg.text.strip()
-        spk = next((s for s0, s1, s in segments if s0 <= ts < s1), None)
-        role = 'Unknown'
-        if spk is not None and fingerprints:
-            audio_seg = audio_np[int(ts*SAMPLE_RATE): int((ts+seg.duration)*SAMPLE_RATE)]
-            fp = extract_fingerprint(audio_seg, SAMPLE_RATE)
-            d_agent = abs(fp - fingerprints['agent'])
-            d_cust = abs(fp - fingerprints['customer'])
-            role = 'Agent' if d_agent <= d_cust else 'Customer'
-        print(f"{format_time(ts)} - {role} - {txt}")
+            logger.warning("ECAPA-TDNN model not available")
+            self.model = None
+        except Exception as e:
+            logger.error(f"Model initialization failed: {e}")
+            self.model = None
 
-    # 5) Throttle to roughly CHUNK_DURATION
-    elapsed = time.time() - start_proc
-    to_wait = CHUNK_DURATION - elapsed
-    if to_wait > 0:
-        print(f"⏳ Slot #{idx} done in {elapsed:.1f}s, sleeping {to_wait:.1f}s to sync.")
-        time.sleep(to_wait)
-    else:
-        print(f"⚡ Slot #{idx} processed in {elapsed:.1f}s.")
+    def _load_embeddings(self):
+        if os.path.exists(self.embedding_file):
+            try:
+                with open(self.embedding_file, 'rb') as f:
+                    self.embedding_db = pickle.load(f)
+            except Exception as e:
+                logger.error(f"Error loading embeddings: {e}")
 
-# Worker: slice buffer into fixed-size slots every second
-def chunk_worker(whisper_model, diarizer):
-    idx = 0
-    global audio_buffer
-    while True:
-        time.sleep(1)
-        with buffer_lock:
-            flat = np.concatenate(audio_buffer) if audio_buffer else np.array([], dtype=np.float32)
-            if flat.size >= CHUNK_SAMPLES:
-                chunk = flat[:CHUNK_SAMPLES].copy()
-                remainder = flat[CHUNK_SAMPLES:]
-                audio_buffer = [remainder]
-                threading.Thread(target=process_chunk,
-                                 args=(idx, chunk, whisper_model, diarizer),
-                                 daemon=True).start()
-                idx += 1
+    def extract_embedding(self, audio):
+        if self.model is None or len(audio) < 0.5 * SAMPLE_RATE:
+            return None
+            
+        audio = audio.astype(np.float32)
+        if np.max(np.abs(audio)) > 0:
+            audio /= np.max(np.abs(audio))
+            
+        try:
+            if self.use_speechbrain:
+                waveform = torch.tensor(audio).unsqueeze(0).to(self.device)
+                return self.model.encode_batch(waveform).squeeze().cpu().numpy()
+            else:
+                waveform = torch.tensor(audio).float().unsqueeze(0).to(self.device)
+                return self.model(waveform).squeeze().cpu().numpy()
+        except Exception as e:
+            logger.error(f"Embedding extraction failed: {e}")
+            return None
 
-# Audio callback: append incoming frames to buffer
-def audio_callback(indata, frames, time_info, status):
-    if status:
-        print(f"⚠️ SoundDevice error: {status}")
-    data = indata.flatten().copy()
-    with buffer_lock:
-        audio_buffer.append(data)
+    def identify_speaker(self, audio, threshold=0.7):
+        embedding = self.extract_embedding(audio)
+        if embedding is None or not self.embedding_db:
+            return None
+            
+        best_match = max(
+            self.embedding_db.items(),
+            key=lambda x: np.dot(embedding/np.linalg.norm(embedding), x[1]/np.linalg.norm(x[1])),
+            default=(None, 0)
+        )
+        return best_match[0] if best_match[1] > threshold else None
 
-# Cleanup on CTRL+C
-def cleanup(stream):
-    print("\n🛑 Stopping...")
+class SpeakerDiarizationSystem:
+    def __init__(self):
+        self.embedding_extractor = SpeechEmbeddingExtractor()
+        self.simple_tracker = SimpleSpeakerTracker()
+        self.current_speakers = {}
+        
+    def process_audio(self, audio):
+        if len(audio) < SAMPLE_RATE//2:
+            return None
+            
+        # Try embedding-based identification first
+        speaker = self.embedding_extractor.identify_speaker(audio)
+        if speaker:
+            return [{"speaker_label": speaker, "duration": len(audio)/SAMPLE_RATE}]
+            
+        # Fallback to simple tracker
+        speaker = self.simple_tracker.identify_speaker(audio)
+        return [{"speaker_label": speaker, "duration": len(audio)/SAMPLE_RATE}] if speaker else None
+
+class SimpleSpeakerTracker:
+    def __init__(self):
+        self.agent_profile = None
+        self.customer_profile = None
+        
+    def identify_speaker(self, audio):
+        energy = np.mean(np.abs(audio))
+        if energy < 0.01:
+            return None
+            
+        if not self.agent_profile:
+            self.agent_profile = energy
+            return "Agent"
+            
+        if abs(energy - self.agent_profile) < 0.05:
+            return "Agent"
+        else:
+            if not self.customer_profile:
+                self.customer_profile = energy
+            return "Customer"
+
+class AdvancedTranscriptionSystem:
+    def __init__(self):
+        self.whisper = WhisperModel(MODEL_SIZE, device=DEVICE)
+        self.diarization = SpeakerDiarizationSystem()
+        self.vad = SileroVAD()
+        self.audio_buffer = AudioBuffer()
+        self.stop_event = Event()
+        self.current_speaker = None
+        self.current_text = ""
+        self.last_update = time.time()
+        
+        self.output_file = os.path.join(OUTPUT_DIR, f"transcript_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt")
+        with open(self.output_file, 'w') as f:
+            f.write("Timestamp | Speaker | Transcription\n")
+            f.write("-"*50 + "\n")
+
+    def audio_callback(self, indata, frames, time_info, status):
+        audio = indata[:, 0].astype(np.float32)
+        if np.max(np.abs(audio)) > 0:
+            audio /= np.max(np.abs(audio))
+        self.audio_buffer.add(audio)
+
+    def process_audio(self):
+        while not self.stop_event.is_set():
+            chunk = self.audio_buffer.get()
+            if chunk is None or not self.vad.is_speech(chunk):
+                time.sleep(0.1)
+                continue
+                
+            segments, _ = self.whisper.transcribe(chunk)
+            speaker_info = self.diarization.process_audio(chunk) or [{"speaker_label": "Unknown"}]
+            
+            for segment in segments:
+                text = segment.text.strip()
+                if not text:
+                    continue
+                    
+                speaker = speaker_info[0]["speaker_label"]
+                if speaker != self.current_speaker:
+                    self._finalize_segment()
+                    self.current_speaker = speaker
+                    self.current_text = text
+                else:
+                    self.current_text += " " + text
+                    
+                self.last_update = time.time()
+                
+            if time.time() - self.last_update > 1.5:
+                self._finalize_segment()
+
+    def _finalize_segment(self):
+        if self.current_speaker and self.current_text:
+            timestamp = datetime.now().strftime("%H:%M:%S")
+            print(f"- {self.current_speaker}: {self.current_text}")
+            with open(self.output_file, 'a') as f:
+                f.write(f"{timestamp} | {self.current_speaker} | {self.current_text}\n")
+            self.current_speaker = None
+            self.current_text = ""
+
+    def start(self, device_id):
+        try:
+            self.stream = sd.InputStream(
+                samplerate=SAMPLE_RATE,
+                channels=1,
+                callback=self.audio_callback,
+                device=device_id
+            )
+            self.stream.start()
+            
+            processing_thread = Thread(target=self.process_audio)
+            processing_thread.start()
+            
+            print("\n🎙️ Transcription system ready")
+            print("Press Ctrl+C to stop\n")
+            
+            signal.signal(signal.SIGINT, self.stop)
+            while not self.stop_event.is_set():
+                time.sleep(0.1)
+                
+        except Exception as e:
+            logger.error(f"Error: {e}")
+            self.stop()
+
+    def stop(self, *args):
+        self.stop_event.set()
+        if hasattr(self, 'stream'):
+            self.stream.stop()
+            self.stream.close()
+        self._finalize_segment()
+        print("\nTranscription stopped")
+        sys.exit(0)
+
+
+def list_devices():
+    devices = sd.query_devices()
+    input_devices = [i for i, d in enumerate(devices) if d['max_input_channels'] > 0]
+    print("\nAvailable input devices:")
+    for i in input_devices:
+        print(f"[{i}] {devices[i]['name']}")
+    return input_devices
+
+def main():
+    global transcription_system
+    
+    print("\n" + "="*60)
+    print("Real-Time Transcription System".center(60))
+    print("="*60)
+    
+    input_devices = list_devices()
+    if not input_devices:
+        print("No input devices found!")
+        return
+        
+    device_id = input_devices[0]
     try:
-        stream.stop()
-        stream.close()
-    except Exception as e:
-        print(f"⚠️ Cleanup error: {e}")
-    print("✅ Cleanup done.")
+        selection = input(f"Enter device number [{input_devices[0]}]: ").strip()
+        if selection:
+            device_id = int(selection)
+            if device_id not in input_devices:
+                print("Invalid device, using default")
+                device_id = input_devices[0]
+    except:
+        pass
+    
+    transcription_system = AdvancedTranscriptionSystem()
+    transcription_system.start(device_id)
 
-if __name__ == '__main__':
-    setup_env()
-    whisper_model = WhisperModel(MODEL_SIZE, device=DEVICE, compute_type='int8')
-    print(f"✅ Whisper model loaded: {MODEL_SIZE} on {DEVICE}")
-    diarizer = SpeakerDiarization()
-
-    stream = sd.InputStream(
-        samplerate=SAMPLE_RATE,
-        channels=1,
-        dtype='float32',
-        device=device_index,
-        callback=audio_callback,
-        blocksize=int(SAMPLE_RATE * 0.5)
-    )
-
-    signal.signal(signal.SIGINT, lambda sig, frame: (cleanup(stream), exit(0)))
-
-    print("🔴 Real-time call processing started—agent/customer fingerprinting + 30-second slots.")
-    threading.Thread(target=chunk_worker, args=(whisper_model, diarizer), daemon=True).start()
-    stream.start()
-    threading.Event().wait()
+if __name__ == "__main__":
+    main()

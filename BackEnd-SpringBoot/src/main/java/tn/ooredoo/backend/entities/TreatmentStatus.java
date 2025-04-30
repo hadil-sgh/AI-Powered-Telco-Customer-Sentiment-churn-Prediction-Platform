@@ -1,6 +1,6 @@
 package tn.ooredoo.backend.entities;
 
-public enum AlertStatus {
+public enum TreatmentStatus {
 
     CHURN_RISK,
     COMPLAINTS,
