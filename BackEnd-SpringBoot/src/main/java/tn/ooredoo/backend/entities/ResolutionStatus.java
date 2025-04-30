@@ -1,2 +1,4 @@
-package tn.ooredoo.backend.entities;public enum ResolutionStatus {
+package tn.ooredoo.backend.entities;
+
+public enum ResolutionStatus {
 }
