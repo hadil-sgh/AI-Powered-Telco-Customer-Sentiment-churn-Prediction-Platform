@@ -2,4 +2,5 @@ BackEnd-API/Speech-to-Text API/venv/
 BackEnd-API/Speech-to-Text API/embeddings/
 BackEnd-API/Speech-to-Text API/output/
 BackEnd-API/Speech-to-Text API/pretrained_models/
+BackEnd-API/Speech-to-Text API/.env/
 BackEnd-API/Speech-to-Text API/transcription.log
