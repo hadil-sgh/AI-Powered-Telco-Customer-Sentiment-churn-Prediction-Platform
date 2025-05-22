@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 @Entity
 @Table(name = " user")
 @EntityListeners(AuditingEntityListener.class)
-// Fact: This class is used to listen to entity events creation and update
+// ? This class is used to listen to entity events creation and update
 public class User implements UserDetails, Principal {
 
     @Id
@@ -53,7 +53,7 @@ public class User implements UserDetails, Principal {
 
     @Override
     public String getName() {
-        return email; // Important: Unique identifier for the user
+        return email; // ! Unique identifier for the user
     }
 
     @Override
