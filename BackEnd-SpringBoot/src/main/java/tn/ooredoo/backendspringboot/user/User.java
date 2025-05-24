@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = " user")
+@Table(name = " user1")
 @EntityListeners(AuditingEntityListener.class)
 // ? This class is used to listen to entity events creation and update
 public class User implements UserDetails, Principal {
@@ -64,7 +64,7 @@ public class User implements UserDetails, Principal {
                 .collect(Collectors.toList());
     }
 
-    private String getFullName() {
+    public String getFullName() {
         return firstname + " " + lastname;
     }
 
