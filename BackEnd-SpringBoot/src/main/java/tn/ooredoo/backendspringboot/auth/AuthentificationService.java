@@ -81,7 +81,6 @@ public class AuthentificationService {
         tokenRepository.save(token);
         return generatedToken;
     }
-
     private String generateActivationCode() {
         String characters = "0123456789";
         StringBuilder codeBuilder = new StringBuilder();

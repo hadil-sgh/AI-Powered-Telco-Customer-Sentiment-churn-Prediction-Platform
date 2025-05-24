@@ -32,7 +32,7 @@ public class JwtService {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
-    //!  ⚠️ ParserBuilder is a builder for creating a parser instance (parser is a program that interprets and converts data from one format to another)
+    // ! ParserBuilder is a builder for creating a parser instance (parser is a program that interprets and converts data from one format to another)
     private Claims extractAllClaims(String token) {
         return Jwts
                 .parserBuilder()
