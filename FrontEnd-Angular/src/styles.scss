@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+/* Then below add your imports and variables */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --ooredoo-primary: #ed1c24;
+  --ooredoo-secondary: #c1272d;
+  --ooredoo-light: #fff5f5;
+}
+

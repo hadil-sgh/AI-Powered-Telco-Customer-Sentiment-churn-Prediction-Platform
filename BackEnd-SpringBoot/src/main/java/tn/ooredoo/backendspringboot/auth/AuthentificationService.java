@@ -81,6 +81,7 @@ public class AuthentificationService {
         tokenRepository.save(token);
         return generatedToken;
     }
+
     private String generateActivationCode() {
         String characters = "0123456789";
         StringBuilder codeBuilder = new StringBuilder();
@@ -99,7 +100,7 @@ public class AuthentificationService {
                         , request.getPassword()
                 )
         );
-        var claims = new HashMap <String, Object>();
+        var claims = new HashMap<String, Object>();
         var user = ((User) auth.getPrincipal());
         claims.put("fullName", user.getFullName());
         var jwtToken = jwtService.generateToken(claims, user);
@@ -117,12 +118,11 @@ public class AuthentificationService {
             throw new RuntimeException("Activation Token has expired. A 😄 new one has been sent to your email.");
         }
         var user = userRepository.findById(savedToken.getUser().getId())
-                .orElseThrow(()-> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("User not found"));
         user.setEnabled(true);
         userRepository.save(user);
         savedToken.setValidatedAt(LocalDateTime.now());
         tokenRepository.save(savedToken);
-
 
 
     }

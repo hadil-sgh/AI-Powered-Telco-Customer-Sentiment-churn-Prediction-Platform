@@ -23,9 +23,12 @@
               "node_modules/bootstrap/dist/css/bootstrap.min.css",
               "node_modules/boxicons/css/boxicons.min.css",
               "node_modules/perfect-scrollbar/css/perfect-scrollbar.css",
+              "node_modules/@fortawesome/fontawesome-free/css/all.min.css",
               "src/assets/css/demo.css",
               "src/assets/vendor/css/core.css",
+              "src/styles.scss",
               "src/assets/vendor/css/theme-default.css"
+             
             ],
             "scripts": [
               "node_modules/jquery/dist/jquery.min.js",
@@ -83,7 +86,7 @@
             "polyfills": ["zone.js", "zone.js/testing"],
             "tsConfig": "tsconfig.spec.json",
             "assets": ["src/favicon.ico", "src/assets"],
-            "styles": ["src/styles.css"],
+           "styles": ["src/styles.scss"],
             "scripts": []
           }
         }
