@@ -15,6 +15,10 @@ feature_names = model_data["features_names"]
 with open("encoders.pkl", "rb") as f:
     encoders = pickle.load(f)
 
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({'status': 'healthy', 'service': 'api-name'}), 200
+
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
@@ -50,4 +54,6 @@ def predict():
         return jsonify({"error": str(e)}), 400
 
 if __name__ == '__main__':
-    app.run(debug=True)     
+    import os
+    port = int(os.environ.get('PORT', 5000))  
+    app.run(host='0.0.0.0', port=port, debug=False)
