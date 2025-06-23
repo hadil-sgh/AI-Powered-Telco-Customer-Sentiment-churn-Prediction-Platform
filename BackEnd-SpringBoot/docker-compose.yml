@@ -30,7 +30,7 @@ services:
     container_name: churn-prediction
     image: hadil03/churn-prediction-api
     ports:
-      - 5002:5002
+      - 5000:5000
     networks:
       - springboot-network
     depends_on:
