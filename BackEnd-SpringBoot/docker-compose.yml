@@ -41,7 +41,7 @@ services:
     container_name: audio-pipeline
     image: hadil03/audio-traitment-pipeline-api
     ports:
-      - 5000:5000
+      - 8000:8000
     networks:
       - springboot-network
     depends_on:

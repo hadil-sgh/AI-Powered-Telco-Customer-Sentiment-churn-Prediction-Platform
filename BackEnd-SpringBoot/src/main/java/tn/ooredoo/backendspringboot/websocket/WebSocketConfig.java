@@ -11,7 +11,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 
 @Configuration
 @EnableWebSocketMessageBroker
-@Order(Ordered.HIGHEST_PRECEDENCE + 99)
+@Order(Ordered.HIGHEST_PRECEDENCE + 99) // ! Ensure this config is loaded first
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
@@ -19,13 +19,22 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void configureMessageBroker(MessageBrokerRegistry registry) {
         registry.enableSimpleBroker("/user");
         registry.setApplicationDestinationPrefixes("/app");
+        registry.setUserDestinationPrefix("/user");
 
     }
+// TODO: Implement a better custom for error handling in websocket
+//    @Override
+//    public void addReturnValueHandlers(List<HandlerMethodReturnValueHandler> returnValueHandlers) {
+//        returnValueHandlers.add()
+//    }
+
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
+
                 .setAllowedOrigins("http://localhost:4200")
                 .withSockJS();
-}
+    }
+
 
 }
