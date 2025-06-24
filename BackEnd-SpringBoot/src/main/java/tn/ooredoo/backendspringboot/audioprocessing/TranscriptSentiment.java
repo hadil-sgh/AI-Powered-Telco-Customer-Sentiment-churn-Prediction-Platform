@@ -14,12 +14,13 @@ import lombok.*;
 @NoArgsConstructor
 @Entity
 public class TranscriptSentiment {
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
     private String text;
     private String voice;
-    private Double  score;
+    private Double score;
 
 
 }

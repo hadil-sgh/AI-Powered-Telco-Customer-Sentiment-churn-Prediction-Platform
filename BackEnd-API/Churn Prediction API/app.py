@@ -48,6 +48,8 @@ def predict():
             "ChurnScore": f"{churn_score:.2f}%"
         }
         
+        
+        
         return jsonify(result)
     
     except Exception as e:
