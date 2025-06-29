@@ -10,4 +10,4 @@ springdoc:
 server:
   servlet:
     context-path: /api/v1
-  port: 8089
+  port: 8088

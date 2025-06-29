@@ -22,26 +22,24 @@ def health():
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        # Get input JSON data
+       
         input_data = request.json
-        
-        # Convert input to DataFrame
+       
         input_data_df = pd.DataFrame([input_data])
         
-        # Encode categorical features using the saved encoders
+        
         for column, encoder in encoders.items():
             if column in input_data_df.columns:
                 input_data_df[column] = encoder.transform(input_data_df[column])
         
-        # Ensure only the feature columns expected by the model are used
+        
         input_data_df = input_data_df[feature_names]
         
-        # Make prediction
         prediction = loaded_model.predict(input_data_df)
         pred_prob = loaded_model.predict_proba(input_data_df)
         churn_score = pred_prob[0][1] * 100
         
-        # Format the result
+    
         result = {
             "Prediction": "Churn" if prediction[0] == 1 else "No Churn",
             "PredictionProbability": pred_prob[0].tolist(),

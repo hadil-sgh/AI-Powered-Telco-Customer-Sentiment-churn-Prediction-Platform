@@ -1,67 +1,67 @@
-services:
-  postgres:
-    container_name: postgres-db
-    image: postgres
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      PGDATA: /var/lib/postgresql/data
-      POSTGRES_DB: Costumer_Retention
-    volumes:
-      - postgres:/data/postgres
-    ports:
-        - 5432:5432
-    networks:
+  services:
+    postgres:
+      container_name: postgres-db
+      image: postgres
+      environment:
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+        PGDATA: /var/lib/postgresql/data
+        POSTGRES_DB: Costumer_Retention
+      volumes:
+        - postgres-data:/var/lib/postgresql/data
+      ports:
+          - 5432:5432
+      networks:
+          - springboot-network
+      restart: unless-stopped
+
+    PostCallAnalytics:
+      container_name: post-call-analytics
+      image: hadil03/post-call-inteligence-api
+      ports:
+        - 5001:5001
+      networks:
         - springboot-network
-    restart: unless-stopped
+      depends_on:
+        - postgres
+      restart: unless-stopped
 
-  PostCallAnalytics:
-    container_name: post-call-analytics
-    image: hadil03/post-call-inteligence-api
-    ports:
-      - 5001:5001
-    networks:
-      - springboot-network
-    depends_on:
-      - postgres
-    restart: unless-stopped
+    ChurnPrediction:
+      container_name: churn-prediction
+      image: hadil03/churn-prediction-api
+      ports:
+        - 5000:5000
+      networks:
+        - springboot-network
+      depends_on:
+        - PostCallAnalytics
+      restart: unless-stopped
 
-  ChurnPrediction:
-    container_name: churn-prediction
-    image: hadil03/churn-prediction-api
-    ports:
-      - 5000:5000
-    networks:
-      - springboot-network
-    depends_on:
-      - PostCallAnalytics
-    restart: unless-stopped
+    AudioPipeline:
+      container_name: audio-pipeline
+      image: hadil03/audio-traitment-pipeline-api
+      ports:
+        - 8000:8000
+      networks:
+        - springboot-network
+      depends_on:
+        - PostCallAnalytics
+      restart: unless-stopped
 
-  AudioPipeline:
-    container_name: audio-pipeline
-    image: hadil03/audio-traitment-pipeline-api
-    ports:
-      - 8000:8000
-    networks:
-      - springboot-network
-    depends_on:
-      - PostCallAnalytics
-    restart: unless-stopped
+    MailDev:
+      container_name: mail-dev-CRP
+      image: maildev/maildev
+      ports:
+        - 1080:1080 # Web interface
+        - 1025:1025 # SMTP server
+      networks:
+        - springboot-network
+      restart: unless-stopped
 
-  MailDev:
-    container_name: mail-dev-CRP
-    image: maildev/maildev
-    ports:
-      - 1080:1080 # Web interface
-      - 1025:1025 # SMTP server
-    networks:
-      - springboot-network
-    restart: unless-stopped
+  networks:
+    springboot-network:
+      driver: bridge
 
-networks:
-  springboot-network:
-    driver: bridge
-
-volumes:
-  postgres:
-    driver: local
+  volumes:
+    postgres-data:
+      driver: local

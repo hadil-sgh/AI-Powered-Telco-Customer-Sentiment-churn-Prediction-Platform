@@ -1,22 +1,22 @@
-package tn.ooredoo.backendspringboot.post_call_analysis.performance;
+package tn.ooredoo.backendspringboot.post_call_analysis.complaintscustomer;
 
 
 import jakarta.persistence.*;
 import lombok.*;
 import tn.ooredoo.backendspringboot.call_transcript.CallRecord;
 
-@Getter
 @Setter
-@AllArgsConstructor
-@NoArgsConstructor
+@Getter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
-public class Performance {
+public class Complaint {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
-    private Integer score;
-    private String feedback;
+    private String complaintType;
+    private String summary;
     @OneToOne
     private CallRecord callTranscripts;
 
