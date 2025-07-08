@@ -3,6 +3,9 @@ package tn.ooredoo.backendspringboot.call_transcript;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import tn.ooredoo.backendspringboot.audioprocessing.AudioAnalysisResponse;
+import tn.ooredoo.backendspringboot.dailystats.DailyStatsService;
+import tn.ooredoo.backendspringboot.user.UserRepository;
+import tn.ooredoo.backendspringboot.user.User;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -14,6 +17,8 @@ import java.util.stream.Collectors;
 public class CallRecordServicesImpl implements CallRecordServices {
 
     final CallRecordRepository callRecordRepository;
+    final DailyStatsService dailyStatsService;
+    final UserRepository userRepository;
 
     @Override
     public String formatTranscriptForAnalysis(CallRecord callRecord) {
@@ -71,4 +76,36 @@ public class CallRecordServicesImpl implements CallRecordServices {
     public CallRecord getCallRecordByCallId(Integer id) {
         return callRecordRepository.findById(id).orElse(null);
     }
-}
+
+    @Override
+
+    public Integer getCallsPerDayForAgent(Long agentId, String date) {
+        if (agentId == null) {
+            throw new IllegalArgumentException("Agent does not exist in the DB");
+        }
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startOfDay;
+        LocalDateTime endOfDay;
+        if ("today".equalsIgnoreCase(date)) {
+            startOfDay = now.toLocalDate().atStartOfDay();
+            endOfDay = now.toLocalDate().atTime(23, 59, 59);
+        } else if ("yesterday".equalsIgnoreCase(date)) {
+            startOfDay = now.toLocalDate().minusDays(1).atStartOfDay();
+            endOfDay = now.toLocalDate().minusDays(1).atTime(23, 59, 59);
+        } else {
+            throw new IllegalArgumentException("Date parameter must be 'today' or 'yesterday'");
+        }
+        Integer count = callRecordRepository.countByUserIdAndCallDateTimeBetween(agentId, startOfDay, endOfDay);
+        if ("today".equalsIgnoreCase(date)) {
+            User user = userRepository.findById(agentId).orElse(null);
+            if (user != null) {
+                dailyStatsService.updateCallsCompletedForToday(user, count);
+            }
+        }
+        return count;
+    }
+
+
+
+
+    }

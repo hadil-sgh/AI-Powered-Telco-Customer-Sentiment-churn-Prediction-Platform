@@ -7,6 +7,7 @@ public interface CallRecordServices {
     void deleteCallRecordById(Integer id);
     CallRecord updateCallRecord(CallRecord callRecord);
     CallRecord getCallRecordByCallId(Integer callId);
+    Integer getCallsPerDayForAgent(Long agentId, String date);
 
 
 

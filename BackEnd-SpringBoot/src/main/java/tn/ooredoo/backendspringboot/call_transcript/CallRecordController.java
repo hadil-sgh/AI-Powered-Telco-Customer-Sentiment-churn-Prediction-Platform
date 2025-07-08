@@ -18,4 +18,10 @@ public class CallRecordController {
 
         return callRecordServices.formatTranscriptForAnalysis(callRecord);
     }
+
+
+    @GetMapping("/callsPerDay/{agentId}")
+    public Integer getCallsPerDayForAgent(@PathVariable Long agentId, @RequestParam(defaultValue = "today") String date) {
+        return callRecordServices.getCallsPerDayForAgent(agentId, date);
+    }
 }
