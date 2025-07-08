@@ -24,4 +24,30 @@ public class CallRecordController {
     public Integer getCallsPerDayForAgent(@PathVariable Long agentId, @RequestParam(defaultValue = "today") String date) {
         return callRecordServices.getCallsPerDayForAgent(agentId, date);
     }
+
+    @PostMapping
+    public CallRecord createCallRecord(@RequestBody CallRecord callRecord) {
+        return callRecordServices.saveCallRecord(callRecord);
+    }
+
+    @GetMapping("/{id}")
+    public CallRecord getCallRecordById(@PathVariable Integer id) {
+        return callRecordServices.getCallRecordById(id);
+    }
+
+    @PutMapping("/{id}")
+    public CallRecord updateCallRecord(@PathVariable Integer id, @RequestBody CallRecord callRecord) {
+        callRecord.setId(id);
+        return callRecordServices.updateCallRecord(callRecord);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteCallRecord(@PathVariable Integer id) {
+        callRecordServices.deleteCallRecordById(id);
+    }
+
+    @GetMapping("/byCallId/{callId}")
+    public CallRecord getCallRecordByCallId(@PathVariable Integer callId) {
+        return callRecordServices.getCallRecordByCallId(callId);
+    }
 }
