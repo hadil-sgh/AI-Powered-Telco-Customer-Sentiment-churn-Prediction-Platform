@@ -9,6 +9,7 @@ import java.io.IOException;
 
 @RestController
 @RequestMapping("/audio")
+@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 public class AudioPipelineController {
 
