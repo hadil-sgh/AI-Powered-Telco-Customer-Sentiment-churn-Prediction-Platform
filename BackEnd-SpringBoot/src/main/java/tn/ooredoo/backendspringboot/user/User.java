@@ -28,6 +28,8 @@ import java.util.stream.Collectors;
 // ? This class is used to listen to entity events creation and update
 public class User implements UserDetails, Principal {
 
+    //? userDetails is an interface provided by Spring Security that represents a user in the security context
+    // ? Principal is a Java interface that represents an entity (user) that can be authenticated
     @Id
     @GeneratedValue
     private Long id;
