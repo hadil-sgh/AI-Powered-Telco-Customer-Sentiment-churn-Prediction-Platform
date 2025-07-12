@@ -8,5 +8,6 @@ import java.time.LocalDateTime;
 @Repository
 public interface CallRecordRepository
         extends JpaRepository<CallRecord, Integer> {
-    Integer countByUserIdAndCallDateTimeBetween(Long agentId, LocalDateTime start, LocalDateTime end);
+    Integer countByAgent_IdAndCallDateTimeBetween(Long agentId, LocalDateTime start, LocalDateTime end);
+
 }

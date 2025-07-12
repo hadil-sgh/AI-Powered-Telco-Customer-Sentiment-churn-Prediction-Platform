@@ -15,6 +15,7 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
 
 
+
   mail:
     host: localhost
     port: 1025
@@ -39,6 +40,7 @@ spring:
     mailing:
       frontend:
         activation-url: http://localhost:4200/activate-account
+
 
 server:
   port: 8088

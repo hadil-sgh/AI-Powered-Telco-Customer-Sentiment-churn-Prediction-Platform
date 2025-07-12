@@ -29,7 +29,7 @@ import io.swagger.v3.oas.annotations.servers.Server;
         servers = {
                 @Server(
                         description = "Localhost server",
-                        url = "http://localhost:8080/api/v1"
+                        url = "http://localhost:8088/api/v1"
 
                 ),
                 @Server(
@@ -38,6 +38,7 @@ import io.swagger.v3.oas.annotations.servers.Server;
                 )
 
         },
+        //! they way we want to handel security in our API
         security = {
                 @SecurityRequirement(
                         name = "bearerAuth"
@@ -46,13 +47,12 @@ import io.swagger.v3.oas.annotations.servers.Server;
 
 )
 @SecurityScheme(
-        name = "bearerAuth" ,
+        name = "bearerAuth" , // ? should match the name in SecurityRequirement
         description = "JWT auth description",
         scheme = "bearer",
         type = SecuritySchemeType.HTTP,
         bearerFormat = "JWT",
         in = SecuritySchemeIn.HEADER
-
 )
 public class OpenAPIConfig {
 }

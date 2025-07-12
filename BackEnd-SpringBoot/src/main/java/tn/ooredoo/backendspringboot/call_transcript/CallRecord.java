@@ -7,6 +7,7 @@ import tn.ooredoo.backendspringboot.customer.Customer;
 import tn.ooredoo.backendspringboot.user.User;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -33,4 +34,6 @@ public class CallRecord {
 
     @Enumerated(EnumType.STRING)
     private Outcome callOutcome;
+    private LocalDateTime callDateTime;
+
 }

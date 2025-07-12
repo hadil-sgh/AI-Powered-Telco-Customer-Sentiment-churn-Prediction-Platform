@@ -1,13 +1,14 @@
-spring:
-  profiles:
-    active: dev
-  servlet:
-    multipart:
-      max-file-size: 50MB
-springdoc:
-  default-consumes-media-type: application/json
+  spring:
+    profiles:
+      active: dev
+    servlet:
+      multipart:
+        max-file-size: 50MB
+  springdoc:
+    default-consumes-media-type: application/json
 
-server:
-  servlet:
-    context-path: /api/v1
-  port: 8088
+  server:
+    servlet:
+      context-path: /api/v1
+    port: 8088
+

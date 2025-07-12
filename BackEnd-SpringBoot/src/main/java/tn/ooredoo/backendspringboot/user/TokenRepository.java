@@ -6,5 +6,7 @@ import java.util.Optional;
 
 public interface TokenRepository extends JpaRepository<Token, Integer> {
 
+     // ! Optional is a wrapper to avoid NullPointerException
      Optional<Token> findByToken(String token);
+
 }

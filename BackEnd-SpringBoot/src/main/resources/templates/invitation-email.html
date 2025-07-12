@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Ooredoo Registration Invitation</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .email-wrapper {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 30px 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+        }
+        .header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .header img {
+            max-height: 50px;
+        }
+        .content {
+            padding: 20px 0;
+            line-height: 1.6;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        .invitation-message {
+            font-size: 16px;
+            text-align: center;
+            margin: 30px 0;
+            color: #d71920;
+            font-weight: bold;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            border-left: 4px solid #d71920;
+        }
+        .cta-button {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .cta-button a {
+            background-color: #d71920;
+            color: #fff;
+            padding: 12px 30px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-block;
+        }
+        .footer {
+            margin-top: 40px;
+            font-size: 12px;
+            text-align: center;
+            color: #777;
+        }
+        @media (max-width: 600px) {
+            .email-wrapper {
+                padding: 20px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="email-wrapper">
+    <div class="header">
+        <img src="https://www.ooredoo.com/wp-content/uploads/2015/12/Ooredoo-Logo_CMYK_On-White-BG_FA-01.png" alt="Ooredoo Logo">
+        <h2>Call Center Registration Invitation</h2>
+    </div>
+    <div class="content">
+        <p class="greeting">Hello <strong th:text="${username}">John Doe</strong>,</p>
+        <p>You have been invited to register for the Ooredoo Call Center platform.</p>
+        <p>
+           I hope this email finds you well I would like to congratulate you on becoming a part of Oreedoo's Team
+            <strong th:text="${username}">John Doe</strong> with email address <strong th:text="${email}">johndoe@example.com</strong>.
+        </p>
+        <div class="invitation-message">
+            You're invited to join our Call Center team!
+        </div>
+        <p>Please click the button below to complete your registration:</p>
+        <div class="cta-button">
+            <a href="http://localhost:4200/register" target="_blank">
+                Complete Registration
+            </a>
+        </div>
+        <p>If you have any questions about this invitation, please contact your administrator.</p>
+    </div>
+    <div class="footer">
+        If you did not expect this invitation, please ignore this email.<br>
+        &copy; 2025 Ooredoo. All rights reserved.
+    </div>
+</div>
+</body>
+</html>

@@ -95,7 +95,7 @@ public class CallRecordServicesImpl implements CallRecordServices {
         } else {
             throw new IllegalArgumentException("Date parameter must be 'today' or 'yesterday'");
         }
-        Integer count = callRecordRepository.countByUserIdAndCallDateTimeBetween(agentId, startOfDay, endOfDay);
+        Integer count = callRecordRepository.countByAgent_IdAndCallDateTimeBetween(agentId, startOfDay, endOfDay);
         if ("today".equalsIgnoreCase(date)) {
             User user = userRepository.findById(agentId).orElse(null);
             if (user != null) {

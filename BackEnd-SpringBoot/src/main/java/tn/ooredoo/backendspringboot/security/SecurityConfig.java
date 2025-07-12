@@ -15,7 +15,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-@RequiredArgsConstructor
+@RequiredArgsConstructor // ? create constructor for final fields
 @EnableMethodSecurity(securedEnabled = true)
 public class SecurityConfig {
 
@@ -26,21 +26,20 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(Customizer.withDefaults())
-                .csrf(AbstractHttpConfigurer::disable)
+                .csrf(AbstractHttpConfigurer::disable) // ! CSRF is a security feature that prevents cross-site request forgery attacks.
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
                                 "/auth/**",
-                                "/v3/api-docs",
-                                "/v3/api-docs/**",
                                 "/swagger-resources",
                                 "/swagger-resources/**",
                                 "/configuration/ui",
                                 "/configuration/security",
                                 "/swagger-ui/**",
                                 "/webjars/**",
+                                "/api/v1/swagger-ui/**",
                                 "/swagger-ui.html",
-                                "/api/audio/**",
-                                "/api/v1/audio/**",
+                                "/v3/api-docs/**",
+                                "/audio/**",
                                 "/ws/**"
                         ).permitAll()
                         .anyRequest().authenticated()
@@ -52,20 +51,5 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // TODO: Recover the spring security proper configuration
-//    @Bean
-//    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-//        http
-//                .cors(Customizer.withDefaults())
-//                .csrf(AbstractHttpConfigurer::disable)
-//                .authorizeHttpRequests(auth -> auth
-//                        .anyRequest().permitAll()
-//                )
-//                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-//                .authenticationProvider(authenticationProvider)
-//                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-//
-//        return http.build();
-//    }
 
 }

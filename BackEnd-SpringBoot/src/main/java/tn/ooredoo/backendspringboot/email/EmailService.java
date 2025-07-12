@@ -64,4 +64,40 @@ public class EmailService {
 
         mailSender.send(mimeMessage);
     }
+    public void sendEmailManager(
+            String to,
+            String username,
+            EmailTemplateName emailTemplate,
+            String subject
+    ) throws MessagingException {
+        String templateName;
+        if (emailTemplate == null) {
+            templateName = "invitation-email";
+        } else {
+            templateName = emailTemplate.getName();
+        }
+        MimeMessage mimeMessage = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(
+                mimeMessage,
+                MULTIPART_MODE_MIXED,
+                UTF_8.name()
+        );
+        Map<String, Object> properties = new HashMap<>();
+        properties.put("username", username);
+        properties.put("email", to);
+
+
+        Context context = new Context();
+        context.setVariables(properties);
+
+        helper.setFrom("hadil03sghair@gmail.com");
+        helper.setTo(to);
+        helper.setSubject(subject);
+
+        String template = templateEngine.process(templateName, context);
+
+        helper.setText(template, true);
+
+        mailSender.send(mimeMessage);
+    }
 }
