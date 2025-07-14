@@ -1,4 +1,12 @@
-import { Component, OnInit, AfterViewInit, ViewChildren, QueryList, ElementRef, OnDestroy } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  AfterViewInit,
+  ViewChildren,
+  QueryList,
+  ElementRef,
+  OnDestroy,
+} from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from 'src/app/services/auth.service';
 import { interval, Subscription } from 'rxjs';
@@ -7,9 +15,11 @@ import { take } from 'rxjs/operators';
 @Component({
   selector: 'app-account-validation',
   templateUrl: './account-validation.component.html',
-  styleUrls: ['./account-validation.component.scss']
+  styleUrls: ['./account-validation.component.scss'],
 })
-export class AccountValidationComponent implements OnInit, AfterViewInit, OnDestroy {
+export class AccountValidationComponent
+  implements OnInit, AfterViewInit, OnDestroy
+{
   @ViewChildren('digitInput') digitInputs!: QueryList<ElementRef>;
 
   // Component state
@@ -26,10 +36,7 @@ export class AccountValidationComponent implements OnInit, AfterViewInit, OnDest
 
   private timerSubscription?: Subscription;
 
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) {}
+  constructor(private authService: AuthService, private router: Router) {}
 
   ngOnInit(): void {
     this.startTimer();
@@ -85,7 +92,7 @@ export class AccountValidationComponent implements OnInit, AfterViewInit, OnDest
 
     if (digits.length > 0) {
       const digitElements = this.digitInputs.toArray();
-      
+
       // Fill inputs with pasted digits
       for (let i = 0; i < Math.min(digits.length, digitElements.length); i++) {
         digitElements[i].nativeElement.value = digits[i];
@@ -101,7 +108,7 @@ export class AccountValidationComponent implements OnInit, AfterViewInit, OnDest
 
   private updateCode(): void {
     const digitElements = this.digitInputs.toArray();
-    this.code = digitElements.map(el => el.nativeElement.value).join('');
+    this.code = digitElements.map((el) => el.nativeElement.value).join('');
     this.allDigitsFilled = this.code.length === 6;
     this.progress = (this.code.length / 6) * 100;
     this.errorMessage = ''; // Clear error message when user types
@@ -128,14 +135,16 @@ export class AccountValidationComponent implements OnInit, AfterViewInit, OnDest
   private updateTimerDisplay(): void {
     const minutes = Math.floor(this.countdown / 60);
     const seconds = this.countdown % 60;
-    this.timerDisplay = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    this.timerDisplay = `${minutes.toString().padStart(2, '0')}:${seconds
+      .toString()
+      .padStart(2, '0')}`;
   }
 
   onResendCode(): void {
     if (!this.canResend || this.isResending) return;
 
     this.isResending = true;
-    
+
     // Simulate API call
     setTimeout(() => {
       this.isResending = false;
@@ -162,13 +171,13 @@ export class AccountValidationComponent implements OnInit, AfterViewInit, OnDest
         this.errorMessage = 'Invalid verification code. Please try again.';
         this.shakeInputs();
         this.clearInputs();
-      }
+      },
     });
   }
 
   private shakeInputs(): void {
     const digitElements = this.digitInputs.toArray();
-    digitElements.forEach(el => {
+    digitElements.forEach((el) => {
       el.nativeElement.classList.add('shake');
       setTimeout(() => {
         el.nativeElement.classList.remove('shake');
@@ -178,11 +187,11 @@ export class AccountValidationComponent implements OnInit, AfterViewInit, OnDest
 
   private clearInputs(): void {
     const digitElements = this.digitInputs.toArray();
-    digitElements.forEach(el => {
+    digitElements.forEach((el) => {
       el.nativeElement.value = '';
     });
     this.updateCode();
-    
+
     // Focus on first input
     setTimeout(() => {
       digitElements[0].nativeElement.focus();

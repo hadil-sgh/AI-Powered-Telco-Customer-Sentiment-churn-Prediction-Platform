@@ -23,7 +23,7 @@ import { AccountValidationComponent } from './Auth/account-validation/account-va
     SidebarComponent,
     LoginComponent,
     RegisterComponent,
-    AccountValidationComponent
+    AccountValidationComponent,
   ],
   imports: [
     BrowserModule,
@@ -31,11 +31,9 @@ import { AccountValidationComponent } from './Auth/account-validation/account-va
     AppRoutingModule,
     HttpClientModule,
     ReactiveFormsModule,
-    FormsModule
+    FormsModule,
   ],
-  providers: [
-    HttpClient
-  ],
-  bootstrap: [AppComponent]
+  providers: [HttpClient],
+  bootstrap: [AppComponent],
 })
-export class AppModule { }
+export class AppModule {}
