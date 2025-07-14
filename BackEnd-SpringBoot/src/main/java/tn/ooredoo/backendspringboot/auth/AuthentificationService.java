@@ -21,6 +21,7 @@ import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -39,23 +40,33 @@ public class AuthentificationService {
     public void register(RegisterRequest request) throws MessagingException {
 
 
-        var userRole = roleRepository.findByName("USER")
-                // TODO: better exception handling
-                .orElseThrow(() -> new IllegalStateException("Role not found"));
-        var user = User.builder()
-                .firstname(request.getFirstname())
-                .lastname(request.getLastname())
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .accountLocked(false)
-                .enabled(false)
-                .roles(List.of(userRole))
-                .build();
+        Optional<User> existingUserOpt = userRepository.findByEmail(request.getEmail());
 
-        userRepository.save(user);
-        sendValidationEmail(user);
+        if (existingUserOpt.isPresent()) {
+            User existingUser = existingUserOpt.get();
 
+            // Allow registration only if password is null/empty and not enabled
+            if (existingUser.getPassword() != null && !existingUser.getPassword().isBlank()) {
+                throw new IllegalStateException("User already registered.");
+            }
+
+            if (existingUser.isEnabled()) {
+                throw new IllegalStateException("Account already active.");
+            }
+
+            // Update the existing user with password and role
+            existingUser.setPassword(passwordEncoder.encode(request.getPassword()));
+
+            userRepository.save(existingUser);
+
+            sendValidationEmail(existingUser);
+            return;
+        }
+
+        // Else: reject registration because user must already exist
+        throw new IllegalStateException("User not pre-created. Contact admin.");
     }
+
 
     private void sendValidationEmail(User user) throws MessagingException {
         var newToken = generateAndSendActivationToken(user);

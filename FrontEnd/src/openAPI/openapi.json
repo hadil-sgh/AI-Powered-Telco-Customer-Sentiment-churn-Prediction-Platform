@@ -1,0 +1,1632 @@
+{
+"openapi": "3.0.1",
+"info": {
+"title": "Ooredoo Backend API",
+"description": "Documentation for Ooredoo's Customer Interactions /Marketing Management",
+"termsOfService": "Terms of service ",
+"contact": {
+"name": "Ooredoo Backend Team",
+"email": "hadil.sghair@esprit.tn"
+},
+"license": {
+"name": "license",
+"url": "https://some-url.com"
+},
+"version": "1.0"
+},
+"servers": [
+{
+"url": "http://localhost:8080/api/v1",
+"description": "Localhost server"
+},
+{
+"url": "https://api.ooredoo.tn/retention",
+"description": "Production server"
+}
+],
+"security": [
+{
+"bearerAuth": []
+}
+],
+"paths": {
+"/performances/update": {
+"put": {
+"tags": [
+"performance-controller"
+],
+"operationId": "updatePerformance",
+"requestBody": {
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/Performance"
+}
+}
+},
+"required": true
+},
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/Performance"
+}
+}
+}
+}
+}
+}
+},
+"/notes/{id}": {
+"get": {
+"tags": [
+"note-controller"
+],
+"operationId": "getNoteById",
+"parameters": [
+{
+"name": "id",
+"in": "path",
+"required": true,
+"schema": {
+"type": "integer",
+"format": "int64"
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/Note"
+}
+}
+}
+}
+}
+},
+"put": {
+"tags": [
+"note-controller"
+],
+"operationId": "updateNote",
+"parameters": [
+{
+"name": "id",
+"in": "path",
+"required": true,
+"schema": {
+"type": "integer",
+"format": "int64"
+}
+}
+],
+"requestBody": {
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/Note"
+}
+}
+},
+"required": true
+},
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/Note"
+}
+}
+}
+}
+}
+},
+"delete": {
+"tags": [
+"note-controller"
+],
+"operationId": "deleteNote",
+"parameters": [
+{
+"name": "id",
+"in": "path",
+"required": true,
+"schema": {
+"type": "integer",
+"format": "int64"
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK"
+}
+}
+}
+},
+"/coaching-tips/update": {
+"put": {
+"tags": [
+"coaching-tip-controller"
+],
+"operationId": "updateCoachingTip",
+"requestBody": {
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/CoachingTip"
+}
+}
+},
+"required": true
+},
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/CoachingTip"
+}
+}
+}
+}
+}
+}
+},
+"/callrecord/{id}": {
+"get": {
+"tags": [
+"call-record-controller"
+],
+"operationId": "getCallRecordById",
+"parameters": [
+{
+"name": "id",
+"in": "path",
+"required": true,
+"schema": {
+"type": "integer",
+"format": "int32"
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/CallRecord"
+}
+}
+}
+}
+}
+},
+"put": {
+"tags": [
+"call-record-controller"
+],
+"operationId": "updateCallRecord",
+"parameters": [
+{
+"name": "id",
+"in": "path",
+"required": true,
+"schema": {
+"type": "integer",
+"format": "int32"
+}
+}
+],
+"requestBody": {
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/CallRecord"
+}
+}
+},
+"required": true
+},
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/CallRecord"
+}
+}
+}
+}
+}
+},
+"delete": {
+"tags": [
+"call-record-controller"
+],
+"operationId": "deleteCallRecord",
+"parameters": [
+{
+"name": "id",
+"in": "path",
+"required": true,
+"schema": {
+"type": "integer",
+"format": "int32"
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK"
+}
+}
+}
+},
+"/performances/create": {
+"post": {
+"tags": [
+"performance-controller"
+],
+"operationId": "createPerformance",
+"requestBody": {
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/Performance"
+}
+}
+},
+"required": true
+},
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/Performance"
+}
+}
+}
+}
+}
+}
+},
+"/notes": {
+"get": {
+"tags": [
+"note-controller"
+],
+"operationId": "getAllNotes",
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"type": "array",
+"items": {
+"$ref": "#/components/schemas/Note"
+}
+}
+}
+}
+}
+}
+},
+"post": {
+"tags": [
+"note-controller"
+],
+"operationId": "createNote",
+"requestBody": {
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/Note"
+}
+}
+},
+"required": true
+},
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/Note"
+}
+}
+}
+}
+}
+}
+},
+"/coaching-tips/create": {
+"post": {
+"tags": [
+"coaching-tip-controller"
+],
+"operationId": "createCoachingTip",
+"requestBody": {
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/CoachingTip"
+}
+}
+},
+"required": true
+},
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/CoachingTip"
+}
+}
+}
+}
+}
+}
+},
+"/churn/predict/{customerId}": {
+"post": {
+"tags": [
+"churn-prediction-controller"
+],
+"operationId": "predict",
+"parameters": [
+{
+"name": "customerId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "integer",
+"format": "int32"
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/ChurnPrediction"
+}
+}
+}
+}
+}
+}
+},
+"/callrecord": {
+"post": {
+"tags": [
+"call-record-controller"
+],
+"operationId": "createCallRecord",
+"requestBody": {
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/CallRecord"
+}
+}
+},
+"required": true
+},
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/CallRecord"
+}
+}
+}
+}
+}
+}
+},
+"/auth/register": {
+"post": {
+"tags": [
+"Authentification"
+],
+"operationId": "register",
+"requestBody": {
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/RegisterRequest"
+}
+}
+},
+"required": true
+},
+"responses": {
+"202": {
+"description": "Accepted",
+"content": {
+"*/*": {
+"schema": {
+"type": "object"
+}
+}
+}
+}
+}
+}
+},
+"/auth/authenticate": {
+"post": {
+"tags": [
+"Authentification"
+],
+"operationId": "authenticate",
+"requestBody": {
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/AuthentificationRequest"
+}
+}
+},
+"required": true
+},
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/AuthentificationResponce"
+}
+}
+}
+}
+}
+}
+},
+"/audio/stop": {
+"post": {
+"tags": [
+"audio-pipeline-controller"
+],
+"operationId": "stopPipeline",
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"type": "string"
+}
+}
+}
+}
+}
+}
+},
+"/audio/start": {
+"post": {
+"tags": [
+"audio-pipeline-controller"
+],
+"operationId": "startPipeline",
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"type": "string"
+}
+}
+}
+}
+}
+}
+},
+"/audio/process-file": {
+"post": {
+"tags": [
+"audio-pipeline-controller"
+],
+"operationId": "processAudioFile",
+"parameters": [
+{
+"name": "sessionId",
+"in": "query",
+"required": true,
+"schema": {
+"type": "string"
+}
+}
+],
+"requestBody": {
+"content": {
+"application/json": {
+"schema": {
+"required": [
+"file"
+],
+"type": "object",
+"properties": {
+"file": {
+"type": "string",
+"format": "binary"
+}
+}
+}
+}
+}
+},
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"type": "string"
+}
+}
+}
+}
+}
+}
+},
+"/audio/process-base64": {
+"post": {
+"tags": [
+"audio-pipeline-controller"
+],
+"operationId": "processAudioBase64",
+"parameters": [
+{
+"name": "base64Data",
+"in": "query",
+"required": true,
+"schema": {
+"type": "string"
+}
+},
+{
+"name": "sessionId",
+"in": "query",
+"required": true,
+"schema": {
+"type": "string"
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"type": "string"
+}
+}
+}
+}
+}
+}
+},
+"/postCall/score/{callRecordId}": {
+"get": {
+"tags": [
+"post-call-analysis-controller"
+],
+"operationId": "analyzeTranscriptScore",
+"parameters": [
+{
+"name": "callRecordId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "integer",
+"format": "int32"
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"type": "object",
+"additionalProperties": {
+"type": "object"
+}
+}
+}
+}
+}
+}
+}
+},
+"/postCall/report/{callRecordId}": {
+"get": {
+"tags": [
+"post-call-analysis-controller"
+],
+"operationId": "generateTranscriptReport",
+"parameters": [
+{
+"name": "callRecordId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "integer",
+"format": "int32"
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"type": "object",
+"additionalProperties": {
+"type": "object"
+}
+}
+}
+}
+}
+}
+}
+},
+"/postCall/complete/{callRecordId}": {
+"get": {
+"tags": [
+"post-call-analysis-controller"
+],
+"operationId": "getCompleteAnalysis",
+"parameters": [
+{
+"name": "callRecordId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "integer",
+"format": "int32"
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"type": "object",
+"additionalProperties": {
+"type": "object"
+}
+}
+}
+}
+}
+}
+}
+},
+"/performances/getOne/{id}": {
+"get": {
+"tags": [
+"performance-controller"
+],
+"operationId": "getPerformanceById",
+"parameters": [
+{
+"name": "id",
+"in": "path",
+"required": true,
+"schema": {
+"type": "integer",
+"format": "int64"
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/Performance"
+}
+}
+}
+}
+}
+}
+},
+"/performances/all": {
+"get": {
+"tags": [
+"performance-controller"
+],
+"operationId": "getAllPerformances",
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"type": "array",
+"items": {
+"$ref": "#/components/schemas/Performance"
+}
+}
+}
+}
+}
+}
+}
+},
+"/dailystats/forAgent/{agentId}": {
+"get": {
+"tags": [
+"daily-stats-controller"
+],
+"operationId": "getDailyStatsForAgent",
+"parameters": [
+{
+"name": "agentId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "integer",
+"format": "int64"
+}
+},
+{
+"name": "date",
+"in": "query",
+"required": false,
+"schema": {
+"type": "string",
+"default": "today"
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/DailyStats"
+}
+}
+}
+}
+}
+}
+},
+"/customer/get/{customerId}": {
+"get": {
+"tags": [
+"customer-controller"
+],
+"operationId": "getCustomerById",
+"parameters": [
+{
+"name": "customerId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "integer",
+"format": "int32"
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/Customer"
+}
+}
+}
+}
+}
+}
+},
+"/coaching-tips": {
+"get": {
+"tags": [
+"coaching-tip-controller"
+],
+"operationId": "getAllCoachingTips",
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"type": "array",
+"items": {
+"$ref": "#/components/schemas/CoachingTip"
+}
+}
+}
+}
+}
+}
+}
+},
+"/coaching-tips/getOne/{id}": {
+"get": {
+"tags": [
+"coaching-tip-controller"
+],
+"operationId": "getCoachingTipById",
+"parameters": [
+{
+"name": "id",
+"in": "path",
+"required": true,
+"schema": {
+"type": "integer",
+"format": "int64"
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/CoachingTip"
+}
+}
+}
+}
+}
+}
+},
+"/churn/health": {
+"get": {
+"tags": [
+"churn-prediction-controller"
+],
+"operationId": "health",
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"type": "object",
+"additionalProperties": {
+"type": "string"
+}
+}
+}
+}
+}
+}
+}
+},
+"/callrecord/formatTranscript/{id}": {
+"get": {
+"tags": [
+"call-record-controller"
+],
+"operationId": "getFormattedTranscript",
+"parameters": [
+{
+"name": "id",
+"in": "path",
+"required": true,
+"schema": {
+"type": "integer",
+"format": "int32"
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"type": "string"
+}
+}
+}
+}
+}
+}
+},
+"/callrecord/callsPerDay/{agentId}": {
+"get": {
+"tags": [
+"call-record-controller"
+],
+"operationId": "getCallsPerDayForAgent",
+"parameters": [
+{
+"name": "agentId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "integer",
+"format": "int64"
+}
+},
+{
+"name": "date",
+"in": "query",
+"required": false,
+"schema": {
+"type": "string",
+"default": "today"
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"type": "integer",
+"format": "int32"
+}
+}
+}
+}
+}
+}
+},
+"/callrecord/byCallId/{callId}": {
+"get": {
+"tags": [
+"call-record-controller"
+],
+"operationId": "getCallRecordByCallId",
+"parameters": [
+{
+"name": "callId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "integer",
+"format": "int32"
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/CallRecord"
+}
+}
+}
+}
+}
+}
+},
+"/auth/activate-account": {
+"get": {
+"tags": [
+"Authentification"
+],
+"operationId": "confirmAccount",
+"parameters": [
+{
+"name": "token",
+"in": "query",
+"required": true,
+"schema": {
+"type": "string"
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK"
+}
+}
+}
+},
+"/performances/delete/{id}": {
+"delete": {
+"tags": [
+"performance-controller"
+],
+"operationId": "deletePerformance",
+"parameters": [
+{
+"name": "id",
+"in": "path",
+"required": true,
+"schema": {
+"type": "integer",
+"format": "int64"
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK"
+}
+}
+}
+},
+"/coaching-tips/delete/{id}": {
+"delete": {
+"tags": [
+"coaching-tip-controller"
+],
+"operationId": "deleteCoachingTip",
+"parameters": [
+{
+"name": "id",
+"in": "path",
+"required": true,
+"schema": {
+"type": "integer",
+"format": "int64"
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK"
+}
+}
+}
+}
+},
+"components": {
+"schemas": {
+"AudioAnalysisResponse": {
+"type": "object",
+"properties": {
+"id": {
+"type": "integer",
+"format": "int32"
+},
+"timestamp": {
+"type": "string"
+},
+"speaker": {
+"type": "string"
+},
+"text": {
+"type": "string"
+},
+"sentiment": {
+"$ref": "#/components/schemas/TranscriptSentiment"
+},
+"voiceFeatures": {
+"$ref": "#/components/schemas/VoiceFeatures"
+},
+"callRecord": {
+"$ref": "#/components/schemas/CallRecord"
+}
+}
+},
+"CallRecord": {
+"type": "object",
+"properties": {
+"id": {
+"type": "integer",
+"format": "int32"
+},
+"customer": {
+"$ref": "#/components/schemas/Customer"
+},
+"agent": {
+"$ref": "#/components/schemas/User"
+},
+"callTranscripts": {
+"type": "array",
+"items": {
+"$ref": "#/components/schemas/AudioAnalysisResponse"
+}
+},
+"callDuration": {
+"type": "object",
+"properties": {
+"seconds": {
+"type": "integer",
+"format": "int64"
+},
+"nano": {
+"type": "integer",
+"format": "int32"
+},
+"negative": {
+"type": "boolean"
+},
+"zero": {
+"type": "boolean"
+},
+"units": {
+"type": "array",
+"items": {
+"type": "object",
+"properties": {
+"dateBased": {
+"type": "boolean"
+},
+"timeBased": {
+"type": "boolean"
+},
+"durationEstimated": {
+"type": "boolean"
+}
+}
+}
+}
+}
+},
+"callOutcome": {
+"type": "string",
+"enum": [
+"SUCCESSFUL",
+"NO_ANSWER",
+"DROPPED",
+"RESOLVED"
+]
+},
+"callDateTime": {
+"type": "string",
+"format": "date-time"
+}
+}
+},
+"ChurnPrediction": {
+"type": "object",
+"properties": {
+"id": {
+"type": "integer",
+"format": "int32"
+},
+"Prediction": {
+"type": "string"
+},
+"PredictionProbability": {
+"type": "array",
+"items": {
+"type": "number",
+"format": "double"
+}
+},
+"ChurnScore": {
+"type": "string"
+}
+}
+},
+"Customer": {
+"type": "object",
+"properties": {
+"customerID": {
+"type": "integer",
+"format": "int32"
+},
+"gender": {
+"type": "string"
+},
+"tenure": {
+"type": "integer",
+"format": "int32"
+},
+"churnPrediction": {
+"$ref": "#/components/schemas/ChurnPrediction"
+},
+"SeniorCitizen": {
+"type": "integer",
+"format": "int32"
+},
+"Partner": {
+"type": "string"
+},
+"Dependents": {
+"type": "string"
+},
+"PhoneService": {
+"type": "string"
+},
+"MultipleLines": {
+"type": "string"
+},
+"InternetService": {
+"type": "string"
+},
+"OnlineSecurity": {
+"type": "string"
+},
+"OnlineBackup": {
+"type": "string"
+},
+"DeviceProtection": {
+"type": "string"
+},
+"TechSupport": {
+"type": "string"
+},
+"StreamingTV": {
+"type": "string"
+},
+"StreamingMovies": {
+"type": "string"
+},
+"Contract": {
+"type": "string"
+},
+"PaperlessBilling": {
+"type": "string"
+},
+"PaymentMethod": {
+"type": "string"
+},
+"MonthlyCharges": {
+"type": "number",
+"format": "double"
+},
+"TotalCharges": {
+"type": "number",
+"format": "double"
+}
+}
+},
+"GrantedAuthority": {
+"type": "object",
+"properties": {
+"authority": {
+"type": "string"
+}
+}
+},
+"Performance": {
+"type": "object",
+"properties": {
+"id": {
+"type": "integer",
+"format": "int32"
+},
+"score": {
+"type": "integer",
+"format": "int32"
+},
+"feedback": {
+"type": "string"
+},
+"callTranscripts": {
+"$ref": "#/components/schemas/CallRecord"
+}
+}
+},
+"Role": {
+"type": "object",
+"properties": {
+"id": {
+"type": "integer",
+"format": "int32"
+},
+"name": {
+"type": "string"
+},
+"roleName": {
+"type": "string"
+},
+"createdAt": {
+"type": "string",
+"format": "date-time"
+},
+"updatedAt": {
+"type": "string",
+"format": "date-time"
+}
+}
+},
+"TranscriptSentiment": {
+"type": "object",
+"properties": {
+"id": {
+"type": "integer",
+"format": "int32"
+},
+"text": {
+"type": "string"
+},
+"voice": {
+"type": "string"
+},
+"score": {
+"type": "number",
+"format": "double"
+}
+}
+},
+"User": {
+"type": "object",
+"properties": {
+"id": {
+"type": "integer",
+"format": "int64"
+},
+"firstname": {
+"type": "string"
+},
+"lastname": {
+"type": "string"
+},
+"dateOfBirth": {
+"type": "string",
+"format": "date"
+},
+"email": {
+"type": "string"
+},
+"password": {
+"type": "string"
+},
+"accountLocked": {
+"type": "boolean"
+},
+"enabled": {
+"type": "boolean"
+},
+"roles": {
+"type": "array",
+"items": {
+"$ref": "#/components/schemas/Role"
+}
+},
+"createdAt": {
+"type": "string",
+"format": "date-time"
+},
+"updatedAt": {
+"type": "string",
+"format": "date-time"
+},
+"authorities": {
+"type": "array",
+"items": {
+"$ref": "#/components/schemas/GrantedAuthority"
+}
+},
+"accountNonLocked": {
+"type": "boolean"
+},
+"credentialsNonExpired": {
+"type": "boolean"
+},
+"accountNonExpired": {
+"type": "boolean"
+},
+"name": {
+"type": "string"
+},
+"fullName": {
+"type": "string"
+},
+"username": {
+"type": "string"
+}
+}
+},
+"VoiceFeatures": {
+"type": "object",
+"properties": {
+"id": {
+"type": "integer",
+"format": "int32"
+},
+"pitch": {
+"type": "number",
+"format": "double"
+},
+"energy": {
+"type": "number",
+"format": "double"
+},
+"rate": {
+"type": "number",
+"format": "double"
+}
+}
+},
+"Note": {
+"type": "object",
+"properties": {
+"id": {
+"type": "integer",
+"format": "int64"
+},
+"customer": {
+"$ref": "#/components/schemas/Customer"
+},
+"agent": {
+"$ref": "#/components/schemas/User"
+},
+"description": {
+"type": "string"
+},
+"call": {
+"$ref": "#/components/schemas/CallRecord"
+},
+"callDuration": {
+"type": "object",
+"properties": {
+"seconds": {
+"type": "integer",
+"format": "int64"
+},
+"nano": {
+"type": "integer",
+"format": "int32"
+},
+"negative": {
+"type": "boolean"
+},
+"zero": {
+"type": "boolean"
+},
+"units": {
+"type": "array",
+"items": {
+"type": "object",
+"properties": {
+"dateBased": {
+"type": "boolean"
+},
+"timeBased": {
+"type": "boolean"
+},
+"durationEstimated": {
+"type": "boolean"
+}
+}
+}
+}
+}
+}
+}
+},
+"CoachingTip": {
+"type": "object"
+},
+"RegisterRequest": {
+"required": [
+"email",
+"firstname",
+"lastname",
+"password"
+],
+"type": "object",
+"properties": {
+"firstname": {
+"type": "string"
+},
+"lastname": {
+"type": "string"
+},
+"email": {
+"type": "string"
+},
+"password": {
+"maxLength": 2147483647,
+"minLength": 8,
+"type": "string"
+}
+}
+},
+"AuthentificationRequest": {
+"required": [
+"email",
+"password"
+],
+"type": "object",
+"properties": {
+"email": {
+"type": "string"
+},
+"password": {
+"maxLength": 2147483647,
+"minLength": 8,
+"type": "string"
+}
+}
+},
+"AuthentificationResponce": {
+"type": "object",
+"properties": {
+"token": {
+"type": "string"
+}
+}
+},
+"DailyStats": {
+"type": "object",
+"properties": {
+"id": {
+"type": "integer",
+"format": "int64"
+},
+"user": {
+"$ref": "#/components/schemas/User"
+},
+"date": {
+"type": "string",
+"format": "date-time"
+},
+"callsCompleted": {
+"type": "integer",
+"format": "int32"
+},
+"callsTarget": {
+"type": "integer",
+"format": "int32"
+},
+"averageSentiment": {
+"type": "number",
+"format": "double"
+},
+"escalations": {
+"type": "integer",
+"format": "int32"
+},
+"coachingTipsUsed": {
+"type": "integer",
+"format": "int32"
+},
+"helpfulTips": {
+"type": "integer",
+"format": "int32"
+},
+"totalScore": {
+"type": "integer",
+"format": "int32"
+}
+}
+}
+},
+"securitySchemes": {
+"bearerAuth": {
+"type": "http",
+"description": "JWT auth description",
+"in": "header",
+"scheme": "bearer",
+"bearerFormat": "JWT"
+}
+}
+}
+}

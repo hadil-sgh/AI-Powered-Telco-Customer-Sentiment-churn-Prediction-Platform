@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom fonts and variables */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --ooredoo-primary: #ed1c24;
+  --ooredoo-secondary: #c1272d;
+  --ooredoo-light: #fff5f5;
+}
+
+/* Library CSS */
+@import "ngx-toastr/toastr";
+@import "~bootstrap/dist/css/bootstrap.min.css";
+@import "~@fortawesome/fontawesome-free/css/all.min.css";

@@ -1,0 +1,164 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
+    
+    :root {
+      --ooredoo-primary: #ed1c24;
+      --ooredoo-secondary: #c1272d;
+      --ooredoo-light: #fff5f5;
+    }
+    
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background-color: #f8fafc;
+    }
+    
+    .ooredoo-primary {
+      background-color: var(--ooredoo-primary);
+    }
+    
+    .ooredoo-secondary {
+      background-color: var(--ooredoo-secondary);
+    }
+    
+    .ooredoo-light {
+      background-color: var(--ooredoo-light);
+    }
+    
+    .glass-effect {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+    
+    .input-focus:focus {
+      box-shadow: 0 0 0 3px rgba(237, 28, 36, 0.15);
+      border-color: var(--ooredoo-primary);
+    }
+    
+    .floating-label {
+      position: absolute;
+      pointer-events: none;
+      left: 16px;
+      top: 16px;
+      transition: 0.2s ease all;
+      color: #94a3b8;
+      font-size: 14px;
+      background: transparent;
+    }
+    
+    input:focus ~ .floating-label,
+    input:not(:placeholder-shown) ~ .floating-label {
+      top: -8px;
+      left: 12px;
+      font-size: 12px;
+      background: white;
+      padding: 0 6px;
+      color: var(--ooredoo-primary);
+      font-weight: 500;
+    }
+    
+    select:focus ~ .floating-label,
+    select:not([value=""]):valid ~ .floating-label {
+      top: -8px;
+      left: 12px;
+      font-size: 12px;
+      background: white;
+      padding: 0 6px;
+      color: var(--ooredoo-primary);
+      font-weight: 500;
+    }
+    
+    .btn-hover {
+      transition: all 0.3s ease;
+      transform: translateY(0);
+    }
+    
+    .btn-hover:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(237, 28, 36, 0.3);
+    }
+    
+    .pulse-animation {
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(237, 28, 36, 0.4);
+      }
+      70% {
+        box-shadow: 0 0 0 12px rgba(237, 28, 36, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(237, 28, 36, 0);
+      }
+    }
+    
+    .wave-animation {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .wave-animation::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transform: translateX(-100%);
+      animation: wave 1.5s infinite;
+    }
+    
+    @keyframes wave {
+      100% {
+        transform: translateX(100%);
+      }
+    }
+    
+    .select-wrapper {
+      position: relative;
+    }
+    
+    .select-wrapper::after {
+      content: "▼";
+      font-size: 12px;
+      color: var(--ooredoo-primary);
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+    
+    .toggle-password {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      color: #94a3b8;
+      transition: color 0.2s;
+    }
+    
+    .toggle-password:hover {
+      color: var(--ooredoo-primary);
+    }
+    
+    .error-message {
+      color: var(--ooredoo-primary);
+      font-size: 12px;
+      margin-top: 4px;
+      display: none;
+    }
+    
+    .shake {
+      animation: shake 0.5s;
+    }
+    
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+      20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }

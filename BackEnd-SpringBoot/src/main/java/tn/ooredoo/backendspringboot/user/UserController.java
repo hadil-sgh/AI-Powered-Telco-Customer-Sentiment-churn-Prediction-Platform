@@ -3,7 +3,6 @@ package tn.ooredoo.backendspringboot.user;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import tn.ooredoo.backendspringboot.role.Role;
 
 import java.util.List;
 
@@ -19,22 +18,27 @@ public class UserController {
     public List<User> getAllUsers() {
         return userService.findAll();
     }
+
     @GetMapping("/getById")
     public User getUserById(Long id) {
         return userService.findById(id);
     }
+
     @GetMapping("/getByEmail")
     public User getUserByEmail(String email) {
         return userService.findByEmail(email);
     }
+
     @PostMapping("/save")
     public void addEmployee(String email, String firstName, String lastName, Integer role) {
-         userService.addEmployeeToDB(email, firstName, lastName, role);
+        userService.addEmployeeToDB(email, firstName, lastName, role);
     }
+
     @PutMapping("/update")
     public User updateUser(User user) {
         return userService.update(user);
     }
+
     @DeleteMapping("/delete/{id}")
     public void deleteUserById(@PathVariable Long id) {
         userService.deleteById(id);

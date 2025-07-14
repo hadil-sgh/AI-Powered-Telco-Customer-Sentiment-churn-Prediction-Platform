@@ -31,7 +31,7 @@ public class User implements UserDetails, Principal {
     //? userDetails is an interface provided by Spring Security that represents a user in the security context
     // ? Principal is a Java interface that represents an entity (user) that can be authenticated
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     private String firstname;
     private String lastname;

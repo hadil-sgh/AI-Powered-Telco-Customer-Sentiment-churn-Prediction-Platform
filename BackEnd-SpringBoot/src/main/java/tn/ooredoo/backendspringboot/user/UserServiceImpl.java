@@ -43,7 +43,7 @@ public class UserServiceImpl implements UserService {
                 .firstname(firstName)
                 .lastname(lastName)
                 .roles(List.of(role))
-                .enabled(true)
+                .enabled(false)
                 .accountLocked(false)
                 .build();
 

@@ -1,0 +1,14 @@
+ .gradient-bg {
+            background: linear-gradient(135deg, #e60000 0%, #ff4d4d 100%);
+        }
+        .input-focus:focus {
+            box-shadow: 0 0 0 3px rgba(230, 0, 0, 0.2);
+        }
+        .shake {
+            animation: shake 0.5s;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ooredoo  Registration</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+  <div class="max-w-lg w-full bg-white rounded-xl shadow-2xl overflow-hidden">
+    <!-- Header -->
+    <div class="gradient-bg text-white p-5 text-center">
+    
+    </div>
+
+    <!-- Form -->
+    <div class="p-6">
+      <form [formGroup]="RegisterForm" (ngSubmit)="onSubmit()" class="space-y-5">
+        <!-- Email -->
+        <div>
+            <div class="text-center mb-4">
+             <h1 class="text-2xl font-bold color">Agent Registration</h1>
+            </div>
+             
+          <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Ooredoo Email</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <i class="fas fa-envelope text-gray-400"></i>
+            </div>
+            <input 
+              type="email" 
+              id="email" 
+              name="email" 
+              formControlName="email"
+              required
+              class="pl-10 input-focus w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:border-red-500 transition duration-200"
+             
+              title="Please enter a valid Ooredoo email address"
+            >
+          </div>
+          <p class="mt-1 text-xs text-gray-500">Must be an ooredoo domain email</p>
+        </div>
+
+        <!-- Password -->
+        <div>
+          <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <i class="fas fa-lock text-gray-400"></i>
+            </div>
+            <input 
+              type="password" 
+              formControlName="password"
+              id="password" 
+              name="password" 
+              class="pl-10 input-focus w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:border-red-500 transition duration-200"
+            >
+          </div>
+       
+        </div>
+
+        <!-- Terms -->
+        <div class="flex items-start">
+          <div class="flex items-center h-5">
+            <input id="terms" name="terms" type="checkbox" required class="focus:ring-red-500 h-4 w-4 text-red-600 border-gray-300 rounded">
+          </div>
+          <div class="ml-3 text-sm">
+            <label for="terms" class="font-medium text-gray-700">I agree to the 
+              <a href="#" class="text-red-600 hover:text-red-800">Terms of Service</a> and 
+              <a href="#" class="text-red-600 hover:text-red-800">Privacy Policy</a>
+            </label>
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="gradient-bg w-full text-white py-2.5 px-4 rounded-lg font-semibold hover:opacity-90 transition duration-200 flex items-center justify-center">
+          <span>Register</span>
+          <i class="fas fa-arrow-right ml-2"></i>
+        </button>
+      </form>
+
+      <!-- Login -->
+      <div class="mt-5 text-center">
+        <p class="text-sm text-gray-600">
+          Already have an account? 
+          <a href="#" class="font-medium text-red-600 hover:text-red-800">Sign in</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

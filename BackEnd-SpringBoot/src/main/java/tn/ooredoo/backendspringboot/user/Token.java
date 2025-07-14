@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 public class Token {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
     private String token;
     private LocalDateTime createdAt;
