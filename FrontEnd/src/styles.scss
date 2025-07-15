@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /* Custom fonts and variables */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap");
 
 :root {
   --ooredoo-primary: #ed1c24;
@@ -15,3 +15,46 @@
 @import "ngx-toastr/toastr";
 @import "~bootstrap/dist/css/bootstrap.min.css";
 @import "~@fortawesome/fontawesome-free/css/all.min.css";
+
+/* Layout fixes for agent sidebar */
+.layout-wrapper {
+  &.layout-content-navbar {
+    .layout-container {
+      padding-left: 260px; /* Width of the sidebar */
+
+      @media (max-width: 1199.98px) {
+        padding-left: 0; /* Remove padding on mobile */
+      }
+    }
+  }
+}
+
+/* Ensure content doesn't overlap with fixed sidebar */
+.layout-page {
+  min-height: calc(100vh - 70px); /* Adjust for navbar height */
+  width: 100%;
+}
+
+/* Mobile responsiveness for sidebar */
+@media (max-width: 1199.98px) {
+  .layout-overlay {
+    &.layout-menu-toggle {
+      display: block;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease-in-out;
+
+      &.show {
+        opacity: 1;
+        visibility: visible;
+      }
+    }
+  }
+}

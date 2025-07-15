@@ -1,0 +1,123 @@
+<!-- Menu -->
+<aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+  <div class="app-brand demo">
+    <a href="index.html" class="app-brand-link">
+      <span class="app-brand-logo demo">
+        <img
+          src="assets/img/oicon.png"
+          alt="Ooredoo Logo"
+          style="width: 25px; height: auto"
+        />
+      </span>
+      <span
+        class="app-brand-text demo menu-text fw-bolder ms-2"
+        style="color: #ff3e1d"
+        >Ooredoo</span
+      >
+    </a>
+
+    <a
+      href="javascript:void(0);"
+      class="layout-menu-toggle menu-link text-large ms-auto d-block d-xl-none"
+    >
+      <i class="bx bx-chevron-left bx-sm align-middle"></i>
+    </a>
+  </div>
+
+  <div class="menu-inner-shadow"></div>
+
+  <ul class="menu-inner py-1 ps" data-ps-id="sidebar-menu">
+    <!-- Dashboard -->
+    <li class="menu-item mb-3">
+      <a
+        routerLink="/Agent/dashboard"
+        class="menu-link"
+        routerLinkActive="active"
+      >
+        <span>
+          <img
+            src="/assets/img/dashboard.png"
+            height="20"
+            width="15"
+            alt="Dashboard Icon"
+            class="menu-icon"
+          />
+        </span>
+        <div data-i18n="Analytics">Dashboard</div>
+      </a>
+    </li>
+
+    <!-- Agent Features -->
+    <li class="menu-item mb-3">
+      <a
+        routerLink="/Agent/allCalls"
+        class="menu-link"
+        routerLinkActive="active"
+      >
+        <span>
+          <img
+            src="/assets/img/phone.png"
+            height="20"
+            width="20"
+            alt="Dashboard Icon"
+            class="menu-icon"
+          />
+        </span>
+        <div data-i18n="Call Management">Call Management</div>
+      </a>
+    </li>
+
+    <li class="menu-item mb-3">
+      <a
+        routerLink="/Agent/Performance"
+        class="menu-link"
+        routerLinkActive="active"
+      >
+        <span>
+          <img
+            src="/assets/img/performance.png"
+            height="20"
+            width="20"
+            alt="Performance Icon"
+            class="menu-icon"
+          />
+        </span>
+        <div data-i18n="Performance">Performance</div>
+      </a>
+    </li>
+
+    <li class="menu-item mb-3">
+      <a
+        routerLink="/Agent/postCall"
+        class="menu-link"
+        routerLinkActive="active"
+      >
+        <span>
+          <img
+            src="/assets/img/call_analysis.png"
+            height="20"
+            width="20"
+            alt="Dashboard Icon"
+            class="menu-icon"
+          />
+        </span>
+        <div data-i18n="Post Call">Post Call Analysis</div>
+      </a>
+    </li>
+
+    <li class="menu-item mb-3">
+      <a routerLink="/Agent/notes" class="menu-link" routerLinkActive="active">
+        <span>
+          <img
+            src="/assets/img/notes.png"
+            height="20"
+            width="20"
+            alt="Dashboard Icon"
+            class="menu-icon"
+          />
+        </span>
+        <div data-i18n="Post Call">Notes Management</div>
+      </a>
+    </li>
+  </ul>
+</aside>

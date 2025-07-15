@@ -1,0 +1,652 @@
+<!-- Agent Dashboard -->
+<div class="container-xxl flex-grow-1 container-p-y">
+  <div class="row">
+    <!-- Welcome Banner -->
+    <div class="col-lg-8 mb-4 order-0">
+      <div class="card">
+        <div class="d-flex align-items-end row">
+          <div class="col-sm-7">
+            <div class="card-body">
+              <h5 class="card-title text-primary">
+                {{ getGreeting() }}, Sarah! 🎉
+              </h5>
+              <p class="mb-4">
+                You have
+                <span class="fw-bold text-danger">2 coaching tips</span> from
+                yesterday to review. <br /><small class="text-muted"
+                  >8:05 AM - Pre-Call Preparation</small
+                >
+              </p>
+              <a href="javascript:;" class="btn btn-sm btn-outline-primary me-2"
+                >View Coaching Tips</a
+              >
+              <a href="javascript:;" class="btn btn-sm btn-primary"
+                >Start Day</a
+              >
+            </div>
+          </div>
+          <div class="col-sm-5 text-center text-sm-left">
+            <div class="card-body pb-0 px-0 px-md-4">
+              <img
+                src="assets/img/logoOoredoo.png"
+                height="80"
+                alt="Ooredoo Agent"
+                class="mb-3"
+              />
+              <div class="badge bg-label-primary">
+                Agent ID: {{ agentData.id }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- System Status & Goals -->
+    <div class="col-lg-4 col-md-4 order-1">
+      <div class="row">
+        <div class="col-lg-6 col-md-12 col-6 mb-4">
+          <div class="card">
+            <div class="card-body">
+              <div
+                class="card-title d-flex align-items-start justify-content-between"
+              >
+                <div class="avatar flex-shrink-0">
+                  <span class="avatar-initial rounded bg-label-success">
+                    <i class="bx bx-phone"></i>
+                  </span>
+                </div>
+                <div class="dropdown">
+                  <button
+                    class="btn p-0"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                  >
+                    <i class="bx bx-dots-vertical-rounded"></i>
+                  </button>
+                  <div class="dropdown-menu dropdown-menu-end">
+                    <a class="dropdown-item" href="javascript:void(0);"
+                      >View Details</a
+                    >
+                    <a class="dropdown-item" href="javascript:void(0);"
+                      >Refresh</a
+                    >
+                  </div>
+                </div>
+              </div>
+              <span class="fw-semibold d-block mb-1">Today's Calls</span>
+              <h3 class="card-title mb-2">
+                {{ agentData.completedCalls }}/{{ agentData.todayTarget }}
+              </h3>
+              <small class="text-success fw-semibold">
+                <i class="bx bx-up-arrow-alt"></i>
+                {{
+                  (
+                    (agentData.completedCalls / agentData.todayTarget) *
+                    100
+                  ).toFixed(0)
+                }}% Complete
+              </small>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6 col-md-12 col-6 mb-4">
+          <div class="card">
+            <div class="card-body">
+              <div
+                class="card-title d-flex align-items-start justify-content-between"
+              >
+                <div class="avatar flex-shrink-0">
+                  <span class="avatar-initial rounded bg-label-info">
+                    <i class="bx bx-smile"></i>
+                  </span>
+                </div>
+                <div class="dropdown">
+                  <button
+                    class="btn p-0"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                  >
+                    <i class="bx bx-dots-vertical-rounded"></i>
+                  </button>
+                  <div class="dropdown-menu dropdown-menu-end">
+                    <a class="dropdown-item" href="javascript:void(0);"
+                      >View Analysis</a
+                    >
+                    <a class="dropdown-item" href="javascript:void(0);"
+                      >Export</a
+                    >
+                  </div>
+                </div>
+              </div>
+              <span>Sentiment Score</span>
+              <h3 class="card-title text-nowrap mb-1">
+                {{ agentData.currentSentiment }}%
+              </h3>
+              <small
+                [ngClass]="
+                  'text-' +
+                  getSentimentColor(agentData.currentSentiment) +
+                  ' fw-semibold'
+                "
+              >
+                <i class="bx bx-up-arrow-alt"></i> Target:
+                {{ agentData.sentimentTarget }}%
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Performance Chart -->
+    <div class="col-12 col-lg-8 order-2 order-md-3 order-lg-2 mb-4">
+      <div class="card">
+        <div class="row row-bordered g-0">
+          <div class="col-md-8">
+            <h5 class="card-header m-0 me-2 pb-3">
+              Weekly Performance Overview
+            </h5>
+            <div class="px-3 pb-3" style="height: 480px">
+              <!-- Chart.js Canvas -->
+              <div class="chart-wrapper" style="position: relative; height: 440px;">
+                <canvas #performanceChart></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card-body">
+              <div class="text-center">
+                <div class="dropdown">
+                  <button
+                    class="btn btn-sm btn-outline-primary dropdown-toggle"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                  >
+                    This Week
+                  </button>
+                  <div class="dropdown-menu dropdown-menu-end">
+                    <a class="dropdown-item" href="javascript:void(0);"
+                      >Last Week</a
+                    >
+                    <a class="dropdown-item" href="javascript:void(0);"
+                      >Last Month</a
+                    >
+                    <a class="dropdown-item" href="javascript:void(0);"
+                      >Last Quarter</a
+                    >
+                  </div>
+                </div>
+              </div>
+              <div class="mt-3">
+                <h6 class="text-primary mb-3">Daily Sentiment Breakdown</h6>
+                <div
+                  class="mb-3"
+                  *ngFor="let day of weeklyPerformance.days; let i = index"
+                >
+                  <div
+                    class="d-flex justify-content-between align-items-center mb-1"
+                  >
+                    <span>{{ day }}</span>
+                    <span
+                      [ngClass]="
+                        'badge bg-' +
+                        getSentimentColor(weeklyPerformance.sentimentScores[i])
+                      "
+                    >
+                      {{ weeklyPerformance.sentimentScores[i] }}%
+                    </span>
+                  </div>
+                  <div class="progress" style="height: 6px">
+                    <div
+                      [ngClass]="
+                        'progress-bar bg-' +
+                        getSentimentColor(weeklyPerformance.sentimentScores[i])
+                      "
+                      [style.width.%]="weeklyPerformance.sentimentScores[i]"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+              <div class="text-center fw-semibold pt-3 mb-2">
+                86% Weekly Average
+              </div>
+              <div
+                class="d-flex px-xxl-4 px-lg-2 p-4 gap-xxl-3 gap-lg-1 gap-3 justify-content-between"
+              >
+                <div class="d-flex">
+                  <div class="me-2">
+                    <span class="badge bg-label-primary p-2"
+                      ><i class="bx bx-phone text-primary"></i
+                    ></span>
+                  </div>
+                  <div class="d-flex flex-column">
+                    <small>This Week</small>
+                    <h6 class="mb-0">49 Calls</h6>
+                  </div>
+                </div>
+                <div class="d-flex">
+                  <div class="me-2">
+                    <span class="badge bg-label-info p-2"
+                      ><i class="bx bx-smile text-info"></i
+                    ></span>
+                  </div>
+                  <div class="d-flex flex-column">
+                    <small>Avg. Sentiment</small>
+                    <h6 class="mb-0">86%</h6>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- System Status & Stats -->
+    <div class="col-12 col-md-8 col-lg-4 order-3 order-md-2">
+      <div class="row">
+        <div class="col-6 mb-4">
+          <div class="card">
+            <div class="card-body">
+              <div
+                class="card-title d-flex align-items-start justify-content-between"
+              >
+                <div class="avatar flex-shrink-0">
+                  <span class="avatar-initial rounded bg-label-warning">
+                    <i class="bx bx-server"></i>
+                  </span>
+                </div>
+                <div class="dropdown">
+                  <button
+                    class="btn p-0"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                  >
+                    <i class="bx bx-dots-vertical-rounded"></i>
+                  </button>
+                  <div class="dropdown-menu dropdown-menu-end">
+                    <a class="dropdown-item" href="javascript:void(0);"
+                      >System Health</a
+                    >
+                    <a class="dropdown-item" href="javascript:void(0);"
+                      >Refresh</a
+                    >
+                  </div>
+                </div>
+              </div>
+              <span class="d-block mb-1">System Status</span>
+              <h3 class="card-title text-nowrap mb-2">
+                <span class="badge bg-success">Online</span>
+              </h3>
+              <small class="text-success fw-semibold">
+                <i class="bx bx-user"></i> 8 agents active
+              </small>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 mb-4">
+          <div class="card">
+            <div class="card-body">
+              <div
+                class="card-title d-flex align-items-start justify-content-between"
+              >
+                <div class="avatar flex-shrink-0">
+                  <span class="avatar-initial rounded bg-label-danger">
+                    <i class="bx bx-trending-up"></i>
+                  </span>
+                </div>
+                <div class="dropdown">
+                  <button
+                    class="btn p-0"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                  >
+                    <i class="bx bx-dots-vertical-rounded"></i>
+                  </button>
+                  <div class="dropdown-menu">
+                    <a class="dropdown-item" href="javascript:void(0);"
+                      >View Details</a
+                    >
+                    <a class="dropdown-item" href="javascript:void(0);"
+                      >Compare</a
+                    >
+                  </div>
+                </div>
+              </div>
+              <span class="fw-semibold d-block mb-1">Team Rank</span>
+              <h3 class="card-title mb-2">#3</h3>
+              <small class="text-success fw-semibold">
+                <i class="bx bx-up-arrow-alt"></i> +2 positions
+              </small>
+            </div>
+          </div>
+        </div>
+        <!-- Training Alert Card -->
+        <div class="col-12 mb-4">
+          <div class="card">
+            <div class="card-body">
+              <div
+                class="d-flex justify-content-between flex-sm-row flex-column gap-3"
+              >
+                <div
+                  class="d-flex flex-sm-column flex-row align-items-start justify-content-between"
+                >
+                  <div class="card-title">
+                    <h5 class="text-nowrap mb-2">Training Center</h5>
+                    <span class="badge bg-label-warning rounded-pill"
+                      >2 New Tips</span
+                    >
+                  </div>
+                  <div class="mt-sm-auto">
+                    <small class="text-success text-nowrap fw-semibold">
+                      <i class="bx bx-chevron-up"></i> 5 min read
+                    </small>
+                    <h6 class="mb-0">Objection Handling</h6>
+                  </div>
+                </div>
+                <div class="text-center">
+                  <i
+                    class="bx bx-graduation-cap text-warning"
+                    style="font-size: 3rem"
+                  ></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Second Row -->
+  <div class="row">
+    <!-- Team Leaderboard -->
+    <div class="col-md-6 col-lg-4 col-xl-4 order-0 mb-4">
+      <div class="card h-100">
+        <div
+          class="card-header d-flex align-items-center justify-content-between pb-0"
+        >
+          <div class="card-title mb-0">
+            <h5 class="m-0 me-2">Team Leaderboard</h5>
+            <small class="text-muted">This Week Performance</small>
+          </div>
+          <div class="dropdown">
+            <button
+              class="btn p-0"
+              type="button"
+              data-bs-toggle="dropdown"
+              aria-haspopup="true"
+              aria-expanded="false"
+            >
+              <i class="bx bx-dots-vertical-rounded"></i>
+            </button>
+            <div class="dropdown-menu dropdown-menu-end">
+              <a class="dropdown-item" href="javascript:void(0);">View All</a>
+              <a class="dropdown-item" href="javascript:void(0);">Export</a>
+              <a class="dropdown-item" href="javascript:void(0);">Refresh</a>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="d-flex flex-column align-items-center gap-1">
+              <h2 class="mb-2">89%</h2>
+              <span>Your Score</span>
+            </div>
+            <div class="position-relative">
+              <div class="progress-circle" style="width: 80px; height: 80px">
+                <svg viewBox="0 0 36 36" class="circular-chart">
+                  <path
+                    class="circle-bg"
+                    d="M18 2.0845
+                      a 15.9155 15.9155 0 0 1 0 31.831
+                      a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                  <path
+                    class="circle"
+                    stroke-dasharray="89, 100"
+                    d="M18 2.0845
+                      a 15.9155 15.9155 0 0 1 0 31.831
+                      a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <ul class="p-0 m-0">
+            <li
+              class="d-flex mb-4 pb-1"
+              *ngFor="let member of teamLeaderboard; let i = index"
+            >
+              <div class="avatar flex-shrink-0 me-3">
+                <span
+                  [ngClass]="
+                    'avatar-initial rounded ' +
+                    (member.name.includes('Sarah')
+                      ? 'bg-primary'
+                      : 'bg-label-secondary')
+                  "
+                >
+                  <i
+                    [ngClass]="
+                      member.rank === 1
+                        ? 'bx bx-trophy text-warning'
+                        : 'bx bx-user'
+                    "
+                  ></i>
+                </span>
+              </div>
+              <div
+                class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2"
+              >
+                <div class="me-2">
+                  <h6
+                    class="mb-0"
+                    [ngClass]="
+                      member.name.includes('Sarah')
+                        ? 'text-primary fw-bold'
+                        : ''
+                    "
+                  >
+                    {{ member.name }}
+                  </h6>
+                  <small class="text-muted">Rank #{{ member.rank }}</small>
+                </div>
+                <div class="user-progress">
+                  <span
+                    [ngClass]="'badge bg-' + getSentimentColor(member.score)"
+                    >{{ member.score }}%</span
+                  >
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Incoming Calls Queue -->
+    <div class="col-md-6 col-lg-4 order-1 mb-4">
+      <div class="card h-100">
+        <div
+          class="card-header d-flex align-items-center justify-content-between"
+        >
+          <h5 class="card-title m-0 me-2">Incoming Calls</h5>
+          <div class="d-flex align-items-center">
+            <span class="badge bg-danger me-2"
+              >{{ incomingCalls.length }} waiting</span
+            >
+            <div class="dropdown">
+              <button
+                class="btn p-0"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                <i class="bx bx-dots-vertical-rounded"></i>
+              </button>
+              <div class="dropdown-menu dropdown-menu-end">
+                <a class="dropdown-item" href="javascript:void(0);"
+                  >Refresh Queue</a
+                >
+                <a class="dropdown-item" href="javascript:void(0);"
+                  >Call Settings</a
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <ul class="p-0 m-0">
+            <li class="d-flex mb-4 pb-1" *ngFor="let call of incomingCalls">
+              <div class="avatar flex-shrink-0 me-3">
+                <span
+                  [ngClass]="
+                    'avatar-initial rounded bg-label-' + getTypeColor(call.type)
+                  "
+                >
+                  <i class="bx bx-phone"></i>
+                </span>
+              </div>
+              <div
+                class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2"
+              >
+                <div class="me-2">
+                  <h6 class="mb-0">{{ call.customerName }}</h6>
+                  <small class="text-muted">{{ call.phone }}</small>
+                  <div class="mt-1">
+                    <span
+                      [ngClass]="
+                        'badge bg-' + getTypeColor(call.type) + ' me-1'
+                      "
+                      >{{ call.type }}</span
+                    >
+                    <span
+                      [ngClass]="'badge bg-' + getPriorityColor(call.priority)"
+                      >{{ call.priority }}</span
+                    >
+                  </div>
+                </div>
+                <div class="text-end">
+                  <small class="text-muted d-block">{{ call.waitTime }}</small>
+                  <button
+                    class="btn btn-primary btn-sm mt-1"
+                    (click)="takeCall(call.customerName)"
+                  >
+                    Take Call
+                  </button>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions & Tips -->
+    <div class="col-md-6 col-lg-4 order-2 mb-4">
+      <div class="card h-100">
+        <div class="card-header">
+          <ul class="nav nav-pills" role="tablist">
+            <li class="nav-item">
+              <button
+                type="button"
+                class="nav-link active"
+                role="tab"
+                data-bs-toggle="tab"
+                data-bs-target="#navs-tips"
+                aria-controls="navs-tips"
+                aria-selected="true"
+              >
+                Quick Tips
+              </button>
+            </li>
+            <li class="nav-item">
+              <button
+                type="button"
+                class="nav-link"
+                role="tab"
+                data-bs-toggle="tab"
+                data-bs-target="#navs-actions"
+                aria-controls="navs-actions"
+                aria-selected="false"
+              >
+                Actions
+              </button>
+            </li>
+          </ul>
+        </div>
+        <div class="card-body px-0">
+          <div class="tab-content p-0">
+            <div
+              class="tab-pane fade show active"
+              id="navs-tips"
+              role="tabpanel"
+            >
+              <div class="p-4">
+                <div class="alert alert-primary d-flex" role="alert">
+                  <span
+                    class="badge badge-center rounded-pill bg-primary border-label-primary p-3 me-2"
+                  >
+                    <i class="bx bx-bulb fs-6"></i>
+                  </span>
+                  <div>
+                    <h6 class="alert-heading mb-1">Mirror Customer Energy</h6>
+                    <p class="mb-0">
+                      Match your customer's energy level and speaking pace for
+                      better rapport building.
+                    </p>
+                  </div>
+                </div>
+                <div class="alert alert-info d-flex" role="alert">
+                  <span
+                    class="badge badge-center rounded-pill bg-info border-label-info p-3 me-2"
+                  >
+                    <i class="bx bx-star fs-6"></i>
+                  </span>
+                  <div>
+                    <h6 class="alert-heading mb-1">Active Listening</h6>
+                    <p class="mb-0">
+                      Use phrases like "I understand" and "Let me help you with
+                      that" to show engagement.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="tab-pane fade" id="navs-actions" role="tabpanel">
+              <div class="p-4">
+                <div class="d-grid gap-2">
+                  <button class="btn btn-primary">
+                    <i class="bx bx-phone me-2"></i>Manual Dial
+                  </button>
+                  <button class="btn btn-outline-primary">
+                    <i class="bx bx-pause me-2"></i>Break Time
+                  </button>
+                  <button class="btn btn-outline-info">
+                    <i class="bx bx-help-circle me-2"></i>Get Support
+                  </button>
+                  <button class="btn btn-outline-success">
+                    <i class="bx bx-book me-2"></i>Knowledge Base
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
