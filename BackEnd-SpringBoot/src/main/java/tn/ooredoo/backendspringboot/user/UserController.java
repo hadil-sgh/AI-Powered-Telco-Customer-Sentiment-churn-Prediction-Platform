@@ -43,5 +43,9 @@ public class UserController {
     public void deleteUserById(@PathVariable Long id) {
         userService.deleteById(id);
     }
+    @GetMapping("/getOnlineAgents")
+    public List<User> getOnlineAgents() {
+        return userService.findOnlineAgents();
+    }
 
 }

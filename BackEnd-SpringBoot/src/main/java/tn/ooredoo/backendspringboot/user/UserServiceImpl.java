@@ -10,6 +10,7 @@ import tn.ooredoo.backendspringboot.role.RoleRepository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -91,5 +92,17 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<User> findAll() {
         return userRepository.findAll();
+    }
+
+    @Override
+    public List<User> findOnlineAgents() {
+        return userRepository.findByOnlineTrue()
+                .stream()
+                .filter(
+                        user -> user.getRoles()
+                                .stream()
+                                .anyMatch(role -> role.getName().equals("ROLE_AGENT"))
+                )
+                .collect(Collectors.toList());
     }
 }

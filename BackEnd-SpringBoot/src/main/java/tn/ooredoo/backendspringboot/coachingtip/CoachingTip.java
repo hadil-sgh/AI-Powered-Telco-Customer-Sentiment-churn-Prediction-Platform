@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
-import tn.ooredoo.backendspringboot.call_transcript.CallRecord;
 
 import java.time.LocalDateTime;
 
@@ -17,9 +16,6 @@ public class CoachingTip {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "callId")
-    private CallRecord call;
 
     @Column(nullable = false)
     private String title;
