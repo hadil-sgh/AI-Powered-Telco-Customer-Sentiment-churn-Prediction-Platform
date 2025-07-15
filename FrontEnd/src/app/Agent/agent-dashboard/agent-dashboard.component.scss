@@ -703,11 +703,11 @@ small,
   border-radius: 0.5rem;
   padding: 1.5rem;
   position: relative;
-  
+
   canvas {
     background: transparent !important;
   }
-  
+
   // Enhance Chart.js tooltip styling
   .chartjs-tooltip {
     opacity: 1;
@@ -751,7 +751,7 @@ small,
   .chart-wrapper {
     padding: 0.75rem;
     height: 360px !important;
-    
+
     canvas {
       height: 320px !important;
     }
@@ -762,7 +762,7 @@ small,
   .chart-wrapper {
     padding: 0.5rem;
     height: 320px !important;
-    
+
     canvas {
       height: 280px !important;
     }
