@@ -21,7 +21,7 @@ import { AgentAllTemplateComponent } from './Agent/agent-all-template/agent-all-
 import { AgentSidebarComponent } from './Agent/agent-sidebar/agent-sidebar.component';
 import { AllCallsComponent } from './Agent/all-calls/all-calls.component';
 import { NotesComponent } from './Agent/notes/notes.component';
-
+import { JwtModule } from "@auth0/angular-jwt";
 @NgModule({
   declarations: [
     AppComponent,
@@ -43,7 +43,17 @@ import { NotesComponent } from './Agent/notes/notes.component';
     NotesComponent,
   ],
   imports: [
+    
     BrowserModule,
+        JwtModule.forRoot({
+      config: {
+        tokenGetter: () => {
+          return localStorage.getItem("token");
+        },
+        allowedDomains: ["localhost:8088"], 
+        disallowedRoutes: [],
+      },
+    }), 
     CommonModule,
     AppRoutingModule,
     HttpClientModule,

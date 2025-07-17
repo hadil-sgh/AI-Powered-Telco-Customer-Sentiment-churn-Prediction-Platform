@@ -40,5 +40,60 @@ public class CoachingTipController {
         coachingTipService.deleteCoachingTip(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/assign")
+    public ResponseEntity<CoachingTip> assignTip(
+            @RequestBody CoachingTip tip,
+            @RequestParam Long userId,
+            @RequestParam Long managerId) {
+        return ResponseEntity.ok(coachingTipService.assignCoachingTipToUser(tip, userId, managerId));
+    }
+
+    @PostMapping("/create-and-assign")
+    public ResponseEntity<CoachingTip> createAndAssignTip(
+            @RequestParam String title,
+            @RequestParam String message,
+            @RequestParam TipType type,
+            @RequestParam Long userId,
+            @RequestParam Long managerId) {
+        return ResponseEntity.ok(
+                coachingTipService.createAndAssignCoachingTip(title, message, type, userId, managerId)
+        );
+    }
+
+    @PutMapping("/{tipId}/acknowledge")
+    public ResponseEntity<CoachingTip> acknowledge(@PathVariable Long tipId) {
+        return ResponseEntity.ok(coachingTipService.acknowledgeCoachingTip(tipId));
+    }
+
+    @PutMapping("/{tipId}/helpful")
+    public ResponseEntity<CoachingTip> markHelpful(
+            @PathVariable Long tipId,
+            @RequestParam boolean helpful) {
+        return ResponseEntity.ok(coachingTipService.markTipAsHelpful(tipId, helpful));
+    }
+
+    @PutMapping("/{tipId}/shown")
+    public ResponseEntity<CoachingTip> markShown(@PathVariable Long tipId) {
+        return ResponseEntity.ok(coachingTipService.markTipAsShown(tipId));
+    }
+
+    @GetMapping("/user/{userId}/unacknowledged")
+    public ResponseEntity<List<CoachingTip>> getUnacknowledged(@PathVariable Long userId) {
+        return ResponseEntity.ok(coachingTipService.getUnacknowledgedTipsByUserId(userId));
+    }
+
+    @GetMapping("/user/{userId}/recent")
+    public ResponseEntity<List<CoachingTip>> getRecentTips(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "7") int days) {
+        return ResponseEntity.ok(coachingTipService.getRecentTipsByUserId(userId, days));
+    }
+
+    @GetMapping("/getTipsByUserId/{userId}")
+    public List<CoachingTip> getTipsByUserId(@PathVariable Long userId) {
+        return coachingTipService.getCoachingTipsByUserId(userId);
+    }
 }
+
 

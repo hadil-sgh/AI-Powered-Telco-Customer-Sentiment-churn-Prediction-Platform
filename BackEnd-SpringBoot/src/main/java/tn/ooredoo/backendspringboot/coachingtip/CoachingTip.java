@@ -1,9 +1,8 @@
 package tn.ooredoo.backendspringboot.coachingtip;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import tn.ooredoo.backendspringboot.user.User;
 
 import java.time.LocalDateTime;
 
@@ -11,6 +10,8 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 public class CoachingTip {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -25,6 +26,13 @@ public class CoachingTip {
 
     @Enumerated(EnumType.STRING)
     private TipType type;
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    @ManyToOne
+    @JoinColumn(name = "manager_id")
+    private User manager;
 
     @Builder.Default
     private Boolean acknowledged = false;
@@ -34,5 +42,39 @@ public class CoachingTip {
 
     private LocalDateTime shownAt;
 
+    @Column(name = "acknowledged_at")
+    private LocalDateTime acknowledgedAt;
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    // Helper method to mark as acknowledged
+    public void markAsAcknowledged() {
+        this.acknowledged = true;
+        this.acknowledgedAt = LocalDateTime.now();
+    }
+
+    // Helper method to mark as helpful
+    public void markAsHelpful(boolean helpful) {
+        this.helpful = helpful;
+    }
+
+    // Helper method to mark as shown
+    public void markAsShown() {
+        this.shownAt = LocalDateTime.now();
+    }
 
 }

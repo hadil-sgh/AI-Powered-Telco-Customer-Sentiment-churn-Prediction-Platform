@@ -50,13 +50,8 @@ export class LoginComponent implements OnInit {
     this.authService.authenticate(this.loginForm.value).subscribe({
       next: (res) => {
         localStorage.setItem('token', res.token);
-        Swal.fire({
-          icon: 'success',
-          title: 'Login successful!',
-          timer: 1500,
-          showConfirmButton: false
-        });
-        this.router.navigate(['/Agent']);
+ 
+        this.router.navigate(['/Agent/dashboard']);
       },
       error: (err) => {
         Swal.fire({

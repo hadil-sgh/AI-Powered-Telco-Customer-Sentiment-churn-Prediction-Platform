@@ -9,10 +9,12 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import tn.ooredoo.backendspringboot.role.Role;
+import tn.ooredoo.backendspringboot.team.Team;
 
 import java.security.Principal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -45,7 +47,11 @@ public class User implements UserDetails, Principal {
 
 
     @ManyToMany(fetch = FetchType.EAGER)
-    private List<Role> roles;
+    private List<Role> roles = new ArrayList<>();
+
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    private Team team;
 
     @CreatedDate
     @Column(updatable = false, nullable = false)
