@@ -110,21 +110,61 @@ public class AudioPipelineService {
         try {
             log.debug("Received from pipeline: {}", message);
 
-            // Try to parse as AudioAnalysisResponse
-            AudioAnalysisResponse result = objectMapper.readValue(message, AudioAnalysisResponse.class);
+            // Try to parse as AudioAnalysisRequest (from Python pipeline)
+            AudioAnalysisRequest result = objectMapper.readValue(message, AudioAnalysisRequest.class);
 
             // Broadcast to all subscribers
             subscribers.forEach((sessionId, callback) -> {
                 try {
-                    callback.accept(sessionId, result);
+                    // Convert to AudioAnalysisResponse for callback
+                    AudioAnalysisResponse response = convertToResponse(result);
+                    callback.accept(sessionId, response);
                 } catch (Exception e) {
                     log.error("Error calling subscriber callback for session {}: {}", sessionId, e.getMessage());
                 }
             });
 
         } catch (Exception e) {
-            log.debug("Message is not a valid AudioAnalysisResponse, ignoring: {}", message);
+            log.debug("Message is not a valid AudioAnalysisRequest, ignoring: {}", message);
         }
+    }
+
+    private AudioAnalysisResponse convertToResponse(AudioAnalysisRequest request) {
+        // Create sentiment entity
+        TranscriptSentiment sentiment = TranscriptSentiment.builder()
+                .text(request.getSentiment().getText())
+                .voice(request.getSentiment().getVoice())
+                .score(request.getSentiment().getScore())
+                .build();
+
+        // Create voice features entity
+        VoiceFeatures voiceFeatures = VoiceFeatures.builder()
+                .pitch(request.getVoiceFeatures().getPitch())
+                .energy(request.getVoiceFeatures().getEnergy())
+                .rate(request.getVoiceFeatures().getRate())
+                .build();
+
+        // Create main analysis response
+        return AudioAnalysisResponse.builder()
+                .timestamp(request.getTimestamp())
+                .speaker(request.getSpeaker())
+                .text(request.getText())
+                .sentiment(sentiment)
+                .voiceFeatures(voiceFeatures)
+                .sessionId(request.getSessionId())
+                .analysisType(request.getAnalysisType())
+                .build();
+    }
+
+    public PipelineStatus getStatus() {
+        return PipelineStatus.builder()
+                .status(isConnected ? "CONNECTED" : "DISCONNECTED")
+                .isConnected(isConnected)
+                .activeConnections(subscribers.size())
+                .lastActivity(java.time.LocalDateTime.now().toString())
+                .componentsReady(isConnected)
+                .audioCaptureActive(isConnected)
+                .build();
     }
 
     private void sendHttpRequest(String endpoint, String method, String body) {
