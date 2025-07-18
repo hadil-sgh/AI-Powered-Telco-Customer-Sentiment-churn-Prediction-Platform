@@ -16,6 +16,12 @@ public interface CoachingTipRepository extends JpaRepository<CoachingTip, Long> 
     List<CoachingTip> findByUser_IdAndAcknowledgedFalse(Long userId);
 
     List<CoachingTip> findByUser_IdAndCreatedAtAfter(Long userId, LocalDateTime since);
+    List<CoachingTip> findByUserEmail(String email);
+
+    List<CoachingTip> findByUserEmailAndAcknowledgedFalse(String email);
+
+    List<CoachingTip> findByUserEmailAndCreatedAtAfter(String email, LocalDateTime date);
+
 
 
 }

@@ -2,6 +2,7 @@ package tn.ooredoo.backendspringboot.coachingtip;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import tn.ooredoo.backendspringboot.dailystats.DailyStatsService;
 import tn.ooredoo.backendspringboot.user.User;
 import tn.ooredoo.backendspringboot.user.UserService;
 
@@ -15,6 +16,7 @@ public class CoachingTipServiceImpl implements CoachingTipService {
 
     private final  CoachingTipRepository coachingTipRepository;
     private final  UserService userService;
+    private final DailyStatsService dailyStatsService;
 
     @Override
     public CoachingTip createCoachingTip(CoachingTip coachingTip) {
@@ -111,6 +113,7 @@ public class CoachingTipServiceImpl implements CoachingTipService {
         if (tipOpt.isPresent()) {
             CoachingTip tip = tipOpt.get();
             tip.markAsHelpful(helpful);
+
             return coachingTipRepository.save(tip);
         }
         throw new IllegalArgumentException("Coaching tip not found with ID: " + tipId);
@@ -137,5 +140,19 @@ public class CoachingTipServiceImpl implements CoachingTipService {
         LocalDateTime since = LocalDateTime.now().minusDays(days);
         return coachingTipRepository.findByUser_IdAndCreatedAtAfter(userId, since);
     }
+    @Override
+    public List<CoachingTip> getCoachingTipsByUserEmail(String email) {
+        return coachingTipRepository.findByUserEmail(email);
+    }
+    @Override
+    public List<CoachingTip> getUnacknowledgedTipsByUserEmail(String email) {
+        return coachingTipRepository.findByUserEmailAndAcknowledgedFalse(email);
+    }
+    @Override
+    public List<CoachingTip> getRecentTipsByUserEmail(String email, int days) {
+        LocalDateTime cutoffDate = LocalDateTime.now().minusDays(days);
+        return coachingTipRepository.findByUserEmailAndCreatedAtAfter(email, cutoffDate);
+    }
+
 }
 

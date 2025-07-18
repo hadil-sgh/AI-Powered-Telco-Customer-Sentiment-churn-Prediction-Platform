@@ -26,7 +26,12 @@ public class AudioAnalysisResponse {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "voicefeatures_id")
     private VoiceFeatures voiceFeatures;
+    
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "call_record_id")
     private CallRecord callRecord;
+    
+    // Additional fields for real-time processing
+    private String sessionId;
+    private String analysisType;
 }

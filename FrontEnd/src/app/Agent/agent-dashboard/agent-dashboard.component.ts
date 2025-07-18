@@ -1,11 +1,20 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ViewChild,
+  ElementRef,
+  AfterViewInit,
+} from '@angular/core';
 import {
   Chart,
   ChartConfiguration,
   ChartData,
   ChartOptions,
-  registerables
+  registerables,
 } from 'chart.js';
+import { TipsService } from '../../services/tips.service';
+import { TokenService } from '../../services/token.service';
+import { CoachingTip } from '../../models/coaching-tip';
 
 // Register Chart.js components
 Chart.register(...registerables);
@@ -18,8 +27,16 @@ Chart.register(...registerables);
 export class AgentDashboardComponent implements OnInit, AfterViewInit {
   @ViewChild('performanceChart', { static: false })
   performanceChart!: ElementRef;
-  
+
   private chart: Chart | undefined;
+
+  // Coaching tips data
+  coachingTips: CoachingTip[] = [];
+  unacknowledgedTips: CoachingTip[] = [];
+  recentTips: CoachingTip[] = [];
+  currentUserId!: number;
+  currentUserEmail: string = '';
+  showAllTips: boolean = false;
 
   // Agent data
   agentData = {
@@ -71,11 +88,36 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
     { rank: 4, name: 'Omar S.', score: 85 },
   ];
 
-  constructor() {
+  constructor(
+    private tipsService: TipsService,
+    private tokenService: TokenService
+  ) {
     // Chart.js will be initialized after view init
   }
 
   ngOnInit(): void {
+    // Get current user email from token (the sub field contains email, not numeric ID)
+    const userEmailFromToken = this.tokenService.getUserIdFromToken();
+    const userFullName = this.tokenService.getFullNameFromToken();
+
+    if (userEmailFromToken) {
+      this.currentUserEmail = userEmailFromToken;
+      console.log('Current user email from token:', this.currentUserEmail);
+
+      // Update agent data with real user information
+      if (userFullName) {
+        this.agentData.name = userFullName.split(' ')[0]; // Use first name
+        console.log('Agent name updated to:', this.agentData.name);
+      }
+
+      // Load coaching tips using email
+      this.loadCoachingTips();
+    } else {
+      console.error('No user email found in token');
+      // Handle case where no token or invalid token
+      // You might want to redirect to login page
+    }
+
     // Initialize component data
     this.updateDashboardData();
   }
@@ -89,7 +131,7 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
     if (!this.performanceChart) return;
 
     const ctx = this.performanceChart.nativeElement.getContext('2d');
-    
+
     const chartData: ChartData = {
       labels: this.weeklyPerformance.days,
       datasets: [
@@ -101,7 +143,7 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
           borderColor: 'rgba(255, 99, 132, 0.8)',
           borderWidth: 2,
           yAxisID: 'y1',
-          order: 2
+          order: 2,
         },
         {
           type: 'line',
@@ -118,9 +160,9 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
           pointRadius: 7,
           pointHoverRadius: 10,
           yAxisID: 'y',
-          order: 1
-        }
-      ]
+          order: 1,
+        },
+      ],
     };
 
     const chartOptions: ChartOptions = {
@@ -139,12 +181,12 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
             color: '#697a8d',
             font: {
               size: 12,
-              weight: 'bold'
-            }
-          }
+              weight: 'bold',
+            },
+          },
         },
         title: {
-          display: false
+          display: false,
         },
         tooltip: {
           backgroundColor: 'rgba(255, 255, 255, 0.95)',
@@ -162,22 +204,22 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
                 return `${label}: ${value}%`;
               }
               return `${label}: ${value} calls`;
-            }
-          }
-        }
+            },
+          },
+        },
       },
       scales: {
         x: {
           grid: {
-            display: false
+            display: false,
           },
           ticks: {
             color: '#697a8d',
             font: {
               size: 11,
-              weight: 'normal'
-            }
-          }
+              weight: 'normal',
+            },
+          },
         },
         y: {
           type: 'linear',
@@ -186,16 +228,16 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
           min: 70,
           max: 100,
           grid: {
-            color: 'rgba(165, 163, 174, 0.1)'
+            color: 'rgba(165, 163, 174, 0.1)',
           },
           ticks: {
             color: '#697a8d',
             font: {
-              size: 11
+              size: 11,
             },
-            callback: function(value) {
+            callback: function (value) {
               return value + '%';
-            }
+            },
           },
           title: {
             display: true,
@@ -203,9 +245,9 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
             color: 'rgba(113, 221, 55, 0.9)',
             font: {
               size: 12,
-              weight: 'bold'
-            }
-          }
+              weight: 'bold',
+            },
+          },
         },
         y1: {
           type: 'linear',
@@ -214,13 +256,13 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
           min: 0,
           max: 16,
           grid: {
-            drawOnChartArea: false
+            drawOnChartArea: false,
           },
           ticks: {
             color: '#697a8d',
             font: {
-              size: 11
-            }
+              size: 11,
+            },
           },
           title: {
             display: true,
@@ -228,17 +270,17 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
             color: 'rgba(255, 99, 132, 0.8)',
             font: {
               size: 12,
-              weight: 'bold'
-            }
-          }
-        }
-      }
+              weight: 'bold',
+            },
+          },
+        },
+      },
     };
 
     const config: ChartConfiguration = {
       type: 'bar',
       data: chartData,
-      options: chartOptions
+      options: chartOptions,
     };
 
     this.chart = new Chart(ctx, config);
@@ -250,6 +292,50 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
       // Update current time and refresh data periodically
       this.agentData.currentSentiment = Math.floor(Math.random() * 10) + 82; // Random sentiment between 82-91%
     }, 30000); // Update every 30 seconds
+  }
+
+  loadCoachingTips(): void {
+    if (!this.currentUserEmail) {
+      console.error('Invalid user email:', this.currentUserEmail);
+      return;
+    }
+
+    console.log('Loading coaching tips for user email:', this.currentUserEmail);
+
+    // Load all tips for the user using email
+    this.tipsService.getTipsByUserEmail(this.currentUserEmail).subscribe({
+      next: (tips) => {
+        this.coachingTips = tips;
+        console.log('Coaching tips loaded:', tips);
+      },
+      error: (error) => {
+        console.error('Error loading coaching tips:', error);
+      },
+    });
+
+    // Load unacknowledged tips using email
+    this.tipsService
+      .getUnacknowledgedByUserEmail(this.currentUserEmail)
+      .subscribe({
+        next: (tips) => {
+          this.unacknowledgedTips = tips;
+          console.log('Unacknowledged tips loaded:', tips);
+        },
+        error: (error) => {
+          console.error('Error loading unacknowledged tips:', error);
+        },
+      });
+
+    // Load recent tips (last 7 days) using email
+    this.tipsService.getRecentByUserEmail(this.currentUserEmail, 7).subscribe({
+      next: (tips) => {
+        this.recentTips = tips;
+        console.log('Recent tips loaded:', tips);
+      },
+      error: (error) => {
+        console.error('Error loading recent tips:', error);
+      },
+    });
   }
 
   takeCall(customerName: string): void {
@@ -355,8 +441,121 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
   }
 
   viewCoachingTips(): void {
-    console.log('Viewing coaching tips');
-    // Implement coaching tips view
+    this.showAllTips = !this.showAllTips;
+    console.log('Toggling tips view, showing all tips:', this.showAllTips);
+  }
+
+  getDisplayedTips(): CoachingTip[] {
+    return this.showAllTips
+      ? this.unacknowledgedTips
+      : this.unacknowledgedTips.slice(0, 2);
+  }
+
+  getViewMoreButtonText(): string {
+    if (this.showAllTips) {
+      return 'Show less';
+    } else {
+      const remainingTips = this.unacknowledgedTips.length - 2;
+      return `View ${remainingTips} more tips`;
+    }
+  }
+
+  acknowledgeCoachingTip(tipId: number): void {
+    this.tipsService.markAsAcknowledged(tipId).subscribe({
+      next: (updatedTip) => {
+        console.log('Tip acknowledged:', updatedTip);
+        // Update the local tip in the arrays
+        this.updateLocalTip(updatedTip);
+        // Reload tips to get updated data
+        this.loadCoachingTips();
+      },
+      error: (error) => {
+        console.error('Error acknowledging tip:', error);
+      },
+    });
+  }
+
+  markTipAsHelpful(tipId: number, helpful: boolean): void {
+    this.tipsService.markAsHelpful(tipId, helpful).subscribe({
+      next: (updatedTip) => {
+        console.log('Tip marked as helpful:', updatedTip);
+        this.updateLocalTip(updatedTip);
+      },
+      error: (error) => {
+        console.error('Error marking tip as helpful:', error);
+      },
+    });
+  }
+
+  markTipAsShown(tipId: number): void {
+    this.tipsService.markAsShown(tipId).subscribe({
+      next: (updatedTip) => {
+        console.log('Tip marked as shown:', updatedTip);
+        this.updateLocalTip(updatedTip);
+      },
+      error: (error) => {
+        console.error('Error marking tip as shown:', error);
+      },
+    });
+  }
+
+  private updateLocalTip(updatedTip: CoachingTip): void {
+    // Update the tip in all relevant arrays
+    const updateTipInArray = (tips: CoachingTip[]) => {
+      const index = tips.findIndex((tip) => tip.id === updatedTip.id);
+      if (index !== -1) {
+        tips[index] = updatedTip;
+      }
+    };
+
+    updateTipInArray(this.coachingTips);
+    updateTipInArray(this.unacknowledgedTips);
+    updateTipInArray(this.recentTips);
+  }
+
+  getTipTypeDisplayName(tipType: string): string {
+    switch (tipType) {
+      case 'SENTIMENT_ALERT':
+        return 'Sentiment Alert';
+      case 'COMPETITOR_MENTION':
+        return 'Competitor Mention';
+      case 'ESCALATION_RISK':
+        return 'Escalation Risk';
+      case 'TECHNIQUE_SUGGESTION':
+        return 'Technique Suggestion';
+      default:
+        return tipType;
+    }
+  }
+
+  getTipTypeIcon(tipType: string): string {
+    switch (tipType) {
+      case 'SENTIMENT_ALERT':
+        return 'bx-heart';
+      case 'COMPETITOR_MENTION':
+        return 'bx-shield-alt-2';
+      case 'ESCALATION_RISK':
+        return 'bx-error-circle';
+      case 'TECHNIQUE_SUGGESTION':
+        return 'bx-bulb';
+      default:
+        return 'bx-info-circle';
+    }
+  }
+
+  getTipTypeColor(tipType: string): string {
+    switch (tipType) {
+      case 'SENTIMENT_ALERT':
+        return 'warning';
+      case 'COMPETITOR_MENTION':
+        return 'info';
+      case 'ESCALATION_RISK':
+        return 'danger';
+      case 'TECHNIQUE_SUGGESTION':
+        return 'primary';
+      default:
+        return 'secondary';
+    }
   }
 
   refreshQueue(): void {
@@ -367,7 +566,7 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
 
   updateChartData(): void {
     if (!this.chart) return;
-    
+
     this.chart.data.datasets[0].data = this.weeklyPerformance.calls;
     this.chart.data.datasets[1].data = this.weeklyPerformance.sentimentScores;
     this.chart.update('resize');

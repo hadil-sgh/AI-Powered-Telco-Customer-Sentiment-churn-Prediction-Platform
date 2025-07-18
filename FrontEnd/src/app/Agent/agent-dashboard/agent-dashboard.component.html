@@ -12,12 +12,17 @@
               </h5>
               <p class="mb-4">
                 You have
-                <span class="fw-bold text-danger">2 coaching tips</span> from
-                yesterday to review. <br /><small class="text-muted"
-                  >8:05 AM - Pre-Call Preparation</small
+                <span class="fw-bold text-danger"
+                  >{{ unacknowledgedTips.length }} coaching tips</span
+                >
+                from yesterday to review. <br /><small class="text-muted"
+                  >{{ getCurrentTime() }} - Pre-Call Preparation</small
                 >
               </p>
-              <a href="javascript:;" class="btn btn-sm btn-outline-primary me-2"
+              <a
+                href="javascript:;"
+                class="btn btn-sm btn-outline-primary me-2"
+                (click)="viewCoachingTips()"
                 >View Coaching Tips</a
               >
               <a href="javascript:;" class="btn btn-sm btn-primary"
@@ -599,49 +604,104 @@
               role="tabpanel"
             >
               <div class="p-4">
-                <div class="alert alert-primary d-flex" role="alert">
+                <div
+                  *ngIf="unacknowledgedTips.length === 0"
+                  class="alert alert-success d-flex"
+                  role="alert"
+                >
                   <span
-                    class="badge badge-center rounded-pill bg-primary border-label-primary p-3 me-2"
+                    class="badge badge-center rounded-pill bg-success border-label-success p-3 me-2"
                   >
-                    <i class="bx bx-bulb fs-6"></i>
+                    <i class="bx bx-check-circle fs-6"></i>
                   </span>
                   <div>
-                    <h6 class="alert-heading mb-1">Mirror Customer Energy</h6>
-                    <p class="mb-0">
-                      Match your customer's energy level and speaking pace for
-                      better rapport building.
-                    </p>
+                    <h6 class="alert-heading mb-1">All caught up!</h6>
+                    <p class="mb-0">No new coaching tips to review.</p>
                   </div>
                 </div>
-                <div class="alert alert-info d-flex" role="alert">
+
+                <div
+                  *ngFor="let tip of getDisplayedTips()"
+                  class="alert d-flex mb-3"
+                  [ngClass]="'alert-' + getTipTypeColor(tip.type)"
+                  role="alert"
+                >
                   <span
-                    class="badge badge-center rounded-pill bg-info border-label-info p-3 me-2"
+                    class="badge badge-center rounded-pill p-3 me-2"
+                    [ngClass]="
+                      'bg-' +
+                      getTipTypeColor(tip.type) +
+                      ' border-label-' +
+                      getTipTypeColor(tip.type)
+                    "
                   >
-                    <i class="bx bx-star fs-6"></i>
+                    <i class="bx fs-6" [ngClass]="getTipTypeIcon(tip.type)"></i>
                   </span>
-                  <div>
-                    <h6 class="alert-heading mb-1">Active Listening</h6>
-                    <p class="mb-0">
-                      Use phrases like "I understand" and "Let me help you with
-                      that" to show engagement.
-                    </p>
+                  <div class="flex-grow-1">
+                    <h6 class="alert-heading mb-1">{{ tip.title }}</h6>
+                    <p class="mb-2">{{ tip.message }}</p>
+                    <div class="mt-2">
+                      <small class="text-muted">{{
+                        getTipTypeDisplayName(tip.type)
+                      }}</small>
+                      <div class="mt-2">
+                        <button
+                          class="btn btn-sm btn-outline-success me-2"
+                          (click)="acknowledgeCoachingTip(tip.id!)"
+                        >
+                          <i class="bx bx-check"></i> Got it
+                        </button>
+                        <button
+                          class="btn btn-sm btn-outline-primary me-1"
+                          (click)="markTipAsHelpful(tip.id!, true)"
+                          title="Mark as helpful"
+                        >
+                          <i class="bx bx-like"></i>
+                        </button>
+                        <button
+                          class="btn btn-sm btn-outline-secondary"
+                          (click)="markTipAsHelpful(tip.id!, false)"
+                          title="Mark as not helpful"
+                        >
+                          <i class="bx bx-dislike"></i>
+                        </button>
+                      </div>
+                    </div>
                   </div>
+                </div>
+
+                <div
+                  *ngIf="unacknowledgedTips.length > 2"
+                  class="text-center mt-3"
+                >
+                  <button
+                    class="btn btn-sm btn-primary"
+                    (click)="viewCoachingTips()"
+                  >
+                    {{ getViewMoreButtonText() }}
+                  </button>
                 </div>
               </div>
             </div>
             <div class="tab-pane fade" id="navs-actions" role="tabpanel">
               <div class="p-4">
                 <div class="d-grid gap-2">
-                  <button class="btn btn-primary">
+                  <button class="btn btn-primary" (click)="manualDial()">
                     <i class="bx bx-phone me-2"></i>Manual Dial
                   </button>
-                  <button class="btn btn-outline-primary">
+                  <button
+                    class="btn btn-outline-primary"
+                    (click)="startBreak()"
+                  >
                     <i class="bx bx-pause me-2"></i>Break Time
                   </button>
-                  <button class="btn btn-outline-info">
+                  <button class="btn btn-outline-info" (click)="getSupport()">
                     <i class="bx bx-help-circle me-2"></i>Get Support
                   </button>
-                  <button class="btn btn-outline-success">
+                  <button
+                    class="btn btn-outline-success"
+                    (click)="openKnowledgeBase()"
+                  >
                     <i class="bx bx-book me-2"></i>Knowledge Base
                   </button>
                 </div>

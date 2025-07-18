@@ -17,12 +17,12 @@ import java.util.List;
 public class MockCallsController {
     private final MockCallService mockCallsService;
 
-    @GetMapping
+    @GetMapping("/getAll")
     public List<MockCall> getMockCalls() {
         return mockCallsService.getMockCalls();
     }
 
-    @GetMapping
+    @GetMapping("/getById")
     public MockCall getMockCallsByAgentId(Long agentId) {
         return mockCallsService.getMockCallById(agentId);
     }

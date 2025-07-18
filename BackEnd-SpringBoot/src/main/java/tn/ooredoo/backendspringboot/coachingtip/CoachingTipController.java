@@ -94,6 +94,23 @@ public class CoachingTipController {
     public List<CoachingTip> getTipsByUserId(@PathVariable Long userId) {
         return coachingTipService.getCoachingTipsByUserId(userId);
     }
+    @GetMapping("/getTipsByUserEmail/{email}")
+    public ResponseEntity<List<CoachingTip>> getTipsByUserEmail(@PathVariable String email) {
+        return ResponseEntity.ok(coachingTipService.getCoachingTipsByUserEmail(email));
+    }
+
+    @GetMapping("/user/email/{email}/unacknowledged")
+    public ResponseEntity<List<CoachingTip>> getUnacknowledgedByEmail(@PathVariable String email) {
+        return ResponseEntity.ok(coachingTipService.getUnacknowledgedTipsByUserEmail(email));
+    }
+
+    @GetMapping("/user/email/{email}/recent")
+    public ResponseEntity<List<CoachingTip>> getRecentByEmail(
+            @PathVariable String email,
+            @RequestParam(defaultValue = "7") int days) {
+        return ResponseEntity.ok(coachingTipService.getRecentTipsByUserEmail(email, days));
+    }
+
 }
 
 

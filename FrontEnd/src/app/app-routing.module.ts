@@ -11,6 +11,7 @@ import { PostCallComponent } from './Agent/post-call/post-call.component';
 import { AgentAllTemplateComponent } from './Agent/agent-all-template/agent-all-template.component';
 import { AllCallsComponent } from './Agent/all-calls/all-calls.component';
 import { NotesComponent } from './Agent/notes/notes.component';
+import { ProfileManagementComponent } from './profile-management/profile-management.component';
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -25,7 +26,8 @@ const routes: Routes = [
       { path: 'dashboard', component: AgentDashboardComponent },
       { path: 'postCall', component: PostCallComponent },
       { path: 'allCalls', component: AllCallsComponent },
-      { path: 'notes', component: NotesComponent }
+      { path: 'notes', component: NotesComponent },
+      { path: 'profile', component: ProfileManagementComponent }
     ],
   },
 ];

@@ -1,5 +1,6 @@
 package tn.ooredoo.backendspringboot.coachingtip;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,5 +25,10 @@ public interface CoachingTipService {
     List<CoachingTip> getUnacknowledgedTipsByUserId(Long userId);
 
     List<CoachingTip> getRecentTipsByUserId(Long userId, int days);
+    List<CoachingTip> getCoachingTipsByUserEmail(String email);
+
+    List<CoachingTip> getUnacknowledgedTipsByUserEmail(String email);
+    List<CoachingTip> getRecentTipsByUserEmail(String email, int days) ;
+
 }
 

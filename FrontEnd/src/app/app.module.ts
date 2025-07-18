@@ -22,6 +22,7 @@ import { AgentSidebarComponent } from './Agent/agent-sidebar/agent-sidebar.compo
 import { AllCallsComponent } from './Agent/all-calls/all-calls.component';
 import { NotesComponent } from './Agent/notes/notes.component';
 import { JwtModule } from "@auth0/angular-jwt";
+import { ProfileManagementComponent } from './profile-management/profile-management.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -41,6 +42,7 @@ import { JwtModule } from "@auth0/angular-jwt";
     AgentSidebarComponent,
     AllCallsComponent,
     NotesComponent,
+    ProfileManagementComponent,
   ],
   imports: [
     

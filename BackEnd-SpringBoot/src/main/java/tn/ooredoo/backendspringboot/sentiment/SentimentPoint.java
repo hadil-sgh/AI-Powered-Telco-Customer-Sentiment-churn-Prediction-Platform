@@ -1,9 +1,7 @@
 package tn.ooredoo.backendspringboot.sentiment;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import tn.ooredoo.backendspringboot.call_transcript.CallRecord;
 
 import java.time.LocalDateTime;
@@ -12,6 +10,8 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 public class SentimentPoint {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

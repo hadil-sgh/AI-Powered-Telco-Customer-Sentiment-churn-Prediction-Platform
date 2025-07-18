@@ -14,7 +14,7 @@ public class MockCall {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-    @OneToOne
+    @ManyToOne
     private Customer customer;
     @OneToOne
     private User agent;

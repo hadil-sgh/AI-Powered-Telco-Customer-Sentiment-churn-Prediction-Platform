@@ -23,7 +23,8 @@ public class DailyStats {
 
     private LocalDateTime date;
     private Integer callsCompleted;
-    private Integer callsTarget;
+    @Builder.Default
+    private Integer callsTarget=12;
     private Double averageSentiment;
     private Integer escalations;
     private Integer coachingTipsUsed;
