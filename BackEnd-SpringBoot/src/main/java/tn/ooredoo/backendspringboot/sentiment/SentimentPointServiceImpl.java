@@ -16,6 +16,6 @@ public class SentimentPointServiceImpl implements SentimentPointService {
     @Override
     public Double calculatingSentimentPointsForUserToday(String userEmail) {
        User user = userService.findByEmail(userEmail);
-        return sentimentPointRepository.sumSentimentByUserIdToday(user.getId());
+        return sentimentPointRepository.averageSentimentByUserIdToday(user.getId());
     }
 }
