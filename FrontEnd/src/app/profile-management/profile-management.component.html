@@ -1,0 +1,418 @@
+<div class="container-xxl flex-grow-1 container-p-y">
+  <h4 class="fw-bold py-3 mb-4">
+    <span class="text-muted fw-light">Account /</span> Profile Management
+  </h4>
+
+  <div class="row">
+    <div class="col-md-12">
+      <!-- Navigation Pills -->
+      <ul class="nav nav-pills flex-column flex-md-row mb-3">
+        <li class="nav-item">
+          <a
+            class="nav-link active"
+            (click)="setActiveTab('profile')"
+            [class.active]="activeTab === 'profile'"
+          >
+            <i class="bx bx-user me-1"></i> Profile
+          </a>
+        </li>
+        <li class="nav-item">
+          <a
+            class="nav-link"
+            (click)="setActiveTab('preferences')"
+            [class.active]="activeTab === 'preferences'"
+          >
+            <i class="bx bx-cog me-1"></i> Preferences
+          </a>
+        </li>
+        <li class="nav-item">
+          <a
+            class="nav-link"
+            (click)="setActiveTab('security')"
+            [class.active]="activeTab === 'security'"
+          >
+            <i class="bx bx-lock-alt me-1"></i> Security
+          </a>
+        </li>
+      </ul>
+
+      <!-- Profile Tab -->
+      <div *ngIf="activeTab === 'profile'" class="card mb-4">
+        <h5 class="card-header">Personal Information</h5>
+        <div class="card-body">
+          <form [formGroup]="profileForm" (ngSubmit)="onSaveProfile()">
+            <div class="row">
+              <div class="mb-3 col-md-6">
+                <label for="firstName" class="form-label">First Name</label>
+                <input
+                  class="form-control"
+                  type="text"
+                  id="firstName"
+                  formControlName="firstName"
+                  placeholder="Enter your first name"
+                />
+                <div
+                  *ngIf="
+                    profileForm.get('firstName')?.invalid &&
+                    profileForm.get('firstName')?.touched
+                  "
+                  class="text-danger small mt-1"
+                >
+                  First name is required
+                </div>
+              </div>
+              <div class="mb-3 col-md-6">
+                <label for="lastName" class="form-label">Last Name</label>
+                <input
+                  class="form-control"
+                  type="text"
+                  id="lastName"
+                  formControlName="lastName"
+                  placeholder="Enter your last name"
+                />
+                <div
+                  *ngIf="
+                    profileForm.get('lastName')?.invalid &&
+                    profileForm.get('lastName')?.touched
+                  "
+                  class="text-danger small mt-1"
+                >
+                  Last name is required
+                </div>
+              </div>
+              <div class="mb-3 col-md-6">
+                <label for="email" class="form-label">Email</label>
+                <input
+                  class="form-control"
+                  type="email"
+                  id="email"
+                  formControlName="email"
+                  placeholder="john.doe@example.com"
+                />
+                <div
+                  *ngIf="
+                    profileForm.get('email')?.invalid &&
+                    profileForm.get('email')?.touched
+                  "
+                  class="text-danger small mt-1"
+                >
+                  Please enter a valid email address
+                </div>
+              </div>
+              <div class="mb-3 col-md-6">
+                <label for="phoneNumber" class="form-label">Phone Number</label>
+                <input
+                  type="tel"
+                  id="phoneNumber"
+                  formControlName="phoneNumber"
+                  class="form-control"
+                  placeholder="+1 (555) 123-4567"
+                />
+              </div>
+              <div class="mb-3 col-md-6">
+                <label for="department" class="form-label">Department</label>
+                <select
+                  id="department"
+                  class="form-select"
+                  formControlName="department"
+                >
+                  <option value="">Select Department</option>
+                  <option value="customer-service">Customer Service</option>
+                  <option value="analytics">Analytics</option>
+                  <option value="management">Management</option>
+                  <option value="technical">Technical</option>
+                </select>
+              </div>
+              <div class="mb-3 col-md-6">
+                <label for="role" class="form-label">Role</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="role"
+                  formControlName="role"
+                  placeholder="Your role"
+                />
+              </div>
+            </div>
+            <div class="mt-3">
+              <button
+                type="submit"
+                class="btn btn-primary me-2"
+                [disabled]="profileForm.invalid"
+              >
+                <i class="bx bx-save me-1"></i>Save Changes
+              </button>
+              <button
+                type="button"
+                class="btn btn-outline-secondary"
+                (click)="onCancel()"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Preferences Tab -->
+      <div *ngIf="activeTab === 'preferences'" class="card mb-4">
+        <h5 class="card-header">Account Preferences</h5>
+        <div class="card-body">
+          <form [formGroup]="preferencesForm" (ngSubmit)="onSavePreferences()">
+            <div class="row">
+              <div class="mb-3 col-md-6">
+                <label for="language" class="form-label">Language</label>
+                <select
+                  id="language"
+                  class="form-select"
+                  formControlName="language"
+                >
+                  <option value="en">English</option>
+                  <option value="fr">French</option>
+                  <option value="es">Spanish</option>
+                  <option value="de">German</option>
+                </select>
+              </div>
+              <div class="mb-3 col-md-6">
+                <label for="timezone" class="form-label">Timezone</label>
+                <select
+                  id="timezone"
+                  class="form-select"
+                  formControlName="timezone"
+                >
+                  <option value="UTC-5">Eastern Time (UTC-5)</option>
+                  <option value="UTC-6">Central Time (UTC-6)</option>
+                  <option value="UTC-7">Mountain Time (UTC-7)</option>
+                  <option value="UTC-8">Pacific Time (UTC-8)</option>
+                </select>
+              </div>
+              <div class="mb-3 col-md-6">
+                <label for="dateFormat" class="form-label">Date Format</label>
+                <select
+                  id="dateFormat"
+                  class="form-select"
+                  formControlName="dateFormat"
+                >
+                  <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                  <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                  <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                </select>
+              </div>
+              <div class="mb-3 col-md-6">
+                <label for="theme" class="form-label">Theme</label>
+                <select id="theme" class="form-select" formControlName="theme">
+                  <option value="light">Light</option>
+                  <option value="dark">Dark</option>
+                  <option value="auto">Auto</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Notification Preferences -->
+            <h6 class="mt-4 mb-3">Notification Preferences</h6>
+            <div class="row">
+              <div class="col-12 mb-3">
+                <div class="form-check form-switch">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="emailNotifications"
+                    formControlName="emailNotifications"
+                  />
+                  <label class="form-check-label" for="emailNotifications">
+                    Email Notifications
+                  </label>
+                </div>
+              </div>
+              <div class="col-12 mb-3">
+                <div class="form-check form-switch">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="pushNotifications"
+                    formControlName="pushNotifications"
+                  />
+                  <label class="form-check-label" for="pushNotifications">
+                    Push Notifications
+                  </label>
+                </div>
+              </div>
+              <div class="col-12 mb-3">
+                <div class="form-check form-switch">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="weeklyReports"
+                    formControlName="weeklyReports"
+                  />
+                  <label class="form-check-label" for="weeklyReports">
+                    Weekly Analytics Reports
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-3">
+              <button type="submit" class="btn btn-primary me-2">
+                <i class="bx bx-save me-1"></i>Save Preferences
+              </button>
+              <button
+                type="button"
+                class="btn btn-outline-secondary"
+                (click)="onCancel()"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Security Tab -->
+      <div *ngIf="activeTab === 'security'" class="card mb-4">
+        <h5 class="card-header">Security Settings</h5>
+        <div class="card-body">
+          <form [formGroup]="securityForm" (ngSubmit)="onChangePassword()">
+            <div class="row">
+              <div class="mb-3 col-md-6">
+                <label for="currentPassword" class="form-label"
+                  >Current Password</label
+                >
+                <input
+                  class="form-control"
+                  type="password"
+                  id="currentPassword"
+                  formControlName="currentPassword"
+                  placeholder="Enter current password"
+                />
+              </div>
+              <div class="w-100"></div>
+              <div class="mb-3 col-md-6">
+                <label for="newPassword" class="form-label">New Password</label>
+                <input
+                  class="form-control"
+                  type="password"
+                  id="newPassword"
+                  formControlName="newPassword"
+                  placeholder="Enter new password"
+                />
+                <div
+                  *ngIf="
+                    securityForm.get('newPassword')?.invalid &&
+                    securityForm.get('newPassword')?.touched
+                  "
+                  class="text-danger small mt-1"
+                >
+                  Password must be at least 8 characters long
+                </div>
+              </div>
+              <div class="mb-3 col-md-6">
+                <label for="confirmPassword" class="form-label"
+                  >Confirm New Password</label
+                >
+                <input
+                  class="form-control"
+                  type="password"
+                  id="confirmPassword"
+                  formControlName="confirmPassword"
+                  placeholder="Confirm new password"
+                />
+                <div
+                  *ngIf="
+                    securityForm.get('confirmPassword')?.invalid &&
+                    securityForm.get('confirmPassword')?.touched
+                  "
+                  class="text-danger small mt-1"
+                >
+                  Passwords do not match
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-3">
+              <button
+                type="submit"
+                class="btn btn-primary me-2"
+                [disabled]="securityForm.invalid"
+              >
+                <i class="bx bx-key me-1"></i>Change Password
+              </button>
+              <button
+                type="button"
+                class="btn btn-outline-secondary"
+                (click)="onCancel()"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Two-Factor Authentication -->
+        <hr class="my-4" />
+        <div class="card-body">
+          <h6 class="mb-3">Two-Factor Authentication</h6>
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="mb-1">Enhance your account security with 2FA</p>
+              <small class="text-muted"
+                >Add an extra layer of security to your account</small
+              >
+            </div>
+            <div class="form-check form-switch">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                id="twoFactorAuth"
+                [checked]="twoFactorEnabled"
+                (change)="onToggleTwoFactor($event)"
+              />
+              <label class="form-check-label" for="twoFactorAuth"></label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Account Actions -->
+      <div class="card">
+        <h5 class="card-header text-danger">Danger Zone</h5>
+        <div class="card-body">
+          <div class="mb-3">
+            <div class="alert alert-warning">
+              <h6 class="alert-heading fw-bold mb-1">Deactivate Account</h6>
+              <p class="mb-0">
+                Temporarily disable your account. You can reactivate it anytime.
+              </p>
+            </div>
+            <button
+              type="button"
+              class="btn btn-warning me-2"
+              (click)="onDeactivateAccount()"
+            >
+              <i class="bx bx-pause me-1"></i>Deactivate Account
+            </button>
+          </div>
+
+          <hr class="my-3" />
+
+          <div class="mb-3">
+            <div class="alert alert-danger">
+              <h6 class="alert-heading fw-bold mb-1">Delete Account</h6>
+              <p class="mb-0">
+                Permanently delete your account and all associated data. This
+                action cannot be undone.
+              </p>
+            </div>
+            <button
+              type="button"
+              class="btn btn-danger"
+              (click)="onDeleteAccount()"
+            >
+              <i class="bx bx-trash me-1"></i>Delete Account
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

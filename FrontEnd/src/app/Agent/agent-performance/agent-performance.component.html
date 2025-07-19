@@ -1,1 +1,1230 @@
-<p>agent-performance works!</p>
+<div class="container-xxl flex-grow-1 container-p-y">
+  <!-- Header Section -->
+  <div class="row">
+    <div class="col-md-12">
+      <h4 class="fw-bold py-3 mb-4">
+        <span class="text-muted fw-light">Agent Dashboard /</span> Performance
+        Analytics
+      </h4>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div
+          class="card-header d-flex justify-content-between align-items-center"
+        >
+          <h5 class="card-title mb-0">
+            <i class="bx bx-filter-alt me-2"></i>Filters & Analytics
+          </h5>
+          <button
+            class="btn btn-outline-primary btn-sm"
+            (click)="refreshData()"
+          >
+            <i class="bx bx-refresh me-1"></i>Refresh
+          </button>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <!-- Time Period Filter -->
+            <div class="col-md-3">
+              <label class="form-label">Time Period</label>
+              <select
+                class="form-select"
+                [(ngModel)]="selectedTimePeriod"
+                (change)="onFilterChange()"
+              >
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+                <option value="quarter">This Quarter</option>
+                <option value="year">This Year</option>
+                <option value="custom">Custom Range</option>
+              </select>
+            </div>
+
+            <!-- Date Range (shown when custom is selected) -->
+            <div class="col-md-3" *ngIf="selectedTimePeriod === 'custom'">
+              <label class="form-label">From Date</label>
+              <input
+                type="date"
+                class="form-control"
+                [(ngModel)]="dateRange.from"
+                (change)="onFilterChange()"
+              />
+            </div>
+            <div class="col-md-3" *ngIf="selectedTimePeriod === 'custom'">
+              <label class="form-label">To Date</label>
+              <input
+                type="date"
+                class="form-control"
+                [(ngModel)]="dateRange.to"
+                (change)="onFilterChange()"
+              />
+            </div>
+
+            <!-- Sentiment Filter -->
+            <div class="col-md-3">
+              <label class="form-label">Sentiment Range</label>
+              <select
+                class="form-select"
+                [(ngModel)]="selectedSentimentRange"
+                (change)="onFilterChange()"
+              >
+                <option value="all">All Sentiments</option>
+                <option value="positive">Positive (≥ 0.5)</option>
+                <option value="neutral">Neutral (0 to 0.5)</option>
+                <option value="negative">Negative (< 0)</option>
+              </select>
+            </div>
+
+            <!-- Performance Filter -->
+            <div class="col-md-3">
+              <label class="form-label">Performance Score</label>
+              <select
+                class="form-select"
+                [(ngModel)]="selectedPerformanceRange"
+                (change)="onFilterChange()"
+              >
+                <option value="all">All Scores</option>
+                <option value="excellent">Excellent (90-100)</option>
+                <option value="good">Good (75-89)</option>
+                <option value="average">Average (60-74)</option>
+                <option value="needs-improvement">
+                  Needs Improvement (< 60)
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Metrics Cards -->
+  <div class="row mb-4">
+    <!-- Overall Performance Score -->
+    <div class="col-md-3 col-sm-6 mb-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <h6 class="card-title text-nowrap mb-1">Overall Performance</h6>
+              <h2
+                class="card-text mb-1"
+                [ngClass]="getPerformanceScoreClass(overallStats.averageScore)"
+              >
+                {{ overallStats.averageScore | number : "1.1-1" }}%
+              </h2>
+              <small class="text-muted">Average Score</small>
+            </div>
+            <div class="avatar flex-shrink-0">
+              <span class="avatar-initial rounded bg-label-primary">
+                <i class="bx bx-trophy"></i>
+              </span>
+            </div>
+          </div>
+          <div class="progress mt-3" style="height: 6px">
+            <div
+              class="progress-bar"
+              [style.width.%]="overallStats.averageScore"
+              [ngClass]="getPerformanceProgressClass(overallStats.averageScore)"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Average Sentiment -->
+    <div class="col-md-3 col-sm-6 mb-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <h6 class="card-title text-nowrap mb-1">Average Sentiment</h6>
+              <h2
+                class="card-text mb-1"
+                [ngClass]="
+                  getSentimentScoreClass(overallStats.averageSentiment)
+                "
+              >
+                {{ overallStats.averageSentiment | number : "1.2-2" }}
+              </h2>
+              <small class="text-muted">Sentiment Score</small>
+            </div>
+            <div class="avatar flex-shrink-0">
+              <span
+                class="avatar-initial rounded"
+                [ngClass]="
+                  getSentimentAvatarClass(overallStats.averageSentiment)
+                "
+              >
+                <i
+                  class="bx"
+                  [ngClass]="getSentimentIcon(overallStats.averageSentiment)"
+                ></i>
+              </span>
+            </div>
+          </div>
+          <div class="progress mt-3" style="height: 6px">
+            <div
+              class="progress-bar"
+              [style.width.%]="
+                getSentimentProgressWidth(overallStats.averageSentiment)
+              "
+              [ngClass]="
+                getSentimentProgressClass(overallStats.averageSentiment)
+              "
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total Calls -->
+    <div class="col-md-3 col-sm-6 mb-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <h6 class="card-title text-nowrap mb-1">Total Calls</h6>
+              <h2 class="card-text mb-1 text-info">
+                {{ overallStats.totalCalls }}
+              </h2>
+              <small class="text-muted">In Selected Period</small>
+            </div>
+            <div class="avatar flex-shrink-0">
+              <span class="avatar-initial rounded bg-label-info">
+                <i class="bx bx-phone-call"></i>
+              </span>
+            </div>
+          </div>
+          <div class="d-flex align-items-center mt-3">
+            <span class="badge bg-success me-2">
+              <i class="bx bx-up-arrow-alt bx-xs"></i>
+              +{{ overallStats.callsGrowth | number : "1.1-1" }}%
+            </span>
+            <small class="text-muted">vs last period</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Improvement Trend -->
+    <div class="col-md-3 col-sm-6 mb-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <h6 class="card-title text-nowrap mb-1">Performance Trend</h6>
+              <h2
+                class="card-text mb-1"
+                [ngClass]="getTrendClass(overallStats.performanceTrend)"
+              >
+                {{ overallStats.performanceTrend > 0 ? "+" : ""
+                }}{{ overallStats.performanceTrend | number : "1.1-1" }}%
+              </h2>
+              <small class="text-muted">Change from last period</small>
+            </div>
+            <div class="avatar flex-shrink-0">
+              <span
+                class="avatar-initial rounded"
+                [ngClass]="getTrendAvatarClass(overallStats.performanceTrend)"
+              >
+                <i
+                  class="bx"
+                  [ngClass]="getTrendIcon(overallStats.performanceTrend)"
+                ></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Performance Details Section -->
+  <div class="row mb-4">
+    <!-- Performance Timeline Chart -->
+    <div class="col-lg-8 mb-4">
+      <div class="card h-100">
+        <div
+          class="card-header d-flex justify-content-between align-items-center"
+        >
+          <h5 class="card-title mb-0">Performance Timeline</h5>
+          <div class="dropdown">
+            <button
+              class="btn btn-outline-secondary btn-sm dropdown-toggle"
+              type="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              <i class="bx bx-dots-vertical-rounded"></i>
+            </button>
+            <ul class="dropdown-menu">
+              <li>
+                <a
+                  class="dropdown-item"
+                  href="javascript:void(0);"
+                  (click)="exportChart()"
+                  >Export Chart</a
+                >
+              </li>
+              <li>
+                <a
+                  class="dropdown-item"
+                  href="javascript:void(0);"
+                  (click)="toggleChartType()"
+                  >Switch View</a
+                >
+              </li>
+              <li>
+                <a
+                  class="dropdown-item"
+                  href="javascript:void(0);"
+                  (click)="refreshCharts()"
+                  >Refresh Charts</a
+                >
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="chart-container" style="height: 300px">
+            <canvas
+              #performanceChart
+              data-chart="performance"
+              width="400"
+              height="300"
+            ></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Performance Distribution -->
+    <div class="col-lg-4 mb-4">
+      <div class="card h-100">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Score Distribution</h5>
+        </div>
+        <div class="card-body">
+          <div class="performance-distribution mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="text-success fw-medium">Excellent (90-100)</span>
+              <span class="text-success"
+                >{{ scoreDistribution.excellent }}%</span
+              >
+            </div>
+            <div class="progress mb-3" style="height: 6px">
+              <div
+                class="progress-bar bg-success"
+                [style.width.%]="scoreDistribution.excellent"
+              ></div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="text-info fw-medium">Good (75-89)</span>
+              <span class="text-info">{{ scoreDistribution.good }}%</span>
+            </div>
+            <div class="progress mb-3" style="height: 6px">
+              <div
+                class="progress-bar bg-info"
+                [style.width.%]="scoreDistribution.good"
+              ></div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="text-warning fw-medium">Average (60-74)</span>
+              <span class="text-warning">{{ scoreDistribution.average }}%</span>
+            </div>
+            <div class="progress mb-3" style="height: 6px">
+              <div
+                class="progress-bar bg-warning"
+                [style.width.%]="scoreDistribution.average"
+              ></div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="text-danger fw-medium"
+                >Needs Improvement (< 60)</span
+              >
+              <span class="text-danger"
+                >{{ scoreDistribution.needsImprovement }}%</span
+              >
+            </div>
+            <div class="progress mb-3" style="height: 6px">
+              <div
+                class="progress-bar bg-danger"
+                [style.width.%]="scoreDistribution.needsImprovement"
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sentiment Analysis Section -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="bx bx-sentiment me-2"></i>Sentiment Analysis Overview
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <!-- Sentiment Distribution -->
+            <div class="col-lg-4 mb-3">
+              <h6 class="text-muted">Sentiment Distribution</h6>
+              <div class="sentiment-stats">
+                <div
+                  class="d-flex justify-content-between align-items-center mb-2"
+                >
+                  <div class="d-flex align-items-center">
+                    <i class="bx bx-happy text-success me-2"></i>
+                    <span>Positive</span>
+                  </div>
+                  <span class="text-success fw-medium"
+                    >{{ sentimentStats.positive }}%</span
+                  >
+                </div>
+                <div
+                  class="d-flex justify-content-between align-items-center mb-2"
+                >
+                  <div class="d-flex align-items-center">
+                    <i class="bx bx-meh text-warning me-2"></i>
+                    <span>Neutral</span>
+                  </div>
+                  <span class="text-warning fw-medium"
+                    >{{ sentimentStats.neutral }}%</span
+                  >
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                  <div class="d-flex align-items-center">
+                    <i class="bx bx-sad text-danger me-2"></i>
+                    <span>Negative</span>
+                  </div>
+                  <span class="text-danger fw-medium"
+                    >{{ sentimentStats.negative }}%</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <!-- Sentiment Timeline -->
+            <div class="col-lg-8">
+              <h6 class="text-muted">Sentiment Trend</h6>
+              <div class="chart-container" style="height: 200px">
+                <canvas
+                  #sentimentChart
+                  data-chart="sentiment"
+                  width="400"
+                  height="200"
+                ></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Performance Records -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div
+          class="card-header d-flex justify-content-between align-items-center"
+        >
+          <h5 class="card-title mb-0">
+            <i class="bx bx-list-ul me-2"></i>Recent Performance Records
+          </h5>
+          <div class="d-flex gap-2">
+            <button
+              class="btn btn-outline-secondary btn-sm"
+              (click)="exportPerformanceData()"
+            >
+              <i class="bx bx-download me-1"></i>Export
+            </button>
+            <div class="dropdown">
+              <button
+                class="btn btn-outline-primary btn-sm dropdown-toggle"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                View Options
+              </button>
+              <ul class="dropdown-menu">
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="javascript:void(0);"
+                    (click)="changeView('table')"
+                    >Table View</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="javascript:void(0);"
+                    (click)="changeView('cards')"
+                    >Card View</a
+                  >
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <!-- Search and Pagination Controls -->
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <div class="input-group">
+                <span class="input-group-text"
+                  ><i class="bx bx-search"></i
+                ></span>
+                <input
+                  type="text"
+                  class="form-control"
+                  placeholder="Search by feedback or call details..."
+                  [(ngModel)]="searchTerm"
+                  (input)="filterPerformanceRecords()"
+                />
+              </div>
+            </div>
+            <div class="col-md-6 text-end">
+              <select
+                class="form-select d-inline-block w-auto"
+                [(ngModel)]="pageSize"
+                (change)="onPageSizeChange()"
+              >
+                <option value="10">10 per page</option>
+                <option value="25">25 per page</option>
+                <option value="50">50 per page</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Performance Records Table -->
+          <div class="table-responsive" *ngIf="viewMode === 'table'">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Call ID</th>
+                  <th>Performance Score</th>
+                  <th>Sentiment Score</th>
+                  <th>Feedback</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let record of paginatedPerformanceRecords">
+                  <td>
+                    {{ getCallDate(record.callTranscripts) | date : "short" }}
+                  </td>
+                  <td>
+                    <span class="badge bg-label-primary">{{
+                      record.callTranscripts?.id
+                    }}</span>
+                  </td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <span
+                        class="fw-medium me-2"
+                        [ngClass]="getPerformanceScoreClass(record.score)"
+                      >
+                        {{ record.score }}%
+                      </span>
+                      <span
+                        class="badge"
+                        [ngClass]="getPerformanceBadgeClass(record.score)"
+                      >
+                        {{ getPerformanceLabel(record.score) }}
+                      </span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <span
+                        class="fw-medium me-2"
+                        [ngClass]="
+                          getSentimentScoreClass(
+                            getCallSentimentScore(record.callTranscripts)
+                          )
+                        "
+                      >
+                        {{
+                          getCallSentimentScore(record.callTranscripts)
+                            | number : "1.2-2"
+                        }}
+                      </span>
+                      <i
+                        class="bx"
+                        [ngClass]="
+                          getSentimentIcon(
+                            getCallSentimentScore(record.callTranscripts)
+                          )
+                        "
+                      ></i>
+                    </div>
+                  </td>
+                  <td>
+                    <span
+                      class="text-truncate d-inline-block"
+                      style="max-width: 200px"
+                      [title]="record.feedback"
+                    >
+                      {{ record.feedback }}
+                    </span>
+                  </td>
+                  <td>
+                    <button
+                      class="btn btn-sm btn-outline-primary me-1"
+                      (click)="viewCallDetails(record.callTranscripts?.id)"
+                      [title]="'View call details'"
+                    >
+                      <i class="bx bx-show"></i>
+                    </button>
+                    <button
+                      class="btn btn-sm btn-outline-info"
+                      (click)="viewFeedbackDetails(record)"
+                      [title]="'View detailed feedback'"
+                    >
+                      <i class="bx bx-detail"></i>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Performance Records Cards View -->
+          <div class="row" *ngIf="viewMode === 'cards'">
+            <div
+              class="col-md-6 col-lg-4 mb-3"
+              *ngFor="let record of paginatedPerformanceRecords"
+            >
+              <div class="card h-100">
+                <div
+                  class="card-header d-flex justify-content-between align-items-center"
+                >
+                  <h6 class="card-title mb-0">
+                    Call #{{ record.callTranscripts?.id }}
+                  </h6>
+                  <span
+                    class="badge"
+                    [ngClass]="getPerformanceBadgeClass(record.score)"
+                  >
+                    {{ getPerformanceLabel(record.score) }}
+                  </span>
+                </div>
+                <div class="card-body">
+                  <div class="row mb-2">
+                    <div class="col-6">
+                      <small class="text-muted">Performance</small>
+                      <div
+                        class="fw-medium"
+                        [ngClass]="getPerformanceScoreClass(record.score)"
+                      >
+                        {{ record.score }}%
+                      </div>
+                    </div>
+                    <div class="col-6">
+                      <small class="text-muted">Sentiment</small>
+                      <div
+                        class="fw-medium d-flex align-items-center"
+                        [ngClass]="
+                          getSentimentScoreClass(
+                            getCallSentimentScore(record.callTranscripts)
+                          )
+                        "
+                      >
+                        {{
+                          getCallSentimentScore(record.callTranscripts)
+                            | number : "1.2-2"
+                        }}
+                        <i
+                          class="bx ms-1"
+                          [ngClass]="
+                            getSentimentIcon(
+                              getCallSentimentScore(record.callTranscripts)
+                            )
+                          "
+                        ></i>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="mb-2">
+                    <small class="text-muted">Date</small>
+                    <div>
+                      {{ getCallDate(record.callTranscripts) | date : "short" }}
+                    </div>
+                  </div>
+                  <div class="mb-3">
+                    <small class="text-muted">Feedback</small>
+                    <p class="card-text text-truncate">{{ record.feedback }}</p>
+                  </div>
+                </div>
+                <div class="card-footer">
+                  <div class="d-flex gap-2">
+                    <button
+                      class="btn btn-sm btn-outline-primary flex-fill"
+                      (click)="viewCallDetails(record.callTranscripts?.id)"
+                    >
+                      <i class="bx bx-show me-1"></i>View Call
+                    </button>
+                    <button
+                      class="btn btn-sm btn-outline-info flex-fill"
+                      (click)="viewFeedbackDetails(record)"
+                    >
+                      <i class="bx bx-detail me-1"></i>Details
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pagination -->
+          <nav
+            aria-label="Performance records pagination"
+            *ngIf="totalPages > 1"
+          >
+            <ul class="pagination justify-content-center">
+              <li class="page-item" [class.disabled]="currentPage === 1">
+                <a
+                  class="page-link"
+                  href="javascript:void(0);"
+                  (click)="goToPage(currentPage - 1)"
+                >
+                  <i class="bx bx-chevron-left"></i>
+                </a>
+              </li>
+              <li
+                class="page-item"
+                *ngFor="let page of getPageNumbers()"
+                [class.active]="page === currentPage"
+              >
+                <a
+                  class="page-link"
+                  href="javascript:void(0);"
+                  (click)="goToPage(page)"
+                  >{{ page }}</a
+                >
+              </li>
+              <li
+                class="page-item"
+                [class.disabled]="currentPage === totalPages"
+              >
+                <a
+                  class="page-link"
+                  href="javascript:void(0);"
+                  (click)="goToPage(currentPage + 1)"
+                >
+                  <i class="bx bx-chevron-right"></i>
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Coaching Tips Section -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="bx bx-bulb me-2"></i>Performance Insights & Coaching Tips
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-4 mb-3" *ngFor="let tip of coachingTips">
+              <div
+                class="alert"
+                [ngClass]="getTipAlertClass(tip.priority)"
+                role="alert"
+              >
+                <div class="d-flex align-items-start">
+                  <i
+                    class="bx me-2 mt-1"
+                    [ngClass]="getTipIcon(tip.category)"
+                  ></i>
+                  <div>
+                    <h6 class="alert-heading mb-1">{{ tip.title }}</h6>
+                    <p class="mb-0">{{ tip.description }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Call Details Modal -->
+<div
+  class="modal fade"
+  id="callDetailsModal"
+  tabindex="-1"
+  aria-labelledby="callDetailsModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="callDetailsModalLabel">
+          <i class="bx bx-phone me-2"></i>Call Details
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body" *ngIf="selectedCallRecord">
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <h6 class="text-muted mb-2">Call Information</h6>
+            <div class="mb-2">
+              <strong>Call ID:</strong>
+              <span class="badge bg-label-primary ms-2">{{
+                selectedCallRecord.id
+              }}</span>
+            </div>
+            <div class="mb-2">
+              <strong>Date & Time:</strong>
+              {{ selectedCallRecord.callDateTime | date : "full" }}
+            </div>
+            <div class="mb-2">
+              <strong>Duration:</strong>
+              {{ formatDuration(selectedCallRecord.callDuration) }}
+            </div>
+            <div class="mb-2">
+              <strong>Outcome:</strong>
+              <span
+                class="badge"
+                [ngClass]="{
+                  'bg-label-success': isCallOutcome(
+                    selectedCallRecord.callOutcome,
+                    'SUCCESSFUL'
+                  ),
+                  'bg-label-warning': isCallOutcome(
+                    selectedCallRecord.callOutcome,
+                    'PENDING'
+                  ),
+                  'bg-label-danger': isCallOutcome(
+                    selectedCallRecord.callOutcome,
+                    'FAILED'
+                  ),
+                  'bg-label-info': isCallOutcome(
+                    selectedCallRecord.callOutcome,
+                    'ESCALATED'
+                  )
+                }"
+              >
+                {{ selectedCallRecord.callOutcome }}
+              </span>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <h6 class="text-muted mb-2">Customer Information</h6>
+            <div class="mb-2">
+              <strong>Name:</strong>
+              {{ getCustomerName(selectedCallRecord.customer) }}
+            </div>
+            <div class="mb-2">
+              <strong>Phone:</strong>
+              {{ getCustomerPhone(selectedCallRecord.customer) }}
+            </div>
+            <div class="mb-2">
+              <strong>Email:</strong>
+              {{ getCustomerEmail(selectedCallRecord.customer) }}
+            </div>
+            <div class="mb-2">
+              <strong>Average Sentiment:</strong>
+              <span
+                class="badge"
+                [ngClass]="{
+                  'bg-label-success':
+                    getCallSentimentScore(selectedCallRecord) >= 0.5,
+                  'bg-label-warning':
+                    getCallSentimentScore(selectedCallRecord) >= 0 &&
+                    getCallSentimentScore(selectedCallRecord) < 0.5,
+                  'bg-label-danger':
+                    getCallSentimentScore(selectedCallRecord) < 0
+                }"
+              >
+                {{
+                  getCallSentimentScore(selectedCallRecord) | number : "1.2-2"
+                }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Call Transcripts -->
+        <div
+          *ngIf="
+            selectedCallRecord.callTranscripts &&
+            selectedCallRecord.callTranscripts.length > 0
+          "
+        >
+          <h6 class="text-muted mb-3">Call Transcripts</h6>
+          <div class="accordion" id="transcriptAccordion">
+            <div
+              class="accordion-item"
+              *ngFor="
+                let transcript of selectedCallRecord.callTranscripts;
+                let i = index
+              "
+            >
+              <h2 class="accordion-header">
+                <button
+                  class="accordion-button collapsed"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  [attr.data-bs-target]="'#transcript' + i"
+                  [attr.aria-expanded]="false"
+                  [attr.aria-controls]="'transcript' + i"
+                >
+                  <div class="d-flex justify-content-between w-100 me-3">
+                    <span
+                      >{{
+                        transcript.speaker === "agent" ? "Agent" : "Customer"
+                      }}
+                      - Segment {{ i + 1 }}</span
+                    >
+                    <small class="text-muted">
+                      Sentiment:
+                      {{ transcript.sentiment?.score | number : "1.2-2" }}
+                    </small>
+                  </div>
+                </button>
+              </h2>
+              <div
+                [id]="'transcript' + i"
+                class="accordion-collapse collapse"
+                [attr.data-bs-parent]="'#transcriptAccordion'"
+              >
+                <div class="accordion-body">
+                  <div class="mb-3">
+                    <strong>Text:</strong>
+                    <p class="mt-2">{{ transcript.text }}</p>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-4">
+                      <small class="text-muted">Speaker</small>
+                      <div class="fw-medium">
+                        {{ transcript.speaker | titlecase }}
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <small class="text-muted">Sentiment Score</small>
+                      <div
+                        class="fw-medium"
+                        [ngClass]="{
+                          'text-success':
+                            (transcript.sentiment?.score || 0) >= 0.5,
+                          'text-warning':
+                            (transcript.sentiment?.score || 0) >= 0 &&
+                            (transcript.sentiment?.score || 0) < 0.5,
+                          'text-danger': (transcript.sentiment?.score || 0) < 0
+                        }"
+                      >
+                        {{ transcript.sentiment?.score | number : "1.2-2" }}
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <small class="text-muted">Sentiment Label</small>
+                      <div class="fw-medium">
+                        {{ transcript.sentiment?.text || "N/A" }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          data-bs-dismiss="modal"
+        >
+          <i class="bx bx-x me-1"></i>Close
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          *ngIf="selectedCallRecord"
+        >
+          <i class="bx bx-download me-1"></i>Download Report
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Feedback Details Modal -->
+<div
+  class="modal fade"
+  id="feedbackDetailsModal"
+  tabindex="-1"
+  aria-labelledby="feedbackDetailsModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="feedbackDetailsModalLabel">
+          <i class="bx bx-detail me-2"></i>Performance Feedback Details
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body" *ngIf="selectedPerformanceRecord">
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <h6 class="text-muted mb-2">Performance Summary</h6>
+            <div class="mb-3">
+              <strong>Overall Score:</strong>
+              <div class="mt-1">
+                <span
+                  class="badge"
+                  [ngClass]="
+                    getPerformanceBadgeClass(selectedPerformanceRecord.score)
+                  "
+                >
+                  {{ selectedPerformanceRecord.score }}% -
+                  {{ getPerformanceLabel(selectedPerformanceRecord.score) }}
+                </span>
+              </div>
+            </div>
+            <div class="mb-3">
+              <strong>Call Reference:</strong>
+              <div class="mt-1">
+                <span class="badge bg-label-primary">
+                  Call #{{ selectedPerformanceRecord.callTranscripts?.id }}
+                </span>
+              </div>
+            </div>
+            <div class="mb-3">
+              <strong>Assessment Date:</strong>
+              <div class="mt-1">
+                {{
+                  getCallDate(selectedPerformanceRecord.callTranscripts)
+                    | date : "full"
+                }}
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <h6 class="text-muted mb-2">Sentiment Analysis</h6>
+            <div class="mb-3">
+              <strong>Average Sentiment Score:</strong>
+              <div class="mt-1">
+                <span
+                  class="badge"
+                  [ngClass]="{
+                    'bg-label-success':
+                      getCallSentimentScore(
+                        selectedPerformanceRecord.callTranscripts
+                      ) >= 0.5,
+                    'bg-label-warning':
+                      getCallSentimentScore(
+                        selectedPerformanceRecord.callTranscripts
+                      ) >= 0 &&
+                      getCallSentimentScore(
+                        selectedPerformanceRecord.callTranscripts
+                      ) < 0.5,
+                    'bg-label-danger':
+                      getCallSentimentScore(
+                        selectedPerformanceRecord.callTranscripts
+                      ) < 0
+                  }"
+                >
+                  {{
+                    getCallSentimentScore(
+                      selectedPerformanceRecord.callTranscripts
+                    ) | number : "1.2-2"
+                  }}
+                </span>
+              </div>
+            </div>
+            <div class="mb-3">
+              <strong>Performance Trend:</strong>
+              <div class="mt-1 d-flex align-items-center">
+                <i
+                  class="bx"
+                  [ngClass]="getTrendIcon(overallStats.performanceTrend)"
+                  [class.text-success]="overallStats.performanceTrend > 0"
+                  [class.text-danger]="overallStats.performanceTrend < 0"
+                  [class.text-muted]="overallStats.performanceTrend === 0"
+                ></i>
+                <span
+                  class="ms-2"
+                  [ngClass]="getTrendClass(overallStats.performanceTrend)"
+                >
+                  {{ overallStats.performanceTrend > 0 ? "+" : ""
+                  }}{{ overallStats.performanceTrend | number : "1.1-1" }}%
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detailed Feedback -->
+        <div class="mb-4">
+          <h6 class="text-muted mb-2">Detailed Feedback</h6>
+          <div class="card">
+            <div class="card-body">
+              <p class="mb-0">{{ selectedPerformanceRecord.feedback }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Performance Breakdown -->
+        <div class="mb-4">
+          <h6 class="text-muted mb-2">Performance Breakdown</h6>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <div class="card">
+                <div class="card-body text-center">
+                  <h5
+                    class="card-title"
+                    [ngClass]="
+                      getPerformanceScoreClass(selectedPerformanceRecord.score)
+                    "
+                  >
+                    {{ selectedPerformanceRecord.score }}%
+                  </h5>
+                  <p class="card-text text-muted">Overall Performance</p>
+                  <div class="progress" style="height: 8px">
+                    <div
+                      class="progress-bar"
+                      [style.width.%]="selectedPerformanceRecord.score"
+                      [ngClass]="
+                        getPerformanceProgressClass(
+                          selectedPerformanceRecord.score
+                        )
+                      "
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <div class="card">
+                <div class="card-body text-center">
+                  <h5
+                    class="card-title"
+                    [ngClass]="
+                      getSentimentScoreClass(
+                        getCallSentimentScore(
+                          selectedPerformanceRecord.callTranscripts
+                        )
+                      )
+                    "
+                  >
+                    {{
+                      getCallSentimentScore(
+                        selectedPerformanceRecord.callTranscripts
+                      ) | number : "1.2-2"
+                    }}
+                  </h5>
+                  <p class="card-text text-muted">Customer Sentiment</p>
+                  <div class="progress" style="height: 8px">
+                    <div
+                      class="progress-bar"
+                      [style.width.%]="
+                        getSentimentProgressWidth(
+                          getCallSentimentScore(
+                            selectedPerformanceRecord.callTranscripts
+                          )
+                        )
+                      "
+                      [ngClass]="
+                        getSentimentProgressClass(
+                          getCallSentimentScore(
+                            selectedPerformanceRecord.callTranscripts
+                          )
+                        )
+                      "
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recommendations -->
+        <div class="mb-3">
+          <h6 class="text-muted mb-2">Improvement Recommendations</h6>
+          <div class="alert alert-info" role="alert">
+            <i class="bx bx-info-circle me-2"></i>
+            <strong>Based on this performance:</strong>
+            <ul class="mb-0 mt-2">
+              <li *ngIf="(selectedPerformanceRecord.score || 0) < 75">
+                Focus on improving communication skills and active listening
+              </li>
+              <li
+                *ngIf="
+                  getCallSentimentScore(
+                    selectedPerformanceRecord.callTranscripts
+                  ) < 0.5
+                "
+              >
+                Work on maintaining positive customer interactions
+              </li>
+              <li *ngIf="(selectedPerformanceRecord.score || 0) >= 90">
+                Excellent performance! Consider mentoring other agents
+              </li>
+              <li>Review call transcript for specific areas of improvement</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          data-bs-dismiss="modal"
+        >
+          <i class="bx bx-x me-1"></i>Close
+        </button>
+        <button
+          type="button"
+          class="btn btn-outline-primary"
+          (click)="
+            viewCallDetails(selectedPerformanceRecord?.callTranscripts?.id)
+          "
+        >
+          <i class="bx bx-phone me-1"></i>View Call Details
+        </button>
+        <button type="button" class="btn btn-primary">
+          <i class="bx bx-download me-1"></i>Export Feedback
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

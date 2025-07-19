@@ -1,0 +1,324 @@
+// Performance Dashboard Styles
+
+.performance-dashboard {
+  background-color: var(--bs-gray-50);
+  min-height: 100vh;
+}
+
+// Card hover effects
+.card {
+  transition: all 0.3s ease;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// Performance metric cards
+.metric-card {
+  .avatar {
+    width: 3rem;
+    height: 3rem;
+
+    .avatar-initial {
+      font-size: 1.25rem;
+    }
+  }
+
+  .progress {
+    border-radius: 4px;
+
+    .progress-bar {
+      transition: width 0.6s ease;
+    }
+  }
+}
+
+// Score styling enhancements
+.score-excellent {
+  color: #28a745 !important;
+  font-weight: 600;
+}
+
+.score-good {
+  color: #17a2b8 !important;
+  font-weight: 600;
+}
+
+.score-average {
+  color: #ffc107 !important;
+  font-weight: 600;
+}
+
+.score-poor {
+  color: #dc3545 !important;
+  font-weight: 600;
+}
+
+// Sentiment indicators
+.sentiment-positive {
+  color: #28a745;
+
+  &::before {
+    content: "😊";
+    margin-right: 0.25rem;
+  }
+}
+
+.sentiment-neutral {
+  color: #ffc107;
+
+  &::before {
+    content: "😐";
+    margin-right: 0.25rem;
+  }
+}
+
+.sentiment-negative {
+  color: #dc3545;
+
+  &::before {
+    content: "😞";
+    margin-right: 0.25rem;
+  }
+}
+
+// Filter section
+.filter-section {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+
+  .form-control,
+  .form-select {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    &:focus {
+      border-color: rgba(255, 255, 255, 0.4);
+      box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.15);
+      background-color: rgba(255, 255, 255, 0.15);
+    }
+  }
+
+  .form-label {
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
+  }
+}
+
+// Chart containers
+.chart-container {
+  position: relative;
+
+  canvas {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+// Performance distribution
+.performance-distribution {
+  .progress {
+    height: 8px;
+    border-radius: 4px;
+
+    .progress-bar {
+      border-radius: 4px;
+    }
+  }
+}
+
+// Table enhancements
+.table {
+  .table-header {
+    background-color: var(--bs-gray-100);
+    font-weight: 600;
+    color: var(--bs-gray-700);
+  }
+
+  tbody tr {
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: var(--bs-gray-50);
+    }
+  }
+
+  .badge {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.75rem;
+  }
+}
+
+// Card view grid
+.performance-cards {
+  .performance-card {
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    }
+
+    .card-header {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+  }
+}
+
+// Pagination
+.pagination {
+  .page-link {
+    color: var(--bs-primary);
+    border: 1px solid #dee2e6;
+
+    &:hover {
+      background-color: var(--bs-primary);
+      border-color: var(--bs-primary);
+      color: white;
+    }
+  }
+
+  .page-item.active .page-link {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+  }
+}
+
+// Coaching tips
+.coaching-tips {
+  .alert {
+    border-left: 4px solid;
+    border-radius: 0.5rem;
+
+    &.alert-danger {
+      border-left-color: #dc3545;
+    }
+
+    &.alert-warning {
+      border-left-color: #ffc107;
+    }
+
+    &.alert-info {
+      border-left-color: #17a2b8;
+    }
+
+    .alert-heading {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+  }
+}
+
+// Search and action buttons
+.action-buttons {
+  .btn {
+    transition: all 0.2s ease;
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+  }
+}
+
+// Loading states
+.loading-skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .metric-card .avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+
+    .avatar-initial {
+      font-size: 1rem;
+    }
+  }
+
+  .table-responsive {
+    font-size: 0.875rem;
+  }
+
+  .performance-cards .col-md-6 {
+    margin-bottom: 1rem;
+  }
+}
+
+// Dark mode support
+@media (prefers-color-scheme: dark) {
+  .performance-dashboard {
+    background-color: var(--bs-dark);
+  }
+
+  .card {
+    background-color: var(--bs-gray-800);
+    border-color: var(--bs-gray-700);
+    color: var(--bs-gray-100);
+  }
+
+  .table {
+    color: var(--bs-gray-100);
+
+    .table-header {
+      background-color: var(--bs-gray-700);
+      color: var(--bs-gray-100);
+    }
+
+    tbody tr:hover {
+      background-color: var(--bs-gray-700);
+    }
+  }
+}
+
+// Animation utilities
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

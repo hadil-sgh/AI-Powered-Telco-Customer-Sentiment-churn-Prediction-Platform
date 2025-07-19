@@ -1,1 +1,577 @@
-<p>call-managment works!</p>
+<!-- Ooredoo Call Management Interface -->
+<div class="container-xxl flex-grow-1 container-p-y">
+  <!-- Main Content Row -->
+  <div class="row h-100">
+    <!-- Left Column - Customer Details -->
+    <div class="col-lg-3 col-md-4 mb-4 d-flex">
+      <!-- Customer Info Card -->
+      <div class="card flex-fill">
+        <div class="card-header bg-danger text-white">
+          <h5 class="card-title text-white mb-0">
+            <i class="bx bx-user me-2"></i>Customer Details
+          </h5>
+        </div>
+        <div class="card-body">
+          <!-- Customer Basic Info -->
+          <div class="text-center mb-4">
+            <h5 class="mb-1">{{ customerData.name }}</h5>
+            <small class="text-muted"
+              >Customer ID: {{ customerData.customerID }}</small
+            >
+          </div>
+
+          <!-- Contact Information -->
+          <div class="row mb-3">
+            <div class="col-12 mb-2">
+              <small class="text-muted d-block">Phone Number</small>
+              <strong>{{ customerData.phoneNumber }}</strong>
+            </div>
+            <div class="col-12 mb-2">
+              <small class="text-muted d-block">Email</small>
+              <strong class="small">{{ customerData.email }}</strong>
+            </div>
+            <div class="col-12 mb-2">
+              <small class="text-muted d-block">Gender</small>
+              <span class="badge bg-label-info">{{ customerData.gender }}</span>
+            </div>
+          </div>
+
+          <!-- Account Details -->
+          <hr />
+          <div class="row text-center mb-3">
+            <div class="col-6">
+              <div class="border-end">
+                <h6 class="mb-0 text-danger">
+                  {{
+                    customerData.monthlyCharges
+                      | currency : "TND" : "symbol" : "1.2-2"
+                  }}
+                </h6>
+                <small class="text-muted">Monthly</small>
+              </div>
+            </div>
+            <div class="col-6">
+              <h6 class="mb-0 text-primary">{{ customerData.tenure }}</h6>
+              <small class="text-muted">Months</small>
+            </div>
+          </div>
+
+          <div class="row text-center mb-3">
+            <div class="col-12">
+              <h6 class="mb-0 text-success">
+                {{
+                  customerData.totalCharges
+                    | currency : "TND" : "symbol" : "1.2-2"
+                }}
+              </h6>
+              <small class="text-muted">Total Charges</small>
+            </div>
+          </div>
+
+          <hr />
+
+          <!-- Service Details -->
+          <div class="mb-2">
+            <small class="text-muted d-block">Contract Type</small>
+            <span class="badge bg-danger">{{ customerData.contract }}</span>
+          </div>
+
+          <div class="mb-2">
+            <small class="text-muted d-block">Internet Service</small>
+            <span class="badge bg-info">{{
+              customerData.internetService
+            }}</span>
+          </div>
+
+          <div class="mb-2">
+            <small class="text-muted d-block">Status</small>
+            <span class="badge bg-success">{{ customerData.status }}</span>
+          </div>
+
+          <div class="mb-2">
+            <small class="text-muted d-block">Payment Method</small>
+            <small>{{ customerData.paymentMethod }}</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Middle Column - Main Content Area -->
+    <div class="col-lg-6 col-md-8 mb-4 d-flex flex-column">
+      <!-- Control Panel -->
+      <div class="card mb-4">
+        <div
+          class="card-header d-flex align-items-center justify-content-between pb-0"
+        >
+          <div class="card-title mb-0">
+            <h5 class="m-0 me-2">Call Recording Controls</h5>
+            <small class="text-muted">Manage your call recording session</small>
+          </div>
+        </div>
+        <div class="card-body">
+          <div
+            class="d-flex justify-content-between align-items-center flex-wrap gap-3"
+          >
+            <!-- Recording Controls -->
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <button
+                *ngIf="!isRecording"
+                (click)="startRecording()"
+                class="btn btn-danger"
+                [disabled]="!isConnected && connectionStatus !== 'Disconnected'"
+              >
+                <i class="bx bx-radio-circle me-1"></i>
+                Start Recording
+              </button>
+
+              <button
+                *ngIf="isRecording"
+                (click)="stopRecording()"
+                class="btn btn-secondary recording-pulse"
+              >
+                <i class="bx bx-stop me-1"></i>
+                Stop Recording
+              </button>
+
+              <button (click)="clearResults()" class="btn btn-outline-primary">
+                <i class="bx bx-refresh me-1"></i>
+                Clear
+              </button>
+
+              <button
+                (click)="downloadResults()"
+                [disabled]="analysisResults.length === 0"
+                class="btn btn-outline-success"
+              >
+                <i class="bx bx-download me-1"></i>
+                Download
+              </button>
+            </div>
+
+            <!-- Connection Status & Audio Level -->
+            <div class="d-flex align-items-center gap-3">
+              <!-- Audio Level -->
+              <div *ngIf="isRecording" class="d-flex align-items-center gap-2">
+                <small class="text-muted">Audio:</small>
+                <div class="progress" style="width: 80px; height: 6px">
+                  <div
+                    class="progress-bar"
+                    [class]="getAudioLevelClass()"
+                    [style.width.%]="audioLevel * 100"
+                  ></div>
+                </div>
+              </div>
+
+              <!-- Status Badge -->
+              <div class="d-flex align-items-center gap-2">
+                <div
+                  class="badge"
+                  [class]="isConnected ? 'bg-label-success' : 'bg-label-danger'"
+                >
+                  <i class="bx bx-radio-circle me-1"></i>
+                  {{ connectionStatus }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Tabbed Content Area -->
+      <div class="card flex-fill">
+        <!-- Tab Navigation -->
+        <div class="card-header">
+          <div class="card-title mb-3">
+            <h5 class="m-0 me-2">Analysis Dashboard</h5>
+            <small class="text-muted"
+              >Real-time call analysis and history</small
+            >
+          </div>
+          <ul class="nav nav-tabs card-header-tabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link"
+                [class.active]="activeTab === 'call-analysis'"
+                (click)="setActiveTab('call-analysis')"
+                type="button"
+              >
+                <i class="bx bx-chart me-1"></i>
+                Live Analysis
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link"
+                [class.active]="activeTab === 'call-history'"
+                (click)="setActiveTab('call-history')"
+                type="button"
+              >
+                <i class="bx bx-history me-1"></i>
+                Call History
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link"
+                [class.active]="activeTab === 'transcription'"
+                (click)="setActiveTab('transcription')"
+                type="button"
+              >
+                <i class="bx bx-message-dots me-1"></i>
+                Transcription
+              </button>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="card-body custom-scroll flex-fill" style="overflow-y: auto">
+          <!-- Live Analysis Tab -->
+          <div *ngIf="activeTab === 'call-analysis'">
+            <div
+              *ngIf="analysisResults.length === 0"
+              class="text-center text-muted py-5"
+            >
+              <i class="bx bx-microphone display-4 mb-3 text-danger"></i>
+              <p>
+                No analysis results yet. Start recording to see real-time
+                sentiment analysis.
+              </p>
+            </div>
+
+            <div
+              *ngFor="let result of analysisResults; trackBy: trackByTimestamp"
+              class="border-bottom py-3 analysis-result-item"
+            >
+              <!-- Speaker & Timestamp -->
+              <div
+                class="d-flex justify-content-between align-items-start mb-2"
+              >
+                <div class="d-flex align-items-center gap-2">
+                  <span class="fw-semibold text-danger">{{
+                    result.speaker
+                  }}</span>
+                  <small class="text-muted">{{ result.timestamp }}</small>
+                </div>
+
+                <!-- Sentiment Display -->
+                <div class="d-flex align-items-center gap-2">
+                  <span class="fs-5">{{
+                    getSentimentIcon(result.sentiment.text)
+                  }}</span>
+                  <span
+                    class="badge"
+                    [class]="
+                      'bg-' +
+                      (result.sentiment.text === 'positive'
+                        ? 'success'
+                        : result.sentiment.text === 'negative'
+                        ? 'danger'
+                        : 'secondary')
+                    "
+                  >
+                    {{ result.sentiment.text | titlecase }}
+                  </span>
+                  <small class="text-muted"
+                    >({{
+                      result.sentiment.score * 100 | number : "1.0-0"
+                    }}%)</small
+                  >
+                </div>
+              </div>
+
+              <!-- Transcribed Text -->
+              <div class="mb-2">
+                <p class="mb-1">{{ result.text }}</p>
+              </div>
+
+              <!-- Voice Features -->
+              <div class="d-flex gap-3">
+                <small class="text-muted">
+                  <strong>Voice:</strong>
+                  <span [class]="getSentimentClass(result.sentiment.voice)">{{
+                    result.sentiment.voice
+                  }}</span>
+                </small>
+                <small class="text-muted">
+                  <strong>Pitch:</strong>
+                  {{ result.voiceFeatures.pitch | number : "1.2-2" }}
+                </small>
+                <small class="text-muted">
+                  <strong>Energy:</strong>
+                  {{ result.voiceFeatures.energy | number : "1.2-2" }}
+                </small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Call History Tab -->
+          <div *ngIf="activeTab === 'call-history'">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <div class="card bg-light">
+                  <div class="card-body text-center">
+                    <h4 class="text-primary mb-1">
+                      {{ analysisResults.length }}
+                    </h4>
+                    <small class="text-muted">Total Interactions</small>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <div class="card bg-light">
+                  <div class="card-body text-center">
+                    <h4 class="text-success mb-1">
+                      {{ getsentimentCount("positive") }}
+                    </h4>
+                    <small class="text-muted">Positive Responses</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sample Call History -->
+            <div class="border-bottom py-2">
+              <div class="d-flex justify-content-between">
+                <span
+                  ><i class="bx bx-phone text-success me-2"></i>Incoming
+                  Call</span
+                >
+                <small class="text-muted">Today, 10:15 AM</small>
+              </div>
+              <small class="text-muted"
+                >Duration: 8m 45s | Result: Resolved</small
+              >
+            </div>
+
+            <div class="border-bottom py-2">
+              <div class="d-flex justify-content-between">
+                <span
+                  ><i class="bx bx-phone-outgoing text-primary me-2"></i
+                  >Outgoing Call</span
+                >
+                <small class="text-muted">Yesterday, 3:30 PM</small>
+              </div>
+              <small class="text-muted"
+                >Duration: 12m 20s | Result: Follow-up Required</small
+              >
+            </div>
+          </div>
+
+          <!-- Transcription Tab -->
+          <div *ngIf="activeTab === 'transcription'">
+            <div class="mb-3">
+              <h6>Complete Call Transcription</h6>
+              <p class="text-muted">
+                Real-time conversation transcription and analysis
+              </p>
+            </div>
+
+            <div *ngFor="let result of analysisResults" class="mb-2">
+              <div class="d-flex gap-2">
+                <span class="badge bg-primary">{{ result.speaker }}</span>
+                <span>{{ result.text }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column - Churn Score & Notes -->
+    <div class="col-lg-3 col-md-12 d-flex flex-column">
+      <!-- Churn Prediction Card -->
+      <div class="card mb-4">
+        <div
+          class="card-header d-flex align-items-center justify-content-between pb-0"
+        >
+          <div class="card-title mb-0">
+            <h5 class="m-0 me-2">Churn Risk Analysis</h5>
+            <small class="text-muted">Customer retention prediction</small>
+          </div>
+          <div class="dropdown">
+            <button
+              class="btn p-0"
+              type="button"
+              data-bs-toggle="dropdown"
+              aria-haspopup="true"
+              aria-expanded="false"
+            >
+              <i class="bx bx-dots-vertical-rounded"></i>
+            </button>
+            <div class="dropdown-menu dropdown-menu-end">
+              <a class="dropdown-item" href="javascript:void(0);"
+                >Refresh Analysis</a
+              >
+              <a class="dropdown-item" href="javascript:void(0);"
+                >Export Report</a
+              >
+            </div>
+          </div>
+        </div>
+        <div class="card-body text-center">
+          <!-- Churn Score Display -->
+          <div class="mb-3">
+            <div class="d-flex justify-content-center align-items-center mb-3">
+              <div class="position-relative d-inline-block churn-score-circle">
+                <div
+                  class="rounded-circle d-flex align-items-center justify-content-center mx-auto border-2"
+                  style="width: 80px; height: 80px"
+                  [class]="getChurnRiskBg()"
+                >
+                  <span class="h4 mb-0 fw-bold" [class]="getChurnRiskColor()">
+                    {{ churnData.score * 100 | number : "1.0-0" }}%
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <h6 class="mb-1" [class]="getChurnRiskColor()">
+            {{ churnData.churnScore }} Risk
+          </h6>
+          <p class="text-muted small mb-3">{{ getChurnPredictionText() }}</p>
+
+          <!-- Prediction Probability -->
+          <div class="mb-3">
+            <small class="text-muted d-block mb-2"
+              >Prediction Confidence:</small
+            >
+            <div class="row text-center">
+              <div class="col-6">
+                <div class="border-end">
+                  <h6 class="mb-0 text-success">
+                    {{
+                      churnData.predictionProbability[0] * 100
+                        | number : "1.0-0"
+                    }}%
+                  </h6>
+                  <small class="text-muted">Stay</small>
+                </div>
+              </div>
+              <div class="col-6">
+                <h6 class="mb-0 text-danger">
+                  {{
+                    churnData.predictionProbability[1] * 100 | number : "1.0-0"
+                  }}%
+                </h6>
+                <small class="text-muted">Churn</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Risk Factors -->
+          <div class="text-start">
+            <h6 class="text-muted mb-2">Key Factors:</h6>
+            <ul class="p-0 m-0">
+              <li
+                *ngFor="let factor of churnData.factors"
+                class="d-flex justify-content-between align-items-center mb-2 pb-1"
+              >
+                <div class="d-flex flex-column">
+                  <h6 class="mb-0 small">{{ factor.factor }}</h6>
+                </div>
+                <div class="user-progress d-flex align-items-center gap-1">
+                  <span
+                    class="badge badge-sm"
+                    [class]="
+                      factor.impact === 'Positive'
+                        ? 'bg-label-success'
+                        : 'bg-label-danger'
+                    "
+                  >
+                    {{ factor.impact }}
+                  </span>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <!-- Notes Section -->
+      <div class="card flex-fill">
+        <div
+          class="card-header d-flex align-items-center justify-content-between"
+        >
+          <h5 class="card-title m-0 me-2">Call Notes</h5>
+          <div class="dropdown">
+            <button class="btn p-0" type="button" data-bs-toggle="dropdown">
+              <i class="bx bx-dots-vertical-rounded"></i>
+            </button>
+            <div class="dropdown-menu dropdown-menu-end">
+              <a class="dropdown-item" href="javascript:void(0);"
+                >Clear All Notes</a
+              >
+              <a class="dropdown-item" href="javascript:void(0);"
+                >Export Notes</a
+              >
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <!-- Note Input -->
+          <div class="mb-3">
+            <label class="form-label">Add Note</label>
+            <textarea
+              class="form-control"
+              rows="3"
+              placeholder="Add your notes here..."
+              [(ngModel)]="callNotes"
+            ></textarea>
+            <div class="d-grid mt-2">
+              <button
+                class="btn btn-primary btn-sm"
+                (click)="saveNote()"
+                [disabled]="!callNotes.trim()"
+              >
+                <i class="bx bx-save me-1"></i>Save Note
+              </button>
+            </div>
+          </div>
+
+          <!-- Saved Notes -->
+          <div
+            class="border-top pt-3 custom-scroll"
+            style="max-height: 200px; overflow-y: auto"
+          >
+            <h6 class="text-muted mb-2">Recent Notes</h6>
+
+            <ul class="p-0 m-0">
+              <li
+                *ngFor="let note of savedNotes"
+                class="d-flex mb-3 pb-2 border-bottom"
+              >
+                <div class="avatar flex-shrink-0 me-3">
+                  <span class="avatar-initial rounded bg-label-primary">
+                    <i class="bx bx-note"></i>
+                  </span>
+                </div>
+                <div
+                  class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2"
+                >
+                  <div class="me-2">
+                    <h6 class="mb-0">{{ note.agent }}</h6>
+                    <small class="text-muted d-block">{{ note.content }}</small>
+                  </div>
+                  <div class="user-progress d-flex align-items-center gap-1">
+                    <small class="fw-semibold">{{ note.timestamp }}</small>
+                  </div>
+                </div>
+              </li>
+            </ul>
+
+            <div
+              *ngIf="savedNotes.length === 0"
+              class="text-center text-muted py-4"
+            >
+              <i class="bx bx-note display-6 text-primary"></i>
+              <p class="mb-0">No notes yet</p>
+              <small class="text-muted"
+                >Add notes during your call session</small
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

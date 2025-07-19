@@ -15,6 +15,7 @@ import {
 import { TipsService } from '../../services/tips.service';
 import { TokenService } from '../../services/token.service';
 import { CoachingTip } from '../../models/coaching-tip';
+import { Router } from '@angular/router';
 
 // Register Chart.js components
 Chart.register(...registerables);
@@ -90,7 +91,8 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
 
   constructor(
     private tipsService: TipsService,
-    private tokenService: TokenService
+    private tokenService: TokenService,
+    private route: Router
   ) {
     // Chart.js will be initialized after view init
   }
@@ -437,7 +439,7 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
 
   manualDial(): void {
     console.log('Starting manual dial');
-    // Implement manual dial functionality
+    this.route.navigate(['/Agent/call']);
   }
 
   viewCoachingTips(): void {

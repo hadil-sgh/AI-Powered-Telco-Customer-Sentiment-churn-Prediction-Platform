@@ -1,0 +1,69 @@
+.custom-accordion {
+  .btn-link {
+    text-decoration: none;
+    color: inherit;
+    border: none;
+    background: none;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    &:focus {
+      box-shadow: none;
+    }
+  }
+
+  .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+
+    .btn-link {
+      padding: 1rem;
+    }
+  }
+
+  .card-body {
+    border-top: none;
+  }
+}
+
+// Stats cards styling
+.card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+// Table responsive enhancements
+.table-responsive {
+  .avatar-initial {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+}
+
+// Card view enhancements
+.card.h-100 {
+  transition: box-shadow 0.2s ease-in-out;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// Pagination styling
+.pagination {
+  .page-link {
+    cursor: pointer;
+  }
+}

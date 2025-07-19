@@ -1,218 +1,545 @@
-<div class="min-h-screen bg-gray-50 p-6">
-  <div class="max-w-6xl mx-auto">
-    <!-- Header -->
-    <div class="bg-white shadow-lg rounded-lg p-6 mb-6">
-      <div class="flex justify-between items-center">
-        <div>
-          <h1 class="text-3xl font-bold text-gray-800">
-            Real-Time Audio Analysis
-          </h1>
-          <p class="text-gray-600 mt-2">
-            Live call monitoring and sentiment analysis
-          </p>
-        </div>
-        <div class="text-right">
-          <div class="text-sm text-gray-500">Session ID</div>
-          <div class="font-mono text-xs text-gray-700">
-            {{ currentSessionId }}
+<div class="container-xxl flex-grow-1 container-p-y">
+  <h4 class="fw-bold py-3 mb-4">
+    <span class="text-muted fw-light">Agent /</span> Call Management
+  </h4>
+
+  <!-- Quick Stats Cards -->
+  <div class="row mb-4">
+    <div class="col-xl-3 col-lg-6 col-md-6">
+      <div class="card bg-primary text-white">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h5 class="card-title text-white">Total Calls</h5>
+              <h3 class="text-white">{{ callStats.totalCalls }}</h3>
+            </div>
+            <div class="card-icon">
+              <i class="bx bx-phone bx-lg"></i>
+            </div>
           </div>
         </div>
       </div>
     </div>
-
-    <!-- Control Panel -->
-    <div class="bg-white shadow-lg rounded-lg p-6 mb-6">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center space-x-4">
-          <!-- Record Button -->
-          <button
-            *ngIf="!isRecording"
-            (click)="startRecording()"
-            class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors flex items-center space-x-2"
-            [disabled]="!isConnected && connectionStatus !== 'Disconnected'"
-          >
-            <span class="w-3 h-3 bg-white rounded-full"></span>
-            <span>Start Recording</span>
-          </button>
-
-          <!-- Stop Button -->
-          <button
-            *ngIf="isRecording"
-            (click)="stopRecording()"
-            class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors flex items-center space-x-2"
-          >
-            <span class="w-3 h-3 bg-white"></span>
-            <span>Stop Recording</span>
-          </button>
-
-          <!-- Clear Results -->
-          <button
-            (click)="clearResults()"
-            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-semibold transition-colors"
-          >
-            Clear Results
-          </button>
-
-          <!-- Download Results -->
-          <button
-            (click)="downloadResults()"
-            [disabled]="analysisResults.length === 0"
-            class="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-3 rounded-lg font-semibold transition-colors"
-          >
-            Download
-          </button>
-        </div>
-
-        <!-- Connection Status -->
-        <div class="flex items-center space-x-4">
-          <!-- Audio Level Indicator -->
-          <div *ngIf="isRecording" class="flex items-center space-x-2">
-            <span class="text-sm text-gray-600">Audio Level:</span>
-            <div class="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div
-                class="h-full transition-all duration-100"
-                [class]="getAudioLevelClass()"
-                [style.width.%]="audioLevel * 100"
-              ></div>
+    <div class="col-xl-3 col-lg-6 col-md-6">
+      <div class="card bg-success text-white">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h5 class="card-title text-white">Successful</h5>
+              <h3 class="text-white">{{ callStats.successfulCalls }}</h3>
+            </div>
+            <div class="card-icon">
+              <i class="bx bx-check-circle bx-lg"></i>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-3 col-lg-6 col-md-6">
+      <div class="card bg-warning text-white">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h5 class="card-title text-white">Pending</h5>
+              <h3 class="text-white">{{ callStats.pendingCalls }}</h3>
+            </div>
+            <div class="card-icon">
+              <i class="bx bx-time bx-lg"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-3 col-lg-6 col-md-6">
+      <div class="card bg-info text-white">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h5 class="card-title text-white">Avg Duration</h5>
+              <h3 class="text-white">{{ callStats.avgDuration }}</h3>
+            </div>
+            <div class="card-icon">
+              <i class="bx bx-timer bx-lg"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-          <!-- Connection Status Badge -->
-          <div class="flex items-center space-x-2">
-            <div
-              class="w-3 h-3 rounded-full"
-              [class]="isConnected ? 'bg-green-500' : 'bg-red-500'"
-            ></div>
-            <span
-              class="text-sm font-medium"
-              [class]="isConnected ? 'text-green-600' : 'text-red-600'"
+  <!-- Search and Filters -->
+  <div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">Call Records</h5>
+      <button class="btn btn-primary" (click)="openNewCallModal()">
+        <i class="bx bx-plus me-1"></i>New Call
+      </button>
+    </div>
+    <div class="card-body">
+      <div class="row mb-3">
+        <div class="col-md-3">
+          <div class="input-group">
+            <span class="input-group-text"><i class="bx bx-search"></i></span>
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Search by customer name, phone..."
+              [(ngModel)]="searchTerm"
+              (ngModelChange)="onSearch()"
+            />
+          </div>
+        </div>
+        <div class="col-md-2">
+          <select
+            class="form-select"
+            [(ngModel)]="selectedOutcome"
+            (ngModelChange)="onFilterChange()"
+          >
+            <option value="">All Outcomes</option>
+            <option value="SUCCESSFUL">Successful</option>
+            <option value="PENDING">Pending</option>
+            <option value="FAILED">Failed</option>
+            <option value="ESCALATED">Escalated</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <input
+            type="date"
+            class="form-control"
+            [(ngModel)]="selectedDate"
+            (ngModelChange)="onFilterChange()"
+          />
+        </div>
+        <div class="col-md-2">
+          <select
+            class="form-select"
+            [(ngModel)]="sortBy"
+            (ngModelChange)="onSortChange()"
+          >
+            <option value="callDateTime">Date</option>
+            <option value="callDuration">Duration</option>
+            <option value="customer.name">Customer</option>
+            <option value="callOutcome">Outcome</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <div class="btn-group" role="group">
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              [class.active]="viewMode === 'table'"
+              (click)="setViewMode('table')"
             >
-              {{ connectionStatus }}
-            </span>
+              <i class="bx bx-table"></i>
+            </button>
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              [class.active]="viewMode === 'cards'"
+              (click)="setViewMode('cards')"
+            >
+              <i class="bx bx-grid-alt"></i>
+            </button>
           </div>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Real-time Results -->
-    <div class="bg-white shadow-lg rounded-lg">
-      <div class="p-6 border-b border-gray-200">
-        <h2 class="text-xl font-semibold text-gray-800">
-          Live Analysis Results
-          <span class="text-sm font-normal text-gray-500 ml-2"
-            >({{ analysisResults.length }} entries)</span
-          >
-        </h2>
-      </div>
-
-      <!-- Results List -->
-      <div class="max-h-96 overflow-y-auto">
-        <div
-          *ngIf="analysisResults.length === 0"
-          class="p-8 text-center text-gray-500"
-        >
-          <div class="text-4xl mb-4">🎤</div>
-          <p>
-            No analysis results yet. Start recording to see real-time sentiment
-            analysis.
-          </p>
-        </div>
-
-        <div
-          *ngFor="let result of analysisResults; trackBy: trackByTimestamp"
-          class="border-b border-gray-100 p-4 hover:bg-gray-50 transition-colors"
-        >
-          <!-- Result Header -->
-          <div class="flex justify-between items-start mb-2">
-            <div class="flex items-center space-x-3">
-              <span class="font-semibold text-gray-800">{{
-                result.speaker
+  <!-- Table View -->
+  <div *ngIf="viewMode === 'table'" class="card">
+    <div class="table-responsive text-nowrap">
+      <table class="table table-hover">
+        <thead class="table-light">
+          <tr>
+            <th>Customer</th>
+            <th>Agent</th>
+            <th>Date & Time</th>
+            <th>Duration</th>
+            <th>Outcome</th>
+            <th>Sentiment</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let call of paginatedCalls">
+            <td>
+              <div class="d-flex align-items-center">
+                <div class="avatar avatar-sm me-2">
+                  <span class="avatar-initial bg-label-primary rounded-circle">
+                    {{ call.customer?.name?.charAt(0) }}
+                  </span>
+                </div>
+                <div>
+                  <strong>{{ call.customer?.name }}</strong
+                  ><br />
+                  <small class="text-muted">{{
+                    call.customer?.phoneNumber
+                  }}</small>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="fw-medium"
+                >{{ call.agent?.firstName }} {{ call.agent?.lastName }}</span
+              >
+            </td>
+            <td>
+              <div>
+                {{ call.callDateTime | date : "MMM dd, yyyy" }}<br />
+                <small class="text-muted">{{
+                  call.callDateTime | date : "HH:mm"
+                }}</small>
+              </div>
+            </td>
+            <td>
+              <span class="badge bg-label-info">{{
+                formatDuration(call.callDuration)
               }}</span>
-              <span class="text-xs text-gray-500">{{ result.timestamp }}</span>
-            </div>
-
-            <!-- Sentiment Indicators -->
-            <div class="flex items-center space-x-2">
-              <span class="text-lg">{{
-                getSentimentIcon(result.sentiment.text)
-              }}</span>
+            </td>
+            <td>
               <span
-                class="text-sm font-medium"
-                [class]="getSentimentClass(result.sentiment.text)"
+                class="badge"
+                [ngClass]="{
+                  'bg-label-success': call.callOutcome === 'SUCCESSFUL',
+                  'bg-label-warning': call.callOutcome === 'PENDING',
+                  'bg-label-danger': call.callOutcome === 'FAILED',
+                  'bg-label-info': call.callOutcome === 'ESCALATED'
+                }"
               >
-                {{ result.sentiment.text }}
+                {{ call.callOutcome }}
               </span>
-              <span class="text-xs text-gray-500"
-                >({{ result.sentiment.score * 100 | number : "1.0-0" }}%)</span
+            </td>
+            <td>
+              <span
+                class="badge"
+                [ngClass]="{
+                  'bg-label-success': getSentimentScore(call) > 0.5,
+                  'bg-label-warning':
+                    getSentimentScore(call) > 0 &&
+                    getSentimentScore(call) <= 0.5,
+                  'bg-label-danger': getSentimentScore(call) <= 0
+                }"
               >
-            </div>
-          </div>
+                {{ getSentimentLabel(call) }}
+              </span>
+            </td>
+            <td>
+              <div class="dropdown">
+                <button
+                  type="button"
+                  class="btn p-0 dropdown-toggle hide-arrow"
+                  data-bs-toggle="dropdown"
+                >
+                  <i class="bx bx-dots-vertical-rounded"></i>
+                </button>
+                <div class="dropdown-menu">
+                  <a class="dropdown-item" (click)="viewCallDetails(call)">
+                    <i class="bx bx-show me-1"></i> View Details
+                  </a>
+                  <a class="dropdown-item" (click)="playCallRecording(call)">
+                    <i class="bx bx-play me-1"></i> Play Recording
+                  </a>
+                  <a class="dropdown-item" (click)="downloadTranscript(call)">
+                    <i class="bx bx-download me-1"></i> Download Transcript
+                  </a>
+                  <div class="dropdown-divider"></div>
+                  <a
+                    class="dropdown-item text-danger"
+                    (click)="deleteCall(call)"
+                  >
+                    <i class="bx bx-trash me-1"></i> Delete
+                  </a>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- Pagination -->
+    <div class="card-footer d-flex justify-content-between align-items-center">
+      <div>
+        Showing {{ (currentPage - 1) * pageSize + 1 }} to
+        {{ Math.min(currentPage * pageSize, filteredCalls.length) }} of
+        {{ filteredCalls.length }} entries
+      </div>
+      <nav>
+        <ul class="pagination pagination-sm mb-0">
+          <li class="page-item" [class.disabled]="currentPage === 1">
+            <a class="page-link" (click)="goToPage(currentPage - 1)"
+              >Previous</a
+            >
+          </li>
+          <li
+            class="page-item"
+            *ngFor="let page of getPageNumbers()"
+            [class.active]="page === currentPage"
+          >
+            <a class="page-link" (click)="goToPage(page)">{{ page }}</a>
+          </li>
+          <li class="page-item" [class.disabled]="currentPage === totalPages">
+            <a class="page-link" (click)="goToPage(currentPage + 1)">Next</a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
 
-          <!-- Transcribed Text -->
-          <div class="text-gray-700 mb-3 leading-relaxed">
-            {{ result.text }}
-          </div>
-
-          <!-- Voice Analysis Details -->
-          <div class="flex items-center space-x-6 text-xs text-gray-500">
-            <div class="flex items-center space-x-1">
-              <span class="font-medium">Voice Emotion:</span>
-              <span [class]="getSentimentClass(result.sentiment.voice)">{{
-                result.sentiment.voice
-              }}</span>
+  <!-- Cards View -->
+  <div *ngIf="viewMode === 'cards'" class="row">
+    <div class="col-md-6 col-xl-4 mb-4" *ngFor="let call of paginatedCalls">
+      <div class="card h-100">
+        <div class="card-header d-flex justify-content-between">
+          <div class="d-flex align-items-center">
+            <div class="avatar avatar-sm me-2">
+              <span class="avatar-initial bg-label-primary rounded-circle">
+                {{ call.customer?.name?.charAt(0) }}
+              </span>
             </div>
-            <div class="flex items-center space-x-1">
-              <span class="font-medium">Pitch:</span>
-              <span>{{ result.voiceFeatures.pitch | number : "1.2-2" }}</span>
-            </div>
-            <div class="flex items-center space-x-1">
-              <span class="font-medium">Energy:</span>
-              <span>{{ result.voiceFeatures.energy | number : "1.2-2" }}</span>
-            </div>
-            <div class="flex items-center space-x-1">
-              <span class="font-medium">Rate:</span>
-              <span>{{ result.voiceFeatures.rate | number : "1.2-2" }}</span>
+            <div>
+              <h6 class="mb-0">{{ call.customer?.name }}</h6>
+              <small class="text-muted">{{ call.customer?.phoneNumber }}</small>
             </div>
           </div>
+          <div class="dropdown">
+            <button
+              type="button"
+              class="btn p-0 dropdown-toggle hide-arrow"
+              data-bs-toggle="dropdown"
+            >
+              <i class="bx bx-dots-vertical-rounded"></i>
+            </button>
+            <div class="dropdown-menu">
+              <a class="dropdown-item" (click)="viewCallDetails(call)">
+                <i class="bx bx-show me-1"></i> View Details
+              </a>
+              <a class="dropdown-item" (click)="playCallRecording(call)">
+                <i class="bx bx-play me-1"></i> Play Recording
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row mb-2">
+            <div class="col-6">
+              <small class="text-muted">Date</small>
+              <div>{{ call.callDateTime | date : "MMM dd, yyyy" }}</div>
+            </div>
+            <div class="col-6">
+              <small class="text-muted">Time</small>
+              <div>{{ call.callDateTime | date : "HH:mm" }}</div>
+            </div>
+          </div>
+          <div class="row mb-2">
+            <div class="col-6">
+              <small class="text-muted">Duration</small>
+              <div>{{ formatDuration(call.callDuration) }}</div>
+            </div>
+            <div class="col-6">
+              <small class="text-muted">Outcome</small>
+              <div>
+                <span
+                  class="badge"
+                  [ngClass]="{
+                    'bg-label-success': call.callOutcome === 'SUCCESSFUL',
+                    'bg-label-warning': call.callOutcome === 'PENDING',
+                    'bg-label-danger': call.callOutcome === 'FAILED',
+                    'bg-label-info': call.callOutcome === 'ESCALATED'
+                  }"
+                >
+                  {{ call.callOutcome }}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-12">
+              <small class="text-muted">Agent</small>
+              <div>{{ call.agent?.firstName }} {{ call.agent?.lastName }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button
+            class="btn btn-outline-primary btn-sm me-2"
+            (click)="viewCallDetails(call)"
+          >
+            <i class="bx bx-show me-1"></i>Details
+          </button>
+          <button
+            class="btn btn-outline-secondary btn-sm"
+            (click)="playCallRecording(call)"
+          >
+            <i class="bx bx-play me-1"></i>Play
+          </button>
         </div>
       </div>
     </div>
+  </div>
+</div>
 
-    <!-- Statistics Panel -->
-    <div
-      *ngIf="analysisResults.length > 0"
-      class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6"
-    >
-      <!-- Total Conversations -->
-      <div class="bg-white p-4 rounded-lg shadow">
-        <div class="text-2xl font-bold text-blue-600">
-          {{ analysisResults.length }}
-        </div>
-        <div class="text-sm text-gray-600">Total Entries</div>
+<!-- Call Details Modal -->
+<div class="modal fade" id="callDetailsModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Call Details</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+        ></button>
       </div>
-
-      <!-- Positive Sentiment -->
-      <div class="bg-white p-4 rounded-lg shadow">
-        <div class="text-2xl font-bold text-green-600">
-          {{ getsentimentCount("positive") }}
+      <div class="modal-body" *ngIf="selectedCall">
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <h6>Customer Information</h6>
+            <p><strong>Name:</strong> {{ selectedCall.customer?.name }}</p>
+            <p>
+              <strong>Phone:</strong> {{ selectedCall.customer?.phoneNumber }}
+            </p>
+            <p><strong>Email:</strong> {{ selectedCall.customer?.email }}</p>
+          </div>
+          <div class="col-md-6">
+            <h6>Call Information</h6>
+            <p>
+              <strong>Agent:</strong> {{ selectedCall.agent?.firstName }}
+              {{ selectedCall.agent?.lastName }}
+            </p>
+            <p>
+              <strong>Date:</strong>
+              {{ selectedCall.callDateTime | date : "full" }}
+            </p>
+            <p>
+              <strong>Duration:</strong>
+              {{ formatDuration(selectedCall.callDuration) }}
+            </p>
+            <p>
+              <strong>Outcome:</strong>
+              <span
+                class="badge"
+                [ngClass]="{
+                  'bg-label-success': selectedCall.callOutcome === 'SUCCESSFUL',
+                  'bg-label-warning': selectedCall.callOutcome === 'PENDING',
+                  'bg-label-danger': selectedCall.callOutcome === 'FAILED',
+                  'bg-label-info': selectedCall.callOutcome === 'ESCALATED'
+                }"
+              >
+                {{ selectedCall.callOutcome }}
+              </span>
+            </p>
+          </div>
         </div>
-        <div class="text-sm text-gray-600">Positive</div>
+
+        <!-- Call Transcript -->
+        <div
+          *ngIf="
+            selectedCall.callTranscripts &&
+            selectedCall.callTranscripts.length > 0
+          "
+        >
+          <h6>Call Transcript & Analysis</h6>
+          <div class="custom-accordion">
+            <div
+              class="card mb-2"
+              *ngFor="
+                let transcript of selectedCall.callTranscripts;
+                let i = index
+              "
+            >
+              <div class="card-header p-0">
+                <button
+                  class="btn btn-link w-100 text-start"
+                  type="button"
+                  (click)="toggleAccordion(i)"
+                  [attr.aria-expanded]="activeAccordionIndex === i"
+                >
+                  <div
+                    class="d-flex justify-content-between align-items-center"
+                  >
+                    <span
+                      >Segment {{ i + 1 }} -
+                      {{ transcript.timestamp | date : "HH:mm:ss" }}</span
+                    >
+                    <i
+                      class="bx"
+                      [class.bx-chevron-down]="activeAccordionIndex !== i"
+                      [class.bx-chevron-up]="activeAccordionIndex === i"
+                    ></i>
+                  </div>
+                </button>
+              </div>
+              <div
+                class="card-body"
+                *ngIf="activeAccordionIndex === i"
+                [@slideInOut]
+              >
+                <div class="mb-3">
+                  <strong>Transcript:</strong>
+                  <p class="mt-2">{{ transcript.transcript }}</p>
+                </div>
+                <div class="row">
+                  <div class="col-md-4">
+                    <small class="text-muted">Sentiment</small>
+                    <div>
+                      <span
+                        class="badge"
+                        [ngClass]="{
+                          'bg-label-success': transcript.sentimentScore > 0.5,
+                          'bg-label-warning':
+                            transcript.sentimentScore > 0 &&
+                            transcript.sentimentScore <= 0.5,
+                          'bg-label-danger': transcript.sentimentScore <= 0
+                        }"
+                      >
+                        {{ transcript.sentimentScore | number : "1.2-2" }}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <small class="text-muted">Emotions</small>
+                    <div>
+                      <span
+                        class="badge bg-label-info me-1"
+                        *ngFor="let emotion of transcript.emotions"
+                      >
+                        {{ emotion }}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <small class="text-muted">Keywords</small>
+                    <div>
+                      <span
+                        class="badge bg-label-secondary me-1"
+                        *ngFor="let keyword of transcript.keywords"
+                      >
+                        {{ keyword }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-
-      <!-- Negative Sentiment -->
-      <div class="bg-white p-4 rounded-lg shadow">
-        <div class="text-2xl font-bold text-red-600">
-          {{ getsentimentCount("negative") }}
-        </div>
-        <div class="text-sm text-gray-600">Negative</div>
-      </div>
-
-      <!-- Neutral Sentiment -->
-      <div class="bg-white p-4 rounded-lg shadow">
-        <div class="text-2xl font-bold text-gray-600">
-          {{ getsentimentCount("neutral") }}
-        </div>
-        <div class="text-sm text-gray-600">Neutral</div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          data-bs-dismiss="modal"
+        >
+          Close
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="selectedCall && downloadTranscript(selectedCall)"
+        >
+          <i class="bx bx-download me-1"></i>Download Report
+        </button>
       </div>
     </div>
   </div>
