@@ -59,6 +59,84 @@ $ooredoo-light-red: #feb2b2;
   }
 }
 
+// Enhanced scrollable containers for Analysis Dashboard
+.analysis-results-container,
+.call-history-container,
+.transcription-container {
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+
+    &:hover {
+      background: #a8a8a8;
+    }
+  }
+
+  // Smooth scrolling behavior
+  scroll-behavior: smooth;
+
+  // Add padding to prevent content from hiding behind scrollbar
+  padding-right: 8px;
+
+  // Fade effect at bottom to indicate more content
+  &::after {
+    content: "";
+    position: sticky;
+    bottom: 0;
+    display: block;
+    height: 20px;
+    background: linear-gradient(transparent, rgba(255, 255, 255, 0.8));
+    pointer-events: none;
+  }
+}
+
+// Enhanced analysis result items
+.analysis-result-item {
+  transition: background-color 0.2s ease;
+  padding: 1rem;
+  margin: 0 -8px 0 0; // Account for scrollbar padding
+  border-radius: 8px;
+
+  &:hover {
+    background-color: #f8f9fa;
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+// Scrollable tab content with better height management
+.card-body.custom-scroll {
+  position: relative;
+
+  // Ensure minimum height for better UX
+  min-height: 400px;
+
+  // Auto-adjust height based on content
+  &.flex-fill {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  // Tab content containers
+  > div[class*="h-100"] {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+}
+
 // Custom progress bar for audio level
 .progress {
   background-color: #f1f2f4;

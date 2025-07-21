@@ -24,6 +24,9 @@ public class ChurnPredictionController {
         ));
     }
 
+    // I used Mono<ResponseEntity<ChurnPrediction>> to handle the response
+    // because it allows for asynchronous processing and better error handling.
+    // meaning that the response can be sent back to the client once the prediction is ready,
     @PostMapping("/predict/{customerId}")
     public Mono<ResponseEntity<ChurnPrediction>> predict(@PathVariable Integer customerId) {
         return churnPredictionService.predictChurn(customerId)
@@ -34,6 +37,9 @@ public class ChurnPredictionController {
                 })
                 .onErrorReturn(ResponseEntity.badRequest().build());
     }
+
+
+
 
 
     // TODO: Integrate batch prediction

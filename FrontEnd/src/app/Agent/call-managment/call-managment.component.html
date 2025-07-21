@@ -104,33 +104,33 @@
           class="card-header d-flex align-items-center justify-content-between pb-0"
         >
           <div class="card-title mb-0">
-            <h5 class="m-0 me-2">Call Recording Controls</h5>
-            <small class="text-muted">Manage your call recording session</small>
+            <h5 class="m-0 me-2">Call Analysis Controls</h5>
+            <small class="text-muted">Manage your call analysis session</small>
           </div>
         </div>
         <div class="card-body">
           <div
             class="d-flex justify-content-between align-items-center flex-wrap gap-3"
           >
-            <!-- Recording Controls -->
+            <!-- Analysis Controls -->
             <div class="d-flex align-items-center gap-2 flex-wrap">
               <button
-                *ngIf="!isRecording"
-                (click)="startRecording()"
+                *ngIf="!isAnalyzing"
+                (click)="startAnalysis()"
                 class="btn btn-danger"
-                [disabled]="!isConnected && connectionStatus !== 'Disconnected'"
               >
-                <i class="bx bx-radio-circle me-1"></i>
-                Start Recording
+                <i class="bx bx-play-circle me-1"></i>
+                Start
               </button>
 
               <button
-                *ngIf="isRecording"
-                (click)="stopRecording()"
-                class="btn btn-secondary recording-pulse"
+                *ngIf="isAnalyzing"
+                (click)="stopAnalysis()"
+                class="btn btn-danger"
+                title="Stop analysis"
               >
-                <i class="bx bx-stop me-1"></i>
-                Stop Recording
+                <i class="bx bx-stop-circle me-1"></i>
+                STOP Analysis
               </button>
 
               <button (click)="clearResults()" class="btn btn-outline-primary">
@@ -148,29 +148,14 @@
               </button>
             </div>
 
-            <!-- Connection Status & Audio Level -->
-            <div class="d-flex align-items-center gap-3">
-              <!-- Audio Level -->
-              <div *ngIf="isRecording" class="d-flex align-items-center gap-2">
-                <small class="text-muted">Audio:</small>
-                <div class="progress" style="width: 80px; height: 6px">
-                  <div
-                    class="progress-bar"
-                    [class]="getAudioLevelClass()"
-                    [style.width.%]="audioLevel * 100"
-                  ></div>
-                </div>
-              </div>
-
-              <!-- Status Badge -->
-              <div class="d-flex align-items-center gap-2">
-                <div
-                  class="badge"
-                  [class]="isConnected ? 'bg-label-success' : 'bg-label-danger'"
-                >
-                  <i class="bx bx-radio-circle me-1"></i>
-                  {{ connectionStatus }}
-                </div>
+            <!-- Status Badge -->
+            <div class="d-flex align-items-center gap-2">
+              <div
+                class="badge"
+                [class]="isConnected ? 'bg-label-success' : 'bg-label-danger'"
+              >
+                <i class="bx bx-radio-circle me-1"></i>
+                {{ connectionStatus }}
               </div>
             </div>
           </div>
@@ -224,141 +209,170 @@
         </div>
 
         <!-- Tab Content -->
-        <div class="card-body custom-scroll flex-fill" style="overflow-y: auto">
+        <div
+          class="card-body custom-scroll flex-fill"
+          style="overflow-y: auto; max-height: 600px"
+        >
           <!-- Live Analysis Tab -->
-          <div *ngIf="activeTab === 'call-analysis'">
+          <div *ngIf="activeTab === 'call-analysis'" class="h-100">
             <div
               *ngIf="analysisResults.length === 0"
               class="text-center text-muted py-5"
             >
-              <i class="bx bx-microphone display-4 mb-3 text-danger"></i>
+              <i class="bx bx-chart display-4 mb-3 text-primary"></i>
               <p>
-                No analysis results yet. Start recording to see real-time
-                sentiment analysis.
+                No analysis results yet. Start analysis to see real-time
+                sentiment analysis from your pipeline.
               </p>
             </div>
 
             <div
-              *ngFor="let result of analysisResults; trackBy: trackByTimestamp"
-              class="border-bottom py-3 analysis-result-item"
+              class="analysis-results-container"
+              style="max-height: 500px; overflow-y: auto"
             >
-              <!-- Speaker & Timestamp -->
+              <!-- Scroll indicator for large number of results -->
+              <div *ngIf="analysisResults.length > 5" class="text-center mb-2">
+                <small class="text-muted">
+                  <i class="bx bx-chevron-down"></i>
+                  {{ analysisResults.length }} results - scroll to see more
+                  <i class="bx bx-chevron-down"></i>
+                </small>
+              </div>
+
               <div
-                class="d-flex justify-content-between align-items-start mb-2"
+                *ngFor="
+                  let result of analysisResults;
+                  trackBy: trackByTimestamp
+                "
+                class="border-bottom py-3 analysis-result-item"
               >
-                <div class="d-flex align-items-center gap-2">
-                  <span class="fw-semibold text-danger">{{
-                    result.speaker
-                  }}</span>
-                  <small class="text-muted">{{ result.timestamp }}</small>
+                <!-- Speaker & Timestamp -->
+                <div
+                  class="d-flex justify-content-between align-items-start mb-2"
+                >
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="fw-semibold text-danger">{{
+                      result.speaker
+                    }}</span>
+                    <small class="text-muted">{{ result.timestamp }}</small>
+                  </div>
+
+                  <!-- Sentiment Display with Colorful Badges -->
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="fs-5">{{
+                      getSentimentIcon(result.sentiment.text)
+                    }}</span>
+                    <span
+                      class="badge rounded-pill"
+                      [class]="getSentimentBadgeClass(result.sentiment.text)"
+                    >
+                      {{ result.sentiment.text | titlecase }}
+                    </span>
+                    <small class="text-muted"
+                      >({{
+                        result.sentiment.score * 100 | number : "1.0-0"
+                      }}%)</small
+                    >
+                  </div>
                 </div>
 
-                <!-- Sentiment Display -->
-                <div class="d-flex align-items-center gap-2">
-                  <span class="fs-5">{{
-                    getSentimentIcon(result.sentiment.text)
-                  }}</span>
-                  <span
-                    class="badge"
-                    [class]="
-                      'bg-' +
-                      (result.sentiment.text === 'positive'
-                        ? 'success'
-                        : result.sentiment.text === 'negative'
-                        ? 'danger'
-                        : 'secondary')
-                    "
-                  >
-                    {{ result.sentiment.text | titlecase }}
+                <!-- Transcribed Text -->
+                <div class="mb-2">
+                  <p class="mb-1">{{ result.text }}</p>
+                </div>
+
+                <!-- Voice Features with Colorful Badges -->
+                <div class="d-flex gap-2 flex-wrap">
+                  <span class="badge bg-label-info">
+                    <i class="bx bx-microphone me-1"></i>
+                    <strong>Voice:</strong>
+                    {{ result.sentiment.voice || "NEUTRAL" }}
                   </span>
-                  <small class="text-muted"
-                    >({{
-                      result.sentiment.score * 100 | number : "1.0-0"
-                    }}%)</small
-                  >
+                  <span class="badge bg-label-warning">
+                    <i class="bx bx-trending-up me-1"></i>
+                    <strong>Pitch:</strong>
+                    {{
+                      (result.voiceFeatures && result.voiceFeatures.pitch) ||
+                        0.0 | number : "1.2-2"
+                    }}
+                  </span>
+                  <span class="badge bg-label-success">
+                    <i class="bx bx-pulse me-1"></i>
+                    <strong>Energy:</strong>
+                    {{
+                      (result.voiceFeatures && result.voiceFeatures.energy) ||
+                        0.0 | number : "1.2-2"
+                    }}
+                  </span>
                 </div>
-              </div>
-
-              <!-- Transcribed Text -->
-              <div class="mb-2">
-                <p class="mb-1">{{ result.text }}</p>
-              </div>
-
-              <!-- Voice Features -->
-              <div class="d-flex gap-3">
-                <small class="text-muted">
-                  <strong>Voice:</strong>
-                  <span [class]="getSentimentClass(result.sentiment.voice)">{{
-                    result.sentiment.voice
-                  }}</span>
-                </small>
-                <small class="text-muted">
-                  <strong>Pitch:</strong>
-                  {{ result.voiceFeatures.pitch | number : "1.2-2" }}
-                </small>
-                <small class="text-muted">
-                  <strong>Energy:</strong>
-                  {{ result.voiceFeatures.energy | number : "1.2-2" }}
-                </small>
               </div>
             </div>
+            <!-- Close analysis-results-container -->
           </div>
+          <!-- Close call-analysis tab -->
 
           <!-- Call History Tab -->
-          <div *ngIf="activeTab === 'call-history'">
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <div class="card bg-light">
-                  <div class="card-body text-center">
-                    <h4 class="text-primary mb-1">
-                      {{ analysisResults.length }}
-                    </h4>
-                    <small class="text-muted">Total Interactions</small>
+          <div *ngIf="activeTab === 'call-history'" class="h-100">
+            <div
+              class="call-history-container"
+              style="max-height: 500px; overflow-y: auto"
+            >
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <div class="card bg-light">
+                    <div class="card-body text-center">
+                      <h4 class="text-primary mb-1">
+                        {{ analysisResults.length }}
+                      </h4>
+                      <small class="text-muted">Total Interactions</small>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <div class="card bg-light">
+                    <div class="card-body text-center">
+                      <h4 class="text-success mb-1">
+                        {{ getsentimentCount("positive") }}
+                      </h4>
+                      <small class="text-muted">Positive Responses</small>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div class="col-md-6 mb-3">
-                <div class="card bg-light">
-                  <div class="card-body text-center">
-                    <h4 class="text-success mb-1">
-                      {{ getsentimentCount("positive") }}
-                    </h4>
-                    <small class="text-muted">Positive Responses</small>
-                  </div>
+
+              <!-- Sample Call History -->
+              <div class="border-bottom py-2">
+                <div class="d-flex justify-content-between">
+                  <span
+                    ><i class="bx bx-phone text-success me-2"></i>Incoming
+                    Call</span
+                  >
+                  <small class="text-muted">Today, 10:15 AM</small>
                 </div>
-              </div>
-            </div>
-
-            <!-- Sample Call History -->
-            <div class="border-bottom py-2">
-              <div class="d-flex justify-content-between">
-                <span
-                  ><i class="bx bx-phone text-success me-2"></i>Incoming
-                  Call</span
+                <small class="text-muted"
+                  >Duration: 8m 45s | Result: Resolved</small
                 >
-                <small class="text-muted">Today, 10:15 AM</small>
               </div>
-              <small class="text-muted"
-                >Duration: 8m 45s | Result: Resolved</small
-              >
-            </div>
 
-            <div class="border-bottom py-2">
-              <div class="d-flex justify-content-between">
-                <span
-                  ><i class="bx bx-phone-outgoing text-primary me-2"></i
-                  >Outgoing Call</span
+              <div class="border-bottom py-2">
+                <div class="d-flex justify-content-between">
+                  <span
+                    ><i class="bx bx-phone-outgoing text-primary me-2"></i
+                    >Outgoing Call</span
+                  >
+                  <small class="text-muted">Yesterday, 3:30 PM</small>
+                </div>
+                <small class="text-muted"
+                  >Duration: 12m 20s | Result: Follow-up Required</small
                 >
-                <small class="text-muted">Yesterday, 3:30 PM</small>
               </div>
-              <small class="text-muted"
-                >Duration: 12m 20s | Result: Follow-up Required</small
-              >
             </div>
+            <!-- Close call-history-container -->
           </div>
+          <!-- Close call-history tab -->
 
           <!-- Transcription Tab -->
-          <div *ngIf="activeTab === 'transcription'">
+          <div *ngIf="activeTab === 'transcription'" class="h-100">
             <div class="mb-3">
               <h6>Complete Call Transcription</h6>
               <p class="text-muted">
@@ -366,13 +380,45 @@
               </p>
             </div>
 
-            <div *ngFor="let result of analysisResults" class="mb-2">
-              <div class="d-flex gap-2">
-                <span class="badge bg-primary">{{ result.speaker }}</span>
-                <span>{{ result.text }}</span>
+            <div
+              class="transcription-container"
+              style="max-height: 450px; overflow-y: auto"
+            >
+              <div
+                *ngFor="let result of analysisResults"
+                class="mb-3 border-bottom pb-2"
+              >
+                <div class="d-flex gap-2 align-items-center mb-2">
+                  <span
+                    class="badge"
+                    [class]="
+                      result.speaker === 'SPEAKER_00'
+                        ? 'bg-primary'
+                        : 'bg-success'
+                    "
+                  >
+                    {{ result.speaker === "SPEAKER_00" ? "Customer" : "Agent" }}
+                  </span>
+                  <small class="text-muted">{{ result.timestamp }}</small>
+                </div>
+                <p class="mb-2">{{ result.text }}</p>
+                <!-- Voice analytics badges -->
+                <div class="d-flex gap-1 flex-wrap">
+                  <span
+                    class="badge rounded-pill"
+                    [class]="getSentimentBadgeClass(result.sentiment.text)"
+                  >
+                    {{ result.sentiment.text | titlecase }}
+                  </span>
+                  <span class="badge bg-label-info rounded-pill">
+                    Voice: {{ result.sentiment.voice || "NEUTRAL" }}
+                  </span>
+                </div>
               </div>
             </div>
+            <!-- Close transcription-container -->
           </div>
+          <!-- Close transcription tab -->
         </div>
       </div>
     </div>
