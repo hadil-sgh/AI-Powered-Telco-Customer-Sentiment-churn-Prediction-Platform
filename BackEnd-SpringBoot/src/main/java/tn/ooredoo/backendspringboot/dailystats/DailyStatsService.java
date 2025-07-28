@@ -4,6 +4,8 @@ import tn.ooredoo.backendspringboot.user.User;
 
 public interface DailyStatsService {
     void updateCallsCompletedForToday(User user, int callsCompleted);
-    
+    Double getDailyAverageSentiment(String email);
+    Integer getAgentRanking(String email);
+
 }
 

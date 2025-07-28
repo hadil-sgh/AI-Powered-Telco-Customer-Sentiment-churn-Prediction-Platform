@@ -26,7 +26,7 @@ public class Note {
     private User agent;
 
     private String description;
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     private CallRecord call;
 
     private Duration callDuration;

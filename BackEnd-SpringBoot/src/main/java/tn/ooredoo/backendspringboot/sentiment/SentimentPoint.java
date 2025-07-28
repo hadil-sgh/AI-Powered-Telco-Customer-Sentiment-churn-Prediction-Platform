@@ -4,8 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import tn.ooredoo.backendspringboot.call_transcript.CallRecord;
 
-import java.time.LocalDateTime;
-
 @Entity
 @Builder
 @NoArgsConstructor
@@ -21,7 +19,6 @@ public class SentimentPoint {
     @JoinColumn(name = "callId")
     private CallRecord call;
 
-    private LocalDateTime timestamp;
     private Double sentimentScore;
     private String context;
 }

@@ -10,4 +10,5 @@ public interface CallRecordRepository
         extends JpaRepository<CallRecord, Integer> {
     Integer countByAgent_IdAndCallDateTimeBetween(Long agentId, LocalDateTime start, LocalDateTime end);
 
+
 }

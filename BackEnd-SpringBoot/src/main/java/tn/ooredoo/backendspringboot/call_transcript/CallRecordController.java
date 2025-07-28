@@ -3,6 +3,8 @@ package tn.ooredoo.backendspringboot.call_transcript;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
+
 @RestController
 @RequestMapping("/callrecord")
 @RequiredArgsConstructor
@@ -21,7 +23,7 @@ public class CallRecordController {
 
 
     @GetMapping("/callsPerDay/{agentId}")
-    public Integer getCallsPerDayForAgent(@PathVariable Long agentId, @RequestParam(defaultValue = "today") String date) {
+    public Integer getCallsPerDayForAgent(@PathVariable Long agentId, @RequestParam(defaultValue = "today") Date date) {
         return callRecordServices.getCallsPerDayForAgent(agentId, date);
     }
 

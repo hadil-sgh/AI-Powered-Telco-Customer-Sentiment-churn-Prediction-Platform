@@ -1,5 +1,7 @@
 package tn.ooredoo.backendspringboot.call_transcript;
 
+import java.util.Date;
+
 public interface CallRecordServices {
     String formatTranscriptForAnalysis(CallRecord callRecord);
     CallRecord saveCallRecord(CallRecord callRecord);
@@ -7,7 +9,7 @@ public interface CallRecordServices {
     void deleteCallRecordById(Integer id);
     CallRecord updateCallRecord(CallRecord callRecord);
     CallRecord getCallRecordByCallId(Integer callId);
-    Integer getCallsPerDayForAgent(Long agentId, String date);
+    Integer getCallsPerDayForAgent(Long agentId, Date date);
 
 
 

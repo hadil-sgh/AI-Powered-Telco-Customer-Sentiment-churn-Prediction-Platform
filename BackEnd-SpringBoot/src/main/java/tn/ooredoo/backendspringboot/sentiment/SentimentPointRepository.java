@@ -18,3 +18,5 @@ public interface SentimentPointRepository extends JpaRepository<SentimentPoint, 
 
 
 
+
+

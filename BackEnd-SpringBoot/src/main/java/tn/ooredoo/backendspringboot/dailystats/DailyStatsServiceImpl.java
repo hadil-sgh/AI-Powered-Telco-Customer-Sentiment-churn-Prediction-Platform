@@ -2,17 +2,27 @@ package tn.ooredoo.backendspringboot.dailystats;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import tn.ooredoo.backendspringboot.call_transcript.CallRecord;
+import tn.ooredoo.backendspringboot.call_transcript.CallRecordServices;
+import tn.ooredoo.backendspringboot.post_call_analysis.performanceagent.PerformanceRepository;
+import tn.ooredoo.backendspringboot.sentiment.SentimentPointRepository;
 import tn.ooredoo.backendspringboot.user.User;
+import tn.ooredoo.backendspringboot.user.UserRepository;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class DailyStatsServiceImpl implements DailyStatsService {
     private final DailyStatsRepository dailyStatsRepository;
+    private final UserRepository userRepository;
+    private final PerformanceRepository performanceRepository;
+    private final SentimentPointRepository sentimentPointRepository;
+    private final CallRecordServices callRecordServices;
 
     @Override
     public void updateCallsCompletedForToday(User user, int callsCompleted) {
@@ -33,6 +43,29 @@ public class DailyStatsServiceImpl implements DailyStatsService {
                     .build();
         }
         dailyStatsRepository.save(stats);
+    }
+
+    @Override
+    public Double getDailyAverageSentiment(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+        LocalDate today = LocalDate.now();
+        List<CallRecord> callRecords = callRecordServices.getCallsPerDayForAgent(user.getId(), today);
+        if (callRecords.isEmpty()) {
+            return 0.0;
+        }else {
+
+
+
+        }
+
+        return 0.0;
+    }
+
+    @Override
+    public Integer getAgentRanking(String email) {
+
+        return 0;
     }
 }
 
