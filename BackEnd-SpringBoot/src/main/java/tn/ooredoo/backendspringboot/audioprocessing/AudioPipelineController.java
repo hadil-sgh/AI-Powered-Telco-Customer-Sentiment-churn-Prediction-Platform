@@ -4,148 +4,122 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.List;
 
 @RestController
-@RequestMapping("/audio")
+@RequestMapping("/audio-analysis")  // Updated to match Angular service
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 @Slf4j
 public class AudioPipelineController {
 
     private final AudioPipelineService audioPipelineService;
-    private final AudioAnalysisRepository audioAnalysisRepository;
 
-    @PostMapping("/start")
-    public ResponseEntity<String> startPipeline() {
+    /**
+     * Save audio analysis result received from Angular frontend
+     * Flow: Python API ➝ Angular ➝ Spring Boot (this endpoint)
+     */
+    @PostMapping("/save")
+    public ResponseEntity<AudioAnalysisResponse> saveAnalysisResult(@RequestBody AudioAnalysisRequestDto request) {
         try {
-            audioPipelineService.startPipeline();
-            return ResponseEntity.ok("Audio pipeline started successfully");
-        } catch (Exception e) {
-            log.error("Error starting pipeline: {}", e.getMessage());
-            return ResponseEntity.internalServerError().body("Failed to start pipeline: " + e.getMessage());
-        }
-    }
+            log.info("💾 Received analysis result from Angular - SessionId: {}, Speaker: {}, Text: {}",
+                    request.getSessionId(),
+                    request.getSpeaker(),
+                    request.getText().substring(0, Math.min(request.getText().length(), 50)) + "...");
 
-    @PostMapping("/stop")
-    public ResponseEntity<String> stopPipeline() {
-        try {
-            audioPipelineService.stopPipeline();
-            return ResponseEntity.ok("Audio pipeline stopped successfully");
-        } catch (Exception e) {
-            log.error("Error stopping pipeline: {}", e.getMessage());
-            return ResponseEntity.internalServerError().body("Failed to stop pipeline: " + e.getMessage());
-        }
-    }
-
-    @PostMapping("/process-base64")
-    public ResponseEntity<String> processAudioBase64(
-            @RequestParam String base64Data,
-            @RequestParam String sessionId) {
-        try {
-            audioPipelineService.processAudioChunk(base64Data, sessionId);
-            return ResponseEntity.ok("Base64 audio chunk processed successfully");
-        } catch (Exception e) {
-            log.error("Error processing base64 audio: {}", e.getMessage());
-            return ResponseEntity.internalServerError().body("Failed to process audio: " + e.getMessage());
-        }
-    }
-
-    @PostMapping("/process-file")
-    public ResponseEntity<String> processAudioFile(
-            @RequestParam("file") MultipartFile file,
-            @RequestParam String sessionId) throws IOException {
-        try {
-            byte[] audioBytes = file.getBytes();
-            audioPipelineService.processAudioChunk(audioBytes, sessionId);
-            return ResponseEntity.ok("Audio file processed successfully");
-        } catch (Exception e) {
-            log.error("Error processing audio file: {}", e.getMessage());
-            return ResponseEntity.internalServerError().body("Failed to process audio file: " + e.getMessage());
-        }
-    }
-
-    @PostMapping("/analysis/save")
-    public ResponseEntity<AudioAnalysisResponse> saveAnalysisResult(@RequestBody AudioAnalysisRequest request) {
-        try {
-            log.info("Received analysis result for session: {}", request.getSessionId());
+            // Save and return the saved entity
+            AudioAnalysisResponse saved = audioPipelineService.saveAnalysisResult(request);
             
-            // Convert request to entity
-            AudioAnalysisResponse response = convertToEntity(request);
-            
-            // Save to database
-            AudioAnalysisResponse saved = audioAnalysisRepository.save(response);
-            
-            log.debug("Saved analysis result with ID: {}", saved.getId());
+            log.info("✅ Analysis result saved successfully - ID: {}", saved.getId());
             return ResponseEntity.ok(saved);
-            
+
         } catch (Exception e) {
-            log.error("Error saving analysis result: {}", e.getMessage());
-            return ResponseEntity.internalServerError().build();
+            log.error("❌ Error saving analysis result: ", e);
+            return ResponseEntity.status(500).build();
         }
     }
 
-    @GetMapping("/analysis/session/{sessionId}")
-    public ResponseEntity<List<AudioAnalysisResponse>> getAnalysisBySession(@PathVariable String sessionId) {
+    /**
+     * Get all analysis results for a specific session
+     */
+    @GetMapping("/session/{sessionId}")
+    public ResponseEntity<List<AudioAnalysisResponse>> getSessionResults(
+            @PathVariable String sessionId) {
         try {
-            List<AudioAnalysisResponse> results = audioAnalysisRepository.findBySessionIdOrderByTimestampDesc(sessionId);
+            log.info("📖 Retrieving analysis results for session: {}", sessionId);
+            List<AudioAnalysisResponse> results = audioPipelineService.getTranscriptsBySession(sessionId);
             return ResponseEntity.ok(results);
         } catch (Exception e) {
-            log.error("Error retrieving analysis results: {}", e.getMessage());
-            return ResponseEntity.internalServerError().build();
+            log.error("❌ Error retrieving results for session {}: ", sessionId, e);
+            return ResponseEntity.status(500).build();
         }
     }
 
-    @GetMapping("/analysis/recent")
-    public ResponseEntity<List<AudioAnalysisResponse>> getRecentAnalysis(
-            @RequestParam(defaultValue = "50") int limit) {
+    /**
+     * Get all analysis results for a specific call record
+     */
+    @GetMapping("/call-record/{callRecordId}")
+    public ResponseEntity<List<AudioAnalysisResponse>> getCallRecordResults(
+            @PathVariable Integer callRecordId) {
         try {
-            List<AudioAnalysisResponse> results = audioAnalysisRepository.findTopByOrderByTimestampDesc(limit);
+            log.info("📖 Retrieving analysis results for call record: {}", callRecordId);
+            List<AudioAnalysisResponse> results = audioPipelineService.getTranscriptsByCallRecord(callRecordId);
             return ResponseEntity.ok(results);
         } catch (Exception e) {
-            log.error("Error retrieving recent analysis: {}", e.getMessage());
-            return ResponseEntity.internalServerError().build();
+            log.error("❌ Error retrieving results for call record {}: ", callRecordId, e);
+            return ResponseEntity.status(500).build();
         }
     }
 
-    @GetMapping("/status")
-    public ResponseEntity<PipelineStatus> getPipelineStatus() {
+    /**
+     * Get session statistics
+     */
+    @GetMapping("/session/{sessionId}/statistics")
+    public ResponseEntity<?> getSessionStatistics(@PathVariable String sessionId) {
         try {
-            PipelineStatus status = audioPipelineService.getStatus();
-            return ResponseEntity.ok(status);
+            // You can implement statistics calculation in the service
+            var stats = audioPipelineService.getSessionStatistics(sessionId);
+            return ResponseEntity.ok(stats);
         } catch (Exception e) {
-            log.error("Error getting pipeline status: {}", e.getMessage());
-            return ResponseEntity.internalServerError().build();
+            log.error("❌ Error retrieving session statistics: ", e);
+            return ResponseEntity.status(500).build();
         }
     }
 
-    private AudioAnalysisResponse convertToEntity(AudioAnalysisRequest request) {
-        // Create sentiment entity
-        TranscriptSentiment sentiment = TranscriptSentiment.builder()
-                .text(request.getSentiment().getText())
-                .voice(request.getSentiment().getVoice())
-                .score(request.getSentiment().getScore())
-                .build();
+    /**
+     * Get analysis result by ID
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<AudioAnalysisResponse> getAnalysisResult(@PathVariable Integer id) {
+        try {
+            AudioAnalysisResponse result = audioPipelineService.getAnalysisResultById(id);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("❌ Error retrieving analysis result {}: ", id, e);
+            return ResponseEntity.status(404).build();
+        }
+    }
 
-        // Create voice features entity
-        VoiceFeatures voiceFeatures = VoiceFeatures.builder()
-                .pitch(request.getVoiceFeatures().getPitch())
-                .energy(request.getVoiceFeatures().getEnergy())
-                .rate(request.getVoiceFeatures().getRate())
-                .build();
+    /**
+     * Delete analysis result
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteAnalysisResult(@PathVariable Integer id) {
+        try {
+            audioPipelineService.deleteAnalysisResult(id);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            log.error("❌ Error deleting analysis result {}: ", id, e);
+            return ResponseEntity.status(500).build();
+        }
+    }
 
-        // Create main analysis response
-        return AudioAnalysisResponse.builder()
-                .timestamp(request.getTimestamp())
-                .speaker(request.getSpeaker())
-                .text(request.getText())
-                .sentiment(sentiment)
-                .voiceFeatures(voiceFeatures)
-                .sessionId(request.getSessionId())
-                .analysisType(request.getAnalysisType())
-                .build();
+    /**
+     * Health check endpoint
+     */
+    @GetMapping("/health")
+    public ResponseEntity<String> healthCheck() {
+        return ResponseEntity.ok("Audio Analysis service is running - HTTP only (no WebSocket conflicts)");
     }
 }

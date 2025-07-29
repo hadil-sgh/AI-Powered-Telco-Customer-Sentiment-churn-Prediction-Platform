@@ -9,34 +9,28 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
-@Configuration
-@EnableWebSocketMessageBroker
-@Order(Ordered.HIGHEST_PRECEDENCE + 99) // ! Ensure this config is loaded first
-@RequiredArgsConstructor
+// ⚠️ DISABLED: This WebSocket config was interfering with Python API WebSocket connection
+// The audio processing flow is: Python API ➝ Angular ➝ Spring (HTTP) for storage
+// @Configuration
+// @EnableWebSocketMessageBroker
+// @Order(Ordered.HIGHEST_PRECEDENCE + 99)
+// @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
+    // Commented out to prevent WebSocket conflicts with Python API
+    /*
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
         registry.enableSimpleBroker("/user");
         registry.setApplicationDestinationPrefixes("/app");
         registry.setUserDestinationPrefix("/user");
-
     }
-// TODO: Implement a better custom for error handling in websocket
-//    @Override
-//    public void addReturnValueHandlers(List<HandlerMethodReturnValueHandler> returnValueHandlers) {
-//        returnValueHandlers.add()
-//    }
 
-
-
-@Override
-public void registerStompEndpoints(StompEndpointRegistry registry) {
-    registry.addEndpoint("/ws/audio")
-
-            .setAllowedOrigins("*")
-            .withSockJS();
-}
-
-
+    @Override
+    public void registerStompEndpoints(StompEndpointRegistry registry) {
+        registry.addEndpoint("/ws/audio")
+                .setAllowedOrigins("*")
+                .withSockJS();
+    }
+    */
 }

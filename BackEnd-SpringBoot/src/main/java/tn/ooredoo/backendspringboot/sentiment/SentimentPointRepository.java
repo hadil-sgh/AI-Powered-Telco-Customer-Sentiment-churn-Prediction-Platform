@@ -12,7 +12,7 @@ public interface SentimentPointRepository extends JpaRepository<SentimentPoint, 
         @Query("SELECT AVG(s.sentimentScore) " +
                 "FROM SentimentPoint s " +
                 "WHERE s.call.agent.id = :userId " +
-                "AND CAST(s.timestamp AS date) = CURRENT_DATE")
+                "AND CAST(s.call.callDateTime AS date) = CURRENT_DATE")
         Double averageSentimentByUserIdToday(@Param("userId") Long userId);
     }
 

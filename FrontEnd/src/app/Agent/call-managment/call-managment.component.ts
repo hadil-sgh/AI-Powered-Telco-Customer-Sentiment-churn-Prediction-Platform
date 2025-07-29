@@ -1,5 +1,9 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { AudioStreamService } from '../../services/audio-stream.service';
+import {
+  AudioAnalysisService,
+  AudioAnalysisRequestDto,
+} from '../../services/audio-analysis.service';
 
 export interface AudioAnalysisResult {
   timestamp: string;
@@ -117,7 +121,10 @@ export class CallManagmentComponent implements OnInit, OnDestroy {
   private sessionTimer: any;
   private startTime: Date | null = null;
 
-  constructor(private audioStreamService: AudioStreamService) {
+  constructor(
+    private audioStreamService: AudioStreamService,
+    private audioAnalysisService: AudioAnalysisService
+  ) {
     this.currentSessionId = this.generateSessionId();
   }
 
@@ -202,6 +209,9 @@ export class CallManagmentComponent implements OnInit, OnDestroy {
 
     console.log('✅ Processing unique analysis result:', result.text);
 
+    // 🔄 NEW: Save to Spring Boot backend
+    this.saveToSpringBoot(result);
+
     // Add to beginning of array for newest first
     this.analysisResults.unshift(result);
 
@@ -223,6 +233,51 @@ export class CallManagmentComponent implements OnInit, OnDestroy {
 
     // Update churn prediction if needed (simulate dynamic update)
     this.updateChurnPrediction(result);
+  }
+
+  /**
+   * 💾 Save analysis result to Spring Boot backend
+   * Flow: Python API ➝ Angular ➝ Spring Boot (this method)
+   */
+  private saveToSpringBoot(result: AudioAnalysisResult) {
+    try {
+      // Convert AudioAnalysisResult to AudioAnalysisRequestDto
+      const requestDto: AudioAnalysisRequestDto = {
+        timestamp: result.timestamp,
+        speaker: result.speaker,
+        text: result.text,
+        sessionId: result.sessionId,
+        analysisType: result.analysisType,
+        sentiment: result.sentiment,
+        voiceFeatures: result.voiceFeatures,
+        emotionAnalysis: result.emotionAnalysis,
+        audioStats: result.audioStats,
+        // You can add callRecordId if you have one
+        // callRecordId: this.currentCallRecordId
+      };
+
+      console.log(
+        '💾 Saving to Spring Boot:',
+        result.text.substring(0, 50) + '...'
+      );
+
+      // Save asynchronously - don't block UI if backend is slow
+      this.audioAnalysisService.saveAnalysisResult(requestDto).subscribe({
+        next: (savedResult) => {
+          console.log(
+            '✅ Saved to Spring Boot successfully, ID:',
+            savedResult.id
+          );
+        },
+        error: (error) => {
+          console.error('❌ Error saving to Spring Boot:', error);
+          // Don't show error to user - this shouldn't interrupt real-time flow
+          // Just log it for debugging
+        },
+      });
+    } catch (error) {
+      console.error('❌ Error preparing data for Spring Boot:', error);
+    }
   }
 
   private updateChurnPrediction(result: AudioAnalysisResult) {

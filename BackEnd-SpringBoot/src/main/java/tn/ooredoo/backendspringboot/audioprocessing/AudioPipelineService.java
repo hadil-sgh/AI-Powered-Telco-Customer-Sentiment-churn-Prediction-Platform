@@ -1,190 +1,243 @@
 package tn.ooredoo.backendspringboot.audioprocessing;
 
-
-import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.socket.WebSocketSession;
-import org.springframework.web.reactive.socket.client.ReactorNettyWebSocketClient;
-import org.springframework.web.reactive.socket.client.WebSocketClient;
+import tn.ooredoo.backendspringboot.call_transcript.CallRecord;
+import tn.ooredoo.backendspringboot.call_transcript.CallRecordRepository;
 
-import java.net.URI;
-import java.util.Base64;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.function.BiConsumer;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class AudioPipelineService {
 
-    @Value("${audio.pipeline.url:http://localhost:8000}")
-    private String audioPipelineUrl;
+    private final AudioAnalysisRepository audioAnalysisRepository;
+    private final CallRecordRepository callRecordRepository;
 
-    private final WebSocketClient webSocketClient = new ReactorNettyWebSocketClient();
-    private final ObjectMapper objectMapper = new ObjectMapper();
-    private final ConcurrentMap<String, BiConsumer<String, AudioAnalysisResponse>> subscribers = new ConcurrentHashMap<>();
+    /**
+     * Save audio analysis result from Angular frontend
+     * Flow: Python API ➝ Angular ➝ Spring Boot (this method)
+     */
+    public AudioAnalysisResponse saveAnalysisResult(AudioAnalysisRequestDto request) {
+        try {
+            log.info("💾 Converting and saving analysis result - SessionId: {}, Speaker: {}",
+                    request.getSessionId(), request.getSpeaker());
 
-    private WebSocketSession pipelineSession;
-    private boolean isConnected = false;
+            // Map DTO to Entity
+            AudioAnalysisResponse entity = mapDtoToEntity(request);
 
-    public void startPipeline() {
-        if (!isConnected) {
-            connectToPipeline();
+            // Save to database
+            AudioAnalysisResponse saved = audioAnalysisRepository.save(entity);
+
+            log.info("✅ Analysis result saved successfully - ID: {}, SessionId: {}, Text length: {}",
+                    saved.getId(), saved.getSessionId(), saved.getText().length());
+
+            return saved;
+
+        } catch (Exception e) {
+            log.error("❌ Error saving analysis result for session {}: ", request.getSessionId(), e);
+            throw new RuntimeException("Failed to save analysis result", e);
         }
-
-        // Send start command to pipeline
-        sendHttpRequest("/api/start", "POST", null);
     }
 
-    public void stopPipeline() {
-        // Send stop command to pipeline
-        sendHttpRequest("/api/stop", "POST", null);
-
-        if (pipelineSession != null) {
-            pipelineSession.close();
-            isConnected = false;
+    /**
+     * Map AudioAnalysisRequestDto to AudioAnalysisResponse Entity
+     */
+    private AudioAnalysisResponse mapDtoToEntity(AudioAnalysisRequestDto dto) {
+        // Map sentiment
+        TranscriptSentiment sentiment = null;
+        if (dto.getSentiment() != null) {
+            sentiment = TranscriptSentiment.builder()
+                    .text(dto.getSentiment().getText())
+                    .voice(dto.getSentiment().getVoice())
+                    .score(dto.getSentiment().getScore())
+                    .build();
         }
-    }
 
-    public void processAudioChunk(String base64AudioData, String sessionId) {
-        if (pipelineSession != null && isConnected) {
-            try {
-                String audioMessage = String.format("{\"type\":\"audio_chunk\",\"data\":\"%s\",\"session_id\":\"%s\"}",
-                        base64AudioData, sessionId);
-                pipelineSession.send(
-                        reactor.core.publisher.Mono.just(
-                                pipelineSession.textMessage(audioMessage)
-                        )
-                ).subscribe();
-            } catch (Exception e) {
-                log.error("Error sending audio chunk to pipeline: {}", e.getMessage());
+        // Map voice features
+        VoiceFeatures voiceFeatures = null;
+        if (dto.getVoiceFeatures() != null) {
+            voiceFeatures = VoiceFeatures.builder()
+                    .pitch(dto.getVoiceFeatures().getPitch())
+                    .energy(dto.getVoiceFeatures().getEnergy())
+                    .rate(dto.getVoiceFeatures().getRate())
+                    .build();
+        }
+
+        // Map emotion analysis
+        EmotionAnalysis emotionAnalysis = null;
+        if (dto.getEmotionAnalysis() != null) {
+            emotionAnalysis = EmotionAnalysis.builder()
+                    .primary_emotion(dto.getEmotionAnalysis().getPrimary_emotion())
+                    .confidence(dto.getEmotionAnalysis().getConfidence())
+                    .reasoning(dto.getEmotionAnalysis().getReasoning() != null ? 
+                              Arrays.asList(dto.getEmotionAnalysis().getReasoning()) : null)
+                    .voice_intensity(dto.getEmotionAnalysis().getVoice_intensity())
+                    .escalation_level(dto.getEmotionAnalysis().getEscalation_level())
+                    .build();
+        }
+
+        // Get call record if ID provided
+        CallRecord callRecord = null;
+        if (dto.getCallRecordId() != null) {
+            Optional<CallRecord> callRecordOpt = callRecordRepository.findById(dto.getCallRecordId());
+            if (callRecordOpt.isPresent()) {
+                callRecord = callRecordOpt.get();
+                log.debug("Linked analysis to call record: {}", dto.getCallRecordId());
+            } else {
+                log.warn("Call record not found with ID: {}", dto.getCallRecordId());
             }
         }
-    }
 
-
-    public void processAudioChunk(byte[] audioData, String sessionId) {
-        String base64Data = Base64.getEncoder().encodeToString(audioData);
-        processAudioChunk(base64Data, sessionId);
-    }
-
-    public void subscribeToResults(String sessionId, BiConsumer<String, AudioAnalysisResponse> callback) {
-        subscribers.put(sessionId, callback);
-    }
-
-    public void unsubscribeFromResults(String sessionId) {
-        subscribers.remove(sessionId);
-    }
-
-    private void connectToPipeline() {
-        try {
-            URI uri = URI.create(audioPipelineUrl.replace("http", "ws") + "/ws");
-
-            webSocketClient.execute(uri, session -> {
-                pipelineSession = session;
-                isConnected = true;
-                log.info("Connected to audio pipeline WebSocket");
-
-                return session.receive()
-                        .map(org.springframework.web.reactive.socket.WebSocketMessage::getPayloadAsText)
-                        .doOnNext(this::handlePipelineMessage)
-                        .doOnError(error -> {
-                            log.error("WebSocket error: {}", error.getMessage());
-                            isConnected = false;
-                        })
-                        .doOnComplete(() -> {
-                            log.info("WebSocket connection completed");
-                            isConnected = false;
-                        })
-                        .then();
-            }).subscribe();
-
-        } catch (Exception e) {
-            log.error("Error connecting to audio pipeline: {}", e.getMessage());
-        }
-    }
-
-    private void handlePipelineMessage(String message) {
-        try {
-            log.debug("Received from pipeline: {}", message);
-
-            // Try to parse as AudioAnalysisRequest (from Python pipeline)
-            AudioAnalysisRequest result = objectMapper.readValue(message, AudioAnalysisRequest.class);
-
-            // Broadcast to all subscribers
-            subscribers.forEach((sessionId, callback) -> {
-                try {
-                    // Convert to AudioAnalysisResponse for callback
-                    AudioAnalysisResponse response = convertToResponse(result);
-                    callback.accept(sessionId, response);
-                } catch (Exception e) {
-                    log.error("Error calling subscriber callback for session {}: {}", sessionId, e.getMessage());
-                }
-            });
-
-        } catch (Exception e) {
-            log.debug("Message is not a valid AudioAnalysisRequest, ignoring: {}", message);
-        }
-    }
-
-    private AudioAnalysisResponse convertToResponse(AudioAnalysisRequest request) {
-        // Create sentiment entity
-        TranscriptSentiment sentiment = TranscriptSentiment.builder()
-                .text(request.getSentiment().getText())
-                .voice(request.getSentiment().getVoice())
-                .score(request.getSentiment().getScore())
-                .build();
-
-        // Create voice features entity
-        VoiceFeatures voiceFeatures = VoiceFeatures.builder()
-                .pitch(request.getVoiceFeatures().getPitch())
-                .energy(request.getVoiceFeatures().getEnergy())
-                .rate(request.getVoiceFeatures().getRate())
-                .build();
-
-        // Create main analysis response
+        // Build and return entity
         return AudioAnalysisResponse.builder()
-                .timestamp(request.getTimestamp())
-                .speaker(request.getSpeaker())
-                .text(request.getText())
+                .timestamp(dto.getTimestamp())
+                .speaker(dto.getSpeaker())
+                .text(dto.getText())
+                .sessionId(dto.getSessionId())
+                .analysisType(dto.getAnalysisType())
                 .sentiment(sentiment)
                 .voiceFeatures(voiceFeatures)
-                .sessionId(request.getSessionId())
-                .analysisType(request.getAnalysisType())
+                .emotionAnalysis(emotionAnalysis)
+                .callRecord(callRecord)
                 .build();
     }
 
-    public PipelineStatus getStatus() {
-        return PipelineStatus.builder()
-                .status(isConnected ? "CONNECTED" : "DISCONNECTED")
-                .isConnected(isConnected)
-                .activeConnections(subscribers.size())
-                .lastActivity(java.time.LocalDateTime.now().toString())
-                .componentsReady(isConnected)
-                .audioCaptureActive(isConnected)
-                .build();
-    }
-
-    private void sendHttpRequest(String endpoint, String method, String body) {
-        // Implementation for HTTP requests to pipeline API
-        // This could use WebClient or RestTemplate
+    /**
+     * Get all analysis results for a specific session
+     */
+    public List<AudioAnalysisResponse> getTranscriptsBySession(String sessionId) {
         try {
-            // Using WebClient for reactive HTTP calls
-            org.springframework.web.reactive.function.client.WebClient
-                    .create(audioPipelineUrl)
-                    .method(org.springframework.http.HttpMethod.valueOf(method))
-                    .uri(endpoint)
-                    .bodyValue(body != null ? body : "")
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .subscribe(
-                            response -> log.info("Pipeline API response: {}", response),
-                            error -> log.error("Pipeline API error: {}", error.getMessage())
-                    );
+            log.info("📖 Retrieving analysis results for session: {}", sessionId);
+            List<AudioAnalysisResponse> results = audioAnalysisRepository.findBySessionIdOrderByTimestampDesc(sessionId);
+            log.info("✅ Found {} results for session: {}", results.size(), sessionId);
+            return results;
         } catch (Exception e) {
-            log.error("Error sending request to pipeline API: {}", e.getMessage());
+            log.error("❌ Error retrieving results for session {}: ", sessionId, e);
+            throw e;
         }
+    }
+
+    /**
+     * Get all analysis results for a specific call record
+     */
+    public List<AudioAnalysisResponse> getTranscriptsByCallRecord(Integer callRecordId) {
+        try {
+            log.info("📖 Retrieving analysis results for call record: {}", callRecordId);
+
+            Optional<CallRecord> callRecordOpt = callRecordRepository.findById(callRecordId);
+            if (!callRecordOpt.isPresent()) {
+                log.warn("Call record not found with ID: {}", callRecordId);
+                return List.of(); // Return empty list
+            }
+
+            CallRecord callRecord = callRecordOpt.get();
+            List<AudioAnalysisResponse> results = audioAnalysisRepository.findByCallRecordOrderByTimestampDesc(callRecord);
+
+            log.info("✅ Found {} results for call record: {}", results.size(), callRecordId);
+            return results;
+        } catch (Exception e) {
+            log.error("❌ Error retrieving results for call record {}: ", callRecordId, e);
+            throw e;
+        }
+    }
+
+    /**
+     * Get analysis result by ID
+     */
+    public AudioAnalysisResponse getAnalysisResultById(Integer id) {
+        try {
+            Optional<AudioAnalysisResponse> result = audioAnalysisRepository.findById(id);
+            if (result.isPresent()) {
+                return result.get();
+            } else {
+                throw new RuntimeException("Analysis result not found with ID: " + id);
+            }
+        } catch (Exception e) {
+            log.error("❌ Error retrieving analysis result {}: ", id, e);
+            throw e;
+        }
+    }
+
+    /**
+     * Delete analysis result
+     */
+    public void deleteAnalysisResult(Integer id) {
+        try {
+            log.info("🗑️ Deleting analysis result: {}", id);
+            audioAnalysisRepository.deleteById(id);
+            log.info("✅ Analysis result deleted successfully: {}", id);
+        } catch (Exception e) {
+            log.error("❌ Error deleting analysis result {}: ", id, e);
+            throw e;
+        }
+    }
+
+    /**
+     * Get session statistics
+     */
+    public Map<String, Object> getSessionStatistics(String sessionId) {
+        try {
+            log.info("📊 Calculating statistics for session: {}", sessionId);
+            
+            List<AudioAnalysisResponse> results = audioAnalysisRepository.findBySessionIdOrderByTimestampDesc(sessionId);
+            
+            Map<String, Object> stats = new HashMap<>();
+            stats.put("totalResults", results.size());
+            stats.put("speakers", results.stream().map(AudioAnalysisResponse::getSpeaker).distinct().count());
+            
+            // Sentiment distribution
+            Map<String, Long> sentimentCounts = new HashMap<>();
+            results.forEach(result -> {
+                if (result.getSentiment() != null && result.getSentiment().getText() != null) {
+                    String sentiment = result.getSentiment().getText();
+                    sentimentCounts.put(sentiment, sentimentCounts.getOrDefault(sentiment, 0L) + 1);
+                }
+            });
+            stats.put("sentimentDistribution", sentimentCounts);
+            
+            // Emotion distribution  
+            Map<String, Long> emotionCounts = new HashMap<>();
+            results.forEach(result -> {
+                if (result.getEmotionAnalysis() != null && result.getEmotionAnalysis().getPrimary_emotion() != null) {
+                    String emotion = result.getEmotionAnalysis().getPrimary_emotion();
+                    emotionCounts.put(emotion, emotionCounts.getOrDefault(emotion, 0L) + 1);
+                }
+            });
+            stats.put("emotionDistribution", emotionCounts);
+            
+            log.info("✅ Session statistics calculated for {}: {} total results", sessionId, results.size());
+            return stats;
+            
+        } catch (Exception e) {
+            log.error("❌ Error calculating session statistics {}: ", sessionId, e);
+            throw e;
+        }
+    }
+
+    /**
+     * Legacy method for backward compatibility - now just calls the new method
+     */
+    @Deprecated
+    public void saveTranscriptAsync(AudioAnalysisResponse analysisResult, Integer callRecordId) {
+        log.warn("⚠️ Using deprecated saveTranscriptAsync method. Please use saveAnalysisResult instead.");
+        
+        // Convert entity back to DTO format (not ideal, but maintains compatibility)
+        AudioAnalysisRequestDto dto = AudioAnalysisRequestDto.builder()
+                .timestamp(analysisResult.getTimestamp())
+                .speaker(analysisResult.getSpeaker())
+                .text(analysisResult.getText())
+                .sessionId(analysisResult.getSessionId())
+                .analysisType(analysisResult.getAnalysisType())
+                .callRecordId(callRecordId)
+                .build();
+                
+        saveAnalysisResult(dto);
     }
 }

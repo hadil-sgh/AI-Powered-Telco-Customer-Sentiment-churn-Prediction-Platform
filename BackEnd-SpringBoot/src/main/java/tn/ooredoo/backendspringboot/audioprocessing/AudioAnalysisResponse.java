@@ -17,7 +17,9 @@ public class AudioAnalysisResponse {
     private Integer id;
     private String timestamp;
     private String speaker;
+
     private String text;
+
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "sentiment_id")
@@ -26,12 +28,19 @@ public class AudioAnalysisResponse {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "voicefeatures_id")
     private VoiceFeatures voiceFeatures;
+    @OneToOne(cascade = CascadeType.ALL)
+    private EmotionAnalysis emotionAnalysis;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "call_record_id")
     private CallRecord callRecord;
-    
+
     // Additional fields for real-time processing
     private String sessionId;
     private String analysisType;
+
+
+
+
+
 }

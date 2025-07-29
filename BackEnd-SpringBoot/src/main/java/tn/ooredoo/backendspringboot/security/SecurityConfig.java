@@ -30,6 +30,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
                                 "/auth/**",
+                                "/audio-analysis/**",
                                 "/user/**",
                                 "/swagger-resources",
                                 "/swagger-resources/**",
