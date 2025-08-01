@@ -18,10 +18,12 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 @Entity
+@Table(name = "CallRecords")
+
 public class CallRecord {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     @OneToOne
     private Customer customer;

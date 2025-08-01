@@ -12,7 +12,7 @@ import tn.ooredoo.backendspringboot.call_transcript.CallRecord;
 @Setter
 public class SentimentPoint {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -12,7 +12,7 @@ import tn.ooredoo.backendspringboot.user.User;
 @Builder
 public class MockCall {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @ManyToOne
     private Customer customer;

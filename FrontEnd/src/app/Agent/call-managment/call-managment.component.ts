@@ -1,9 +1,13 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Router } from '@angular/router';
 import { AudioStreamService } from '../../services/audio-stream.service';
 import {
   AudioAnalysisService,
   AudioAnalysisRequestDto,
 } from '../../services/audio-analysis.service';
+import { Customer } from '../../models/customer';
+import { ChurnPredictionService } from '../../services/churn-prediction.service';
+import { ChurnPrediction } from '../../models/churn-prediction';
 
 export interface AudioAnalysisResult {
   timestamp: string;
@@ -67,51 +71,13 @@ export class CallManagmentComponent implements OnInit, OnDestroy {
   // Active tab for middle component
   activeTab = 'call-analysis';
 
-  // Sample customer data based on actual Customer entity
-  customerData = {
-    customerID: 12345,
-    gender: 'Male',
-    seniorCitizen: 0,
-    partner: 'Yes',
-    dependents: 'No',
-    tenure: 24,
-    phoneService: 'Yes',
-    multipleLines: 'Yes',
-    internetService: 'Fiber optic',
-    onlineSecurity: 'Yes',
-    onlineBackup: 'Yes',
-    deviceProtection: 'Yes',
-    techSupport: 'Yes',
-    streamingTV: 'Yes',
-    streamingMovies: 'Yes',
-    contract: 'Month-to-month',
-    paperlessBilling: 'Yes',
-    paymentMethod: 'Electronic check',
-    monthlyCharges: 89.5,
-    totalCharges: 2148.5,
-    // Display fields for UI
-    name: 'Ahmed Ben Mohamed',
-    phoneNumber: '+216 98 123 456',
-    email: 'ahmed.benmohameed@email.com',
-    status: 'Active',
-  };
+  // Customer data - will be populated from Spring Boot via router navigation
+  customerData: Customer | null = null;
 
-  // Sample churn prediction data based on actual ChurnPrediction entity
-  churnData = {
-    id: 1,
-    prediction: 'No',
-    predictionProbability: [0.77, 0.23],
-    churnScore: 'Low',
-    // Derived fields for UI
-    score: 0.23,
-    risk: 'Low',
-    predictionText: 'Not Likely to Churn',
-    factors: [
-      { factor: 'Long tenure (24 months)', impact: 'Positive' },
-      { factor: 'Multiple services', impact: 'Positive' },
-      { factor: 'Regular payments', impact: 'Positive' },
-    ],
-  };
+  // Real churn prediction data from API
+  churnData: ChurnPrediction | null = null;
+  isLoadingChurn = false;
+  churnError = '';
 
   // Notes data
   callNotes = '';
@@ -123,7 +89,9 @@ export class CallManagmentComponent implements OnInit, OnDestroy {
 
   constructor(
     private audioStreamService: AudioStreamService,
-    private audioAnalysisService: AudioAnalysisService
+    private audioAnalysisService: AudioAnalysisService,
+    private churnService: ChurnPredictionService,
+    private router: Router
   ) {
     this.currentSessionId = this.generateSessionId();
   }
@@ -131,6 +99,99 @@ export class CallManagmentComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.setupAudioStreamSubscriptions();
     this.checkBrowserSupport();
+    this.loadSelectedCustomer();
+  }
+
+  loadSelectedCustomer() {
+    // Check if customer data was passed via router state
+    const currentNavigation = this.router.getCurrentNavigation();
+    const routerState = window.history.state;
+
+    if (routerState && routerState.selectedCustomer) {
+      const selectedCustomer: Customer = routerState.selectedCustomer;
+      this.updateCustomerData(selectedCustomer);
+      console.log('Customer data received from dashboard:', selectedCustomer);
+    } else if (
+      currentNavigation?.extras?.state &&
+      currentNavigation.extras.state['selectedCustomer']
+    ) {
+      const selectedCustomer: Customer =
+        currentNavigation.extras.state['selectedCustomer'];
+      this.updateCustomerData(selectedCustomer);
+      console.log(
+        'Customer data received from dashboard via navigation:',
+        selectedCustomer
+      );
+    }
+  }
+
+  updateCustomerData(customer: Customer) {
+    // Update the customerData object with real customer information from Spring Boot
+    this.customerData = {
+      customerID: customer.customerID,
+      firstName: customer.firstName,
+      lastName: customer.lastName,
+      email: customer.email,
+      phone: customer.phone,
+      address: customer.address,
+      gender: customer.gender,
+      SeniorCitizen: customer.SeniorCitizen,
+      Partner: customer.Partner,
+      Dependents: customer.Dependents,
+      tenure: customer.tenure,
+      PhoneService: customer.PhoneService,
+      MultipleLines: customer.MultipleLines,
+      InternetService: customer.InternetService,
+      OnlineSecurity: customer.OnlineSecurity,
+      OnlineBackup: customer.OnlineBackup,
+      DeviceProtection: customer.DeviceProtection,
+      TechSupport: customer.TechSupport,
+      StreamingTV: customer.StreamingTV,
+      StreamingMovies: customer.StreamingMovies,
+      Contract: customer.Contract,
+      PaperlessBilling: customer.PaperlessBilling,
+      PaymentMethod: customer.PaymentMethod,
+      MonthlyCharges: customer.MonthlyCharges,
+      TotalCharges: customer.TotalCharges,
+      // Removed churnPrediction - we only use API response now
+    };
+
+    console.log(
+      '✅ Customer data updated from Spring Boot:',
+      this.customerData
+    );
+
+    // Load real churn prediction for this customer from API
+    this.loadChurnPrediction(customer.customerID?.toString() || '');
+  }
+
+  /**
+   * Load real churn prediction from Spring Boot API
+   */
+  loadChurnPrediction(customerId: string) {
+    if (!customerId) {
+      console.warn('No customer ID provided for churn prediction');
+      return;
+    }
+
+    this.isLoadingChurn = true;
+    this.churnError = '';
+
+    console.log(`🔍 Loading churn prediction for customer: ${customerId}`);
+
+    this.churnService.getChurnPrediction(parseInt(customerId)).subscribe({
+      next: (churnPrediction: ChurnPrediction) => {
+        this.churnData = churnPrediction;
+        this.isLoadingChurn = false;
+        console.log('✅ Churn prediction loaded:', churnPrediction);
+      },
+      error: (error) => {
+        console.error('❌ Error loading churn prediction:', error);
+        this.churnError = 'Failed to load churn prediction from API';
+        this.isLoadingChurn = false;
+        this.churnData = null; // Don't show fallback data
+      }
+    });
   }
 
   ngOnDestroy() {
@@ -230,9 +291,6 @@ export class CallManagmentComponent implements OnInit, OnDestroy {
         peakVolume: result.audioStats.peak_volume,
       };
     }
-
-    // Update churn prediction if needed (simulate dynamic update)
-    this.updateChurnPrediction(result);
   }
 
   /**
@@ -277,42 +335,6 @@ export class CallManagmentComponent implements OnInit, OnDestroy {
       });
     } catch (error) {
       console.error('❌ Error preparing data for Spring Boot:', error);
-    }
-  }
-
-  private updateChurnPrediction(result: AudioAnalysisResult) {
-    // Simulate dynamic churn prediction update based on sentiment
-    if (result.emotionAnalysis) {
-      const emotion = result.emotionAnalysis.primary_emotion;
-      const confidence = result.emotionAnalysis.confidence;
-
-      if (
-        (emotion === 'ANGRY' || emotion === 'FRUSTRATED') &&
-        confidence > 0.7
-      ) {
-        // Increase churn risk
-        this.churnData.score = Math.min(this.churnData.score + 0.05, 0.95);
-        if (this.churnData.score > 0.7) {
-          this.churnData.risk = 'High';
-          this.churnData.churnScore = 'High';
-          this.churnData.predictionText = 'Likely to Churn';
-        } else if (this.churnData.score > 0.4) {
-          this.churnData.risk = 'Medium';
-          this.churnData.churnScore = 'Medium';
-          this.churnData.predictionText = 'Moderate Risk';
-        }
-      } else if (
-        (emotion === 'SATISFIED' || emotion === 'ENTHUSIASTIC') &&
-        confidence > 0.6
-      ) {
-        // Decrease churn risk
-        this.churnData.score = Math.max(this.churnData.score - 0.02, 0.05);
-        if (this.churnData.score < 0.3) {
-          this.churnData.risk = 'Low';
-          this.churnData.churnScore = 'Low';
-          this.churnData.predictionText = 'Not Likely to Churn';
-        }
-      }
     }
   }
 
@@ -574,28 +596,49 @@ export class CallManagmentComponent implements OnInit, OnDestroy {
     }
   }
 
+  // Simplified methods to work directly with API response
   getChurnRiskColor(): string {
-    if (this.churnData.score < 0.3) return 'text-green-600';
-    if (this.churnData.score < 0.7) return 'text-yellow-600';
-    return 'text-red-600';
+    if (!this.churnData) return 'text-gray-600';
+    
+    // Use the prediction directly from API
+    if (this.churnData.Prediction === 'No') return 'text-success';
+    if (this.churnData.Prediction === 'Yes') return 'text-danger';
+    return 'text-warning';
   }
 
   getChurnRiskBg(): string {
-    if (this.churnData.score < 0.3) return 'bg-green-100';
-    if (this.churnData.score < 0.7) return 'bg-yellow-100';
-    return 'bg-red-100';
+    if (!this.churnData) return 'bg-light';
+    
+    // Use the prediction directly from API
+    if (this.churnData.Prediction === 'No') return 'bg-label-success';
+    if (this.churnData.Prediction === 'Yes') return 'bg-label-danger';
+    return 'bg-label-warning';
   }
 
   getChurnPredictionText(): string {
-    return this.churnData.predictionText;
+    if (!this.churnData) return 'Loading...';
+    
+    // Use the prediction directly from API
+    if (this.churnData.Prediction === 'No') return 'Not Likely to Churn';
+    if (this.churnData.Prediction === 'Yes') return 'Likely to Churn';
+    return 'Unknown';
   }
 
-  getServiceStatus(service: string): string {
-    return service === 'Yes'
-      ? 'Active'
-      : service === 'No'
-      ? 'Inactive'
-      : service;
+  getChurnScore(): number {
+    if (!this.churnData || !this.churnData.ChurnScore) return 0;
+    
+    // Extract percentage from string like "25.00%"
+    const scoreStr = this.churnData.ChurnScore.replace('%', '');
+    return parseFloat(scoreStr) || 0;
+  }
+
+  getChurnRiskLevel(): string {
+    if (!this.churnData) return 'Unknown';
+    
+    // Use the prediction directly from API
+    if (this.churnData.Prediction === 'No') return 'Low';
+    if (this.churnData.Prediction === 'Yes') return 'High';
+    return 'Medium';
   }
 
   // Enhanced emotion analysis display

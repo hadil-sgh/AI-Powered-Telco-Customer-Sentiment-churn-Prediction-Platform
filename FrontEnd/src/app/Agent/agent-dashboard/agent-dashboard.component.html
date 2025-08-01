@@ -713,3 +713,150 @@
     </div>
   </div>
 </div>
+
+<!-- Customer Selection Modal -->
+<div
+  class="modal fade"
+  [class.show]="showCustomerModal"
+  [style.display]="showCustomerModal ? 'block' : 'none'"
+  id="customerModal"
+  tabindex="-1"
+  aria-labelledby="customerModalLabel"
+  [attr.aria-hidden]="!showCustomerModal"
+>
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="customerModalLabel">
+          <i class="bx bx-phone me-2"></i>Select Customer for Manual Dial
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          (click)="closeCustomerModal()"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <!-- Search Filter -->
+        <div class="mb-3">
+          <div class="input-group">
+            <span class="input-group-text">
+              <i class="bx bx-search"></i>
+            </span>
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Search customers by name, email, phone, ID..."
+              [(ngModel)]="customerSearchText"
+              (input)="filterCustomers()"
+            />
+          </div>
+        </div>
+
+        <!-- Loading State -->
+        <div *ngIf="isLoadingCustomers" class="text-center py-4">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading customers...</span>
+          </div>
+          <p class="mt-2 text-muted">Loading customers...</p>
+        </div>
+
+        <!-- Customer List -->
+        <div *ngIf="!isLoadingCustomers" class="customer-list">
+          <div *ngIf="filteredCustomers.length === 0" class="text-center py-4">
+            <i class="bx bx-user-x display-4 text-muted"></i>
+            <p class="mt-2 text-muted">
+              No customers found matching your search.
+            </p>
+          </div>
+
+          <div
+            *ngFor="let customer of filteredCustomers"
+            class="card mb-2 customer-card"
+            (click)="selectCustomer(customer)"
+            style="cursor: pointer"
+          >
+            <div class="card-body p-3">
+              <div class="d-flex align-items-center justify-content-between">
+                <!-- Customer Info -->
+                <div class="d-flex align-items-center flex-grow-1">
+                  <div class="avatar avatar-sm me-3">
+                    <div class="avatar-initial bg-label-primary rounded">
+                      <i class="bx bx-user"></i>
+                    </div>
+                  </div>
+                  <div class="flex-grow-1">
+                    <h6 class="mb-1">{{ getCustomerDisplayName(customer) }}</h6>
+                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                      <small class="text-muted" *ngIf="customer.phone">
+                        <i class="bx bx-phone me-1"></i>{{ customer.phone }}
+                      </small>
+                      <small class="text-muted" *ngIf="customer.email">
+                        <i class="bx bx-envelope me-1"></i>{{ customer.email }}
+                      </small>
+                    </div>
+                    <div class="mt-1">
+                      <span
+                        class="badge bg-label-info me-1"
+                        *ngIf="customer.gender"
+                        >{{ customer.gender }}</span
+                      >
+                      <span
+                        class="badge bg-label-warning me-1"
+                        *ngIf="customer.SeniorCitizen"
+                        >Senior</span
+                      >
+                      <span
+                        class="badge bg-label-primary me-1"
+                        *ngIf="customer.PhoneService === 'Yes'"
+                        >Phone</span
+                      >
+                      <span
+                        class="badge bg-label-secondary me-1"
+                        *ngIf="
+                          customer.InternetService &&
+                          customer.InternetService !== 'No'
+                        "
+                      >
+                        {{ customer.InternetService }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Monthly Charges -->
+                <div class="text-end ms-3">
+                  <small class="text-muted d-block">Monthly</small>
+                  <span class="fw-bold text-primary h6 mb-0"
+                    >${{ customer.MonthlyCharges || 0 }}</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          (click)="closeCustomerModal()"
+        >
+          <i class="bx bx-x me-1"></i>Cancel
+        </button>
+        <div class="d-flex align-items-center text-muted">
+          <i class="bx bx-mouse me-2"></i>
+          <small>Click any customer above to start the call</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Backdrop -->
+<div
+  class="modal-backdrop fade"
+  [class.show]="showCustomerModal"
+  *ngIf="showCustomerModal"
+></div>

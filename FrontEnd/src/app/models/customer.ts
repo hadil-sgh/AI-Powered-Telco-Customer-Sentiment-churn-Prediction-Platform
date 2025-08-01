@@ -2,25 +2,30 @@
 /* eslint-disable */
 import { ChurnPrediction } from './churn-prediction';
 export interface Customer {
-  Contract?: string;
-  Dependents?: string;
-  DeviceProtection?: string;
-  InternetService?: string;
-  MonthlyCharges?: number;
-  MultipleLines?: string;
-  OnlineBackup?: string;
-  OnlineSecurity?: string;
-  PaperlessBilling?: string;
-  Partner?: string;
-  PaymentMethod?: string;
-  PhoneService?: string;
+  customerID?: number;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  gender?: string;
   SeniorCitizen?: number;
-  StreamingMovies?: string;
-  StreamingTV?: string;
+  Partner?: string;
+  Dependents?: string;
+  tenure?: number;
+  PhoneService?: string;
+  MultipleLines?: string;
+  InternetService?: string;
+  OnlineSecurity?: string;
+  OnlineBackup?: string;
+  DeviceProtection?: string;
   TechSupport?: string;
+  StreamingTV?: string;
+  StreamingMovies?: string;
+  Contract?: string;
+  PaperlessBilling?: string;
+  PaymentMethod?: string;
+  MonthlyCharges?: number;
   TotalCharges?: number;
   churnPrediction?: ChurnPrediction;
-  customerID?: number;
-  gender?: string;
-  tenure?: number;
 }

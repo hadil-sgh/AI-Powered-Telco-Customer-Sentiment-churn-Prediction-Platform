@@ -12,86 +12,264 @@
           </h5>
         </div>
         <div class="card-body">
-          <!-- Customer Basic Info -->
-          <div class="text-center mb-4">
-            <h5 class="mb-1">{{ customerData.name }}</h5>
-            <small class="text-muted"
-              >Customer ID: {{ customerData.customerID }}</small
-            >
+          <!-- No Customer Selected State -->
+          <div *ngIf="!customerData" class="text-center py-5">
+            <i class="bx bx-user-x display-4 text-muted mb-3"></i>
+            <h6 class="text-muted">No Customer Selected</h6>
+            <p class="text-muted small">
+              Select a customer from the manual dial to view details
+            </p>
           </div>
 
-          <!-- Contact Information -->
-          <div class="row mb-3">
-            <div class="col-12 mb-2">
-              <small class="text-muted d-block">Phone Number</small>
-              <strong>{{ customerData.phoneNumber }}</strong>
+          <!-- Customer Data Display -->
+          <div *ngIf="customerData">
+            <!-- Customer Basic Info -->
+            <div class="text-center mb-4">
+              <h5 class="mb-1">
+                {{ customerData.firstName }} {{ customerData.lastName }}
+              </h5>
+              <small class="text-muted"
+                >Customer ID: {{ customerData.customerID }}</small
+              >
             </div>
-            <div class="col-12 mb-2">
-              <small class="text-muted d-block">Email</small>
-              <strong class="small">{{ customerData.email }}</strong>
-            </div>
-            <div class="col-12 mb-2">
-              <small class="text-muted d-block">Gender</small>
-              <span class="badge bg-label-info">{{ customerData.gender }}</span>
-            </div>
-          </div>
 
-          <!-- Account Details -->
-          <hr />
-          <div class="row text-center mb-3">
-            <div class="col-6">
-              <div class="border-end">
-                <h6 class="mb-0 text-danger">
-                  {{
-                    customerData.monthlyCharges
-                      | currency : "TND" : "symbol" : "1.2-2"
-                  }}
-                </h6>
-                <small class="text-muted">Monthly</small>
+            <!-- Contact Information -->
+            <div class="mb-4">
+              <h6 class="text-muted mb-3">Contact Information</h6>
+              <div class="row mb-2">
+                <div class="col-12 mb-2">
+                  <small class="text-muted d-block">Phone Number</small>
+                  <strong>{{ customerData.phone }}</strong>
+                </div>
+                <div class="col-12 mb-2">
+                  <small class="text-muted d-block">Email</small>
+                  <strong class="small">{{ customerData.email }}</strong>
+                </div>
+                <div class="col-12 mb-2">
+                  <small class="text-muted d-block">Address</small>
+                  <small>{{ customerData.address || "Not provided" }}</small>
+                </div>
               </div>
             </div>
-            <div class="col-6">
-              <h6 class="mb-0 text-primary">{{ customerData.tenure }}</h6>
-              <small class="text-muted">Months</small>
+
+            <!-- Personal Details -->
+            <div class="mb-4">
+              <h6 class="text-muted mb-3">Personal Details</h6>
+              <div class="row mb-2">
+                <div class="col-6 mb-2">
+                  <small class="text-muted d-block">Gender</small>
+                  <span class="badge bg-label-info">{{
+                    customerData.gender
+                  }}</span>
+                </div>
+                <div class="col-6 mb-2">
+                  <small class="text-muted d-block">Senior Citizen</small>
+                  <span
+                    class="badge"
+                    [class]="
+                      customerData.SeniorCitizen
+                        ? 'bg-label-warning'
+                        : 'bg-label-success'
+                    "
+                  >
+                    {{ customerData.SeniorCitizen ? "Yes" : "No" }}
+                  </span>
+                </div>
+                <div class="col-6 mb-2">
+                  <small class="text-muted d-block">Partner</small>
+                  <span
+                    class="badge"
+                    [class]="
+                      customerData.Partner === 'Yes'
+                        ? 'bg-label-success'
+                        : 'bg-label-secondary'
+                    "
+                  >
+                    {{ customerData.Partner }}
+                  </span>
+                </div>
+                <div class="col-6 mb-2">
+                  <small class="text-muted d-block">Dependents</small>
+                  <span
+                    class="badge"
+                    [class]="
+                      customerData.Dependents === 'Yes'
+                        ? 'bg-label-success'
+                        : 'bg-label-secondary'
+                    "
+                  >
+                    {{ customerData.Dependents }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Account Details -->
+            <div class="mb-4">
+              <h6 class="text-muted mb-3">Account Information</h6>
+              <div class="row text-center mb-3">
+                <div class="col-6">
+                  <div class="border-end">
+                    <h6 class="mb-0 text-danger">
+                      {{
+                        customerData.MonthlyCharges
+                          | currency : "TND" : "symbol" : "1.2-2"
+                      }}
+                    </h6>
+                    <small class="text-muted">Monthly</small>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <h6 class="mb-0 text-primary">{{ customerData.tenure }}</h6>
+                  <small class="text-muted">Months</small>
+                </div>
+              </div>
+
+              <div class="row text-center mb-3">
+                <div class="col-12">
+                  <h6 class="mb-0 text-success">
+                    {{
+                      customerData.TotalCharges
+                        | currency : "TND" : "symbol" : "1.2-2"
+                    }}
+                  </h6>
+                  <small class="text-muted">Total Charges</small>
+                </div>
+              </div>
+
+              <div class="row mb-2">
+                <div class="col-12 mb-2">
+                  <small class="text-muted d-block">Contract Type</small>
+                  <span class="badge bg-danger">{{
+                    customerData.Contract
+                  }}</span>
+                </div>
+                <div class="col-12 mb-2">
+                  <small class="text-muted d-block">Payment Method</small>
+                  <span class="badge bg-primary">{{
+                    customerData.PaymentMethod
+                  }}</span>
+                </div>
+                <div class="col-12 mb-2">
+                  <small class="text-muted d-block">Paperless Billing</small>
+                  <span
+                    class="badge"
+                    [class]="
+                      customerData.PaperlessBilling === 'Yes'
+                        ? 'bg-label-success'
+                        : 'bg-label-secondary'
+                    "
+                  >
+                    {{ customerData.PaperlessBilling }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Service Details -->
+            <div class="mb-4">
+              <h6 class="text-muted mb-3">Services</h6>
+              <div class="row mb-2">
+                <div class="col-6 mb-2">
+                  <small class="text-muted d-block">Phone Service</small>
+                  <span
+                    class="badge"
+                    [class]="
+                      customerData.PhoneService === 'Yes'
+                        ? 'bg-label-success'
+                        : 'bg-label-secondary'
+                    "
+                  >
+                    {{ customerData.PhoneService }}
+                  </span>
+                </div>
+                <div class="col-6 mb-2">
+                  <small class="text-muted d-block">Multiple Lines</small>
+                  <span class="badge bg-label-info">{{
+                    customerData.MultipleLines
+                  }}</span>
+                </div>
+                <div class="col-12 mb-2">
+                  <small class="text-muted d-block">Internet Service</small>
+                  <span class="badge bg-info">{{
+                    customerData.InternetService
+                  }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Additional Services -->
+            <div class="mb-3">
+              <h6 class="text-muted mb-3">Additional Services</h6>
+              <div class="d-flex flex-wrap gap-1 mb-2">
+                <span
+                  class="badge"
+                  [class]="
+                    customerData.OnlineSecurity === 'Yes'
+                      ? 'bg-label-success'
+                      : 'bg-label-secondary'
+                  "
+                >
+                  Security: {{ customerData.OnlineSecurity }}
+                </span>
+                <span
+                  class="badge"
+                  [class]="
+                    customerData.OnlineBackup === 'Yes'
+                      ? 'bg-label-success'
+                      : 'bg-label-secondary'
+                  "
+                >
+                  Backup: {{ customerData.OnlineBackup }}
+                </span>
+              </div>
+              <div class="d-flex flex-wrap gap-1 mb-2">
+                <span
+                  class="badge"
+                  [class]="
+                    customerData.DeviceProtection === 'Yes'
+                      ? 'bg-label-success'
+                      : 'bg-label-secondary'
+                  "
+                >
+                  Device Protection: {{ customerData.DeviceProtection }}
+                </span>
+                <span
+                  class="badge"
+                  [class]="
+                    customerData.TechSupport === 'Yes'
+                      ? 'bg-label-success'
+                      : 'bg-label-secondary'
+                  "
+                >
+                  Tech Support: {{ customerData.TechSupport }}
+                </span>
+              </div>
+              <div class="d-flex flex-wrap gap-1 mb-2">
+                <span
+                  class="badge"
+                  [class]="
+                    customerData.StreamingTV === 'Yes'
+                      ? 'bg-label-success'
+                      : 'bg-label-secondary'
+                  "
+                >
+                  Streaming TV: {{ customerData.StreamingTV }}
+                </span>
+                <span
+                  class="badge"
+                  [class]="
+                    customerData.StreamingMovies === 'Yes'
+                      ? 'bg-label-success'
+                      : 'bg-label-secondary'
+                  "
+                >
+                  Streaming Movies: {{ customerData.StreamingMovies }}
+                </span>
+              </div>
             </div>
           </div>
-
-          <div class="row text-center mb-3">
-            <div class="col-12">
-              <h6 class="mb-0 text-success">
-                {{
-                  customerData.totalCharges
-                    | currency : "TND" : "symbol" : "1.2-2"
-                }}
-              </h6>
-              <small class="text-muted">Total Charges</small>
-            </div>
-          </div>
-
-          <hr />
-
-          <!-- Service Details -->
-          <div class="mb-2">
-            <small class="text-muted d-block">Contract Type</small>
-            <span class="badge bg-danger">{{ customerData.contract }}</span>
-          </div>
-
-          <div class="mb-2">
-            <small class="text-muted d-block">Internet Service</small>
-            <span class="badge bg-info">{{
-              customerData.internetService
-            }}</span>
-          </div>
-
-          <div class="mb-2">
-            <small class="text-muted d-block">Status</small>
-            <span class="badge bg-success">{{ customerData.status }}</span>
-          </div>
-
-          <div class="mb-2">
-            <small class="text-muted d-block">Payment Method</small>
-            <small>{{ customerData.paymentMethod }}</small>
-          </div>
+          <!-- End of customerData *ngIf -->
         </div>
       </div>
     </div>
@@ -425,114 +603,103 @@
 
     <!-- Right Column - Churn Score & Notes -->
     <div class="col-lg-3 col-md-12 d-flex flex-column">
-      <!-- Churn Prediction Card -->
-      <div class="card mb-4">
-        <div
-          class="card-header d-flex align-items-center justify-content-between pb-0"
-        >
-          <div class="card-title mb-0">
-            <h5 class="m-0 me-2">Churn Risk Analysis</h5>
-            <small class="text-muted">Customer retention prediction</small>
-          </div>
-          <div class="dropdown">
-            <button
-              class="btn p-0"
-              type="button"
-              data-bs-toggle="dropdown"
-              aria-haspopup="true"
-              aria-expanded="false"
-            >
-              <i class="bx bx-dots-vertical-rounded"></i>
-            </button>
-            <div class="dropdown-menu dropdown-menu-end">
-              <a class="dropdown-item" href="javascript:void(0);"
-                >Refresh Analysis</a
-              >
-              <a class="dropdown-item" href="javascript:void(0);"
-                >Export Report</a
-              >
-            </div>
-          </div>
-        </div>
-        <div class="card-body text-center">
-          <!-- Churn Score Display -->
-          <div class="mb-3">
-            <div class="d-flex justify-content-center align-items-center mb-3">
-              <div class="position-relative d-inline-block churn-score-circle">
-                <div
-                  class="rounded-circle d-flex align-items-center justify-content-center mx-auto border-2"
-                  style="width: 80px; height: 80px"
-                  [class]="getChurnRiskBg()"
-                >
-                  <span class="h4 mb-0 fw-bold" [class]="getChurnRiskColor()">
-                    {{ churnData.score * 100 | number : "1.0-0" }}%
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
+<!-- Fixed Churn Prediction Card -->
+<div class="card mb-4">
+  <div class="card-header d-flex align-items-center justify-content-between pb-0">
+    <div class="card-title mb-0">
+      <h5 class="m-0 me-2">Churn Risk Analysis</h5>
+      <small class="text-muted">Customer retention prediction</small>
+    </div>
+    <div class="dropdown">
+      <button class="btn p-0" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <i class="bx bx-dots-vertical-rounded"></i>
+      </button>
+      <div class="dropdown-menu dropdown-menu-end">
+        <a class="dropdown-item" href="javascript:void(0);" (click)="loadChurnPrediction(customerData?.customerID?.toString() || '')">Refresh Analysis</a>
+        <a class="dropdown-item" href="javascript:void(0);">Export Report</a>
+      </div>
+    </div>
+  </div>
+  
+  <div class="card-body text-center">
+    <!-- Loading State -->
+    <div *ngIf="isLoadingChurn" class="text-center py-4">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="text-muted mt-2">Loading churn prediction...</p>
+    </div>
 
-          <h6 class="mb-1" [class]="getChurnRiskColor()">
-            {{ churnData.churnScore }} Risk
-          </h6>
-          <p class="text-muted small mb-3">{{ getChurnPredictionText() }}</p>
+    <!-- Error State -->
+    <div *ngIf="churnError && !isLoadingChurn && !churnData" class="text-center py-4">
+      <i class="bx bx-error-circle display-4 text-danger mb-3"></i>
+      <p class="text-danger">{{ churnError }}</p>
+      <button class="btn btn-outline-primary btn-sm" (click)="loadChurnPrediction(customerData?.customerID?.toString() || '')">
+        Retry
+      </button>
+    </div>
 
-          <!-- Prediction Probability -->
-          <div class="mb-3">
-            <small class="text-muted d-block mb-2"
-              >Prediction Confidence:</small
-            >
-            <div class="row text-center">
-              <div class="col-6">
-                <div class="border-end">
-                  <h6 class="mb-0 text-success">
-                    {{
-                      churnData.predictionProbability[0] * 100
-                        | number : "1.0-0"
-                    }}%
-                  </h6>
-                  <small class="text-muted">Stay</small>
-                </div>
-              </div>
-              <div class="col-6">
-                <h6 class="mb-0 text-danger">
-                  {{
-                    churnData.predictionProbability[1] * 100 | number : "1.0-0"
-                  }}%
-                </h6>
-                <small class="text-muted">Churn</small>
-              </div>
+    <!-- Churn Data Display - Fixed condition -->
+    <div *ngIf="churnData && !isLoadingChurn">
+      <!-- Churn Score Display -->
+      <div class="mb-3">
+        <div class="d-flex justify-content-center align-items-center mb-3">
+          <div class="position-relative d-inline-block churn-score-circle">
+            <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto border-2"
+                 style="width: 80px; height: 80px"
+                 [class]="getChurnRiskBg()">
+              <span class="h4 mb-0 fw-bold" [class]="getChurnRiskColor()">
+                {{ getChurnScore() | number: "1.0-0" }}%
+              </span>
             </div>
-          </div>
-
-          <!-- Risk Factors -->
-          <div class="text-start">
-            <h6 class="text-muted mb-2">Key Factors:</h6>
-            <ul class="p-0 m-0">
-              <li
-                *ngFor="let factor of churnData.factors"
-                class="d-flex justify-content-between align-items-center mb-2 pb-1"
-              >
-                <div class="d-flex flex-column">
-                  <h6 class="mb-0 small">{{ factor.factor }}</h6>
-                </div>
-                <div class="user-progress d-flex align-items-center gap-1">
-                  <span
-                    class="badge badge-sm"
-                    [class]="
-                      factor.impact === 'Positive'
-                        ? 'bg-label-success'
-                        : 'bg-label-danger'
-                    "
-                  >
-                    {{ factor.impact }}
-                  </span>
-                </div>
-              </li>
-            </ul>
           </div>
         </div>
       </div>
+
+      <h6 class="mb-1" [class]="getChurnRiskColor()">
+        {{ getChurnRiskLevel() }} Risk
+      </h6>
+      <p class="text-muted small mb-3">
+        {{ getChurnPredictionText() }}
+      </p>
+
+      <!-- Prediction Probability -->
+      <div class="mb-3">
+        <small class="text-muted d-block mb-2">Prediction Confidence:</small>
+        <div class="row text-center">
+          <div class="col-6">
+            <div class="border-end">
+              <h6 class="mb-0 text-success">
+                {{ (churnData.PredictionProbability && churnData.PredictionProbability[0] ? churnData.PredictionProbability[0] * 100 : 0) | number: "1.0-0" }}%
+              </h6>
+              <small class="text-muted">Stay</small>
+            </div>
+          </div>
+          <div class="col-6">
+            <h6 class="mb-0 text-danger">
+              {{ (churnData.PredictionProbability && churnData.PredictionProbability[1] ? churnData.PredictionProbability[1] * 100 : 0) | number: "1.0-0" }}%
+            </h6>
+            <small class="text-muted">Churn</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- API Prediction Result -->
+      <div class="text-center">
+        <div class="badge" [class]="churnData.Prediction === 'No' ? 'bg-success' : 'bg-danger'">
+          {{ churnData.Prediction === 'No' ? 'Customer Will Stay' : 'Customer Will Churn' }}
+        </div>
+      </div>
+    </div>
+
+    <!-- No Customer Selected State -->
+    <div *ngIf="!customerData && !isLoadingChurn" class="text-center py-4">
+      <i class="bx bx-user-x display-4 text-muted mb-3"></i>
+      <p class="text-muted">Select a customer to view churn prediction</p>
+    </div>
+  </div>
+</div>
+
       <!-- Notes Section -->
       <div class="card flex-fill">
         <div

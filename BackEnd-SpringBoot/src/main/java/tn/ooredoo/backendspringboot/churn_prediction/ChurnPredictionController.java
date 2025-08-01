@@ -3,7 +3,6 @@ package tn.ooredoo.backendspringboot.churn_prediction;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Mono;
 
 import java.util.Map;
 
@@ -24,22 +23,17 @@ public class ChurnPredictionController {
         ));
     }
 
-    // I used Mono<ResponseEntity<ChurnPrediction>> to handle the response
-    // because it allows for asynchronous processing and better error handling.
-    // meaning that the response can be sent back to the client once the prediction is ready,
     @PostMapping("/predict/{customerId}")
-    public Mono<ResponseEntity<ChurnPrediction>> predict(@PathVariable Integer customerId) {
-        return churnPredictionService.predictChurn(customerId)
-                .map(ResponseEntity::ok)
-                .doOnError(error -> {
-                    System.err.println("Prediction error: " + error.getMessage());
-                    error.printStackTrace();
-                })
-                .onErrorReturn(ResponseEntity.badRequest().build());
+    public ResponseEntity<ChurnPrediction> predict(@PathVariable Integer customerId) {
+        try {
+            ChurnPrediction prediction = churnPredictionService.predictChurn(customerId).block(); // force Mono to sync
+            return ResponseEntity.ok(prediction);
+        } catch (Exception e) {
+            System.err.println("Prediction error: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().build();
+        }
     }
-
-
-
 
 
     // TODO: Integrate batch prediction

@@ -16,6 +16,8 @@ import { TipsService } from '../../services/tips.service';
 import { TokenService } from '../../services/token.service';
 import { CoachingTip } from '../../models/coaching-tip';
 import { Router } from '@angular/router';
+import { CustomerService } from '../../services/customer.service';
+import { Customer } from '../../models/customer';
 
 // Register Chart.js components
 Chart.register(...registerables);
@@ -38,6 +40,13 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
   currentUserId!: number;
   currentUserEmail: string = '';
   showAllTips: boolean = false;
+
+  // Modal control for customer selection
+  showCustomerModal: boolean = false;
+  customers: Customer[] = [];
+  filteredCustomers: Customer[] = [];
+  customerSearchText: string = '';
+  isLoadingCustomers: boolean = false;
 
   // Agent data
   agentData = {
@@ -92,7 +101,8 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
   constructor(
     private tipsService: TipsService,
     private tokenService: TokenService,
-    private route: Router
+    private route: Router,
+    private customerService: CustomerService
   ) {
     // Chart.js will be initialized after view init
   }
@@ -438,8 +448,71 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
   }
 
   manualDial(): void {
-    console.log('Starting manual dial');
-    this.route.navigate(['/Agent/call']);
+    console.log('Opening customer selection modal');
+    this.showCustomerModal = true;
+    this.loadCustomers();
+  }
+
+  loadCustomers(): void {
+    this.isLoadingCustomers = true;
+    this.customerService.getAllCustomers().subscribe({
+      next: (customers) => {
+        this.customers = customers;
+        this.filteredCustomers = customers;
+        this.isLoadingCustomers = false;
+        console.log('Customers loaded:', customers);
+      },
+      error: (error) => {
+        console.error('Error loading customers:', error);
+        this.isLoadingCustomers = false;
+      },
+    });
+  }
+
+  selectCustomer(customer: Customer): void {
+    console.log('Customer selected:', customer);
+    this.closeCustomerModal();
+    // Navigate to call page with customer data
+    this.route.navigate(['/Agent/call'], {
+      state: { selectedCustomer: customer },
+    });
+  }
+
+  closeCustomerModal(): void {
+    this.showCustomerModal = false;
+    this.customerSearchText = '';
+    this.filteredCustomers = this.customers;
+  }
+
+  getCustomerDisplayName(customer: Customer): string {
+    if (customer.firstName && customer.lastName) {
+      return `${customer.firstName} ${customer.lastName}`;
+    }
+    if (customer.firstName) {
+      return customer.firstName;
+    }
+    return `Customer #${customer.customerID}`;
+  }
+
+  filterCustomers(): void {
+    if (!this.customerSearchText.trim()) {
+      this.filteredCustomers = this.customers;
+      return;
+    }
+
+    const searchTerm = this.customerSearchText.toLowerCase();
+    this.filteredCustomers = this.customers.filter(
+      (customer) =>
+        customer.customerID?.toString().includes(searchTerm) ||
+        customer.firstName?.toLowerCase().includes(searchTerm) ||
+        customer.lastName?.toLowerCase().includes(searchTerm) ||
+        customer.email?.toLowerCase().includes(searchTerm) ||
+        customer.phone?.toLowerCase().includes(searchTerm) ||
+        customer.gender?.toLowerCase().includes(searchTerm) ||
+        customer.PhoneService?.toLowerCase().includes(searchTerm) ||
+        customer.InternetService?.toLowerCase().includes(searchTerm) ||
+        customer.PaymentMethod?.toLowerCase().includes(searchTerm)
+    );
   }
 
   viewCoachingTips(): void {

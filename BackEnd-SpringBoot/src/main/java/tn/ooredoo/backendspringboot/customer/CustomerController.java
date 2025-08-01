@@ -6,15 +6,22 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/customer")
 @RequiredArgsConstructor
 public class CustomerController {
 
     private final CustomerRepository customerRepository;
+
     @GetMapping("/get/{customerId}")
     public Customer getCustomerById(@PathVariable Integer customerId) {
         return customerRepository.findById(customerId).orElse(null);
 
+    }
+    @GetMapping("/getAll")
+    public List<Customer> getAllCustomers() {
+        return customerRepository.findAll();
     }
 }

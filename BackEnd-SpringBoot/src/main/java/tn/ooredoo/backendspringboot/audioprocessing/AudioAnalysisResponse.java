@@ -13,11 +13,12 @@ import tn.ooredoo.backendspringboot.call_transcript.CallRecord;
 @Entity
 public class AudioAnalysisResponse {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     private String timestamp;
     private String speaker;
 
+    @Column(length = 10000)
     private String text;
 
 

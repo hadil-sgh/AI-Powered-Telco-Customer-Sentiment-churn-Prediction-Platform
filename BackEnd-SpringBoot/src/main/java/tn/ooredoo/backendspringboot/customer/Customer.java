@@ -15,8 +15,14 @@ import tn.ooredoo.backendspringboot.churn_prediction.ChurnPrediction;
 public class Customer {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+
     private Integer customerID;
+    private String firstName;
+    private String lastName;
+    private String email;
+    private String phone;
+    private String address;
 
     private String gender;
 

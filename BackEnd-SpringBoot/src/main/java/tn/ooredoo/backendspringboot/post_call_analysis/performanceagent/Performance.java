@@ -13,7 +13,7 @@ import tn.ooredoo.backendspringboot.call_transcript.CallRecord;
 @Entity
 public class Performance {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     private Integer score;
     private String feedback;
