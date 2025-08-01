@@ -190,7 +190,7 @@ export class CallManagmentComponent implements OnInit, OnDestroy {
         this.churnError = 'Failed to load churn prediction from API';
         this.isLoadingChurn = false;
         this.churnData = null; // Don't show fallback data
-      }
+      },
     });
   }
 
@@ -599,7 +599,7 @@ export class CallManagmentComponent implements OnInit, OnDestroy {
   // Simplified methods to work directly with API response
   getChurnRiskColor(): string {
     if (!this.churnData) return 'text-gray-600';
-    
+
     // Use the prediction directly from API
     if (this.churnData.Prediction === 'No') return 'text-success';
     if (this.churnData.Prediction === 'Yes') return 'text-danger';
@@ -608,7 +608,7 @@ export class CallManagmentComponent implements OnInit, OnDestroy {
 
   getChurnRiskBg(): string {
     if (!this.churnData) return 'bg-light';
-    
+
     // Use the prediction directly from API
     if (this.churnData.Prediction === 'No') return 'bg-label-success';
     if (this.churnData.Prediction === 'Yes') return 'bg-label-danger';
@@ -617,7 +617,7 @@ export class CallManagmentComponent implements OnInit, OnDestroy {
 
   getChurnPredictionText(): string {
     if (!this.churnData) return 'Loading...';
-    
+
     // Use the prediction directly from API
     if (this.churnData.Prediction === 'No') return 'Not Likely to Churn';
     if (this.churnData.Prediction === 'Yes') return 'Likely to Churn';
@@ -626,7 +626,7 @@ export class CallManagmentComponent implements OnInit, OnDestroy {
 
   getChurnScore(): number {
     if (!this.churnData || !this.churnData.ChurnScore) return 0;
-    
+
     // Extract percentage from string like "25.00%"
     const scoreStr = this.churnData.ChurnScore.replace('%', '');
     return parseFloat(scoreStr) || 0;
@@ -634,7 +634,7 @@ export class CallManagmentComponent implements OnInit, OnDestroy {
 
   getChurnRiskLevel(): string {
     if (!this.churnData) return 'Unknown';
-    
+
     // Use the prediction directly from API
     if (this.churnData.Prediction === 'No') return 'Low';
     if (this.churnData.Prediction === 'Yes') return 'High';

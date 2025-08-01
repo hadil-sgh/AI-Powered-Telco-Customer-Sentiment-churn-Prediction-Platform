@@ -603,102 +603,161 @@
 
     <!-- Right Column - Churn Score & Notes -->
     <div class="col-lg-3 col-md-12 d-flex flex-column">
-<!-- Fixed Churn Prediction Card -->
-<div class="card mb-4">
-  <div class="card-header d-flex align-items-center justify-content-between pb-0">
-    <div class="card-title mb-0">
-      <h5 class="m-0 me-2">Churn Risk Analysis</h5>
-      <small class="text-muted">Customer retention prediction</small>
-    </div>
-    <div class="dropdown">
-      <button class="btn p-0" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-        <i class="bx bx-dots-vertical-rounded"></i>
-      </button>
-      <div class="dropdown-menu dropdown-menu-end">
-        <a class="dropdown-item" href="javascript:void(0);" (click)="loadChurnPrediction(customerData?.customerID?.toString() || '')">Refresh Analysis</a>
-        <a class="dropdown-item" href="javascript:void(0);">Export Report</a>
-      </div>
-    </div>
-  </div>
-  
-  <div class="card-body text-center">
-    <!-- Loading State -->
-    <div *ngIf="isLoadingChurn" class="text-center py-4">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
-      </div>
-      <p class="text-muted mt-2">Loading churn prediction...</p>
-    </div>
-
-    <!-- Error State -->
-    <div *ngIf="churnError && !isLoadingChurn && !churnData" class="text-center py-4">
-      <i class="bx bx-error-circle display-4 text-danger mb-3"></i>
-      <p class="text-danger">{{ churnError }}</p>
-      <button class="btn btn-outline-primary btn-sm" (click)="loadChurnPrediction(customerData?.customerID?.toString() || '')">
-        Retry
-      </button>
-    </div>
-
-    <!-- Churn Data Display - Fixed condition -->
-    <div *ngIf="churnData && !isLoadingChurn">
-      <!-- Churn Score Display -->
-      <div class="mb-3">
-        <div class="d-flex justify-content-center align-items-center mb-3">
-          <div class="position-relative d-inline-block churn-score-circle">
-            <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto border-2"
-                 style="width: 80px; height: 80px"
-                 [class]="getChurnRiskBg()">
-              <span class="h4 mb-0 fw-bold" [class]="getChurnRiskColor()">
-                {{ getChurnScore() | number: "1.0-0" }}%
-              </span>
+      <!-- Fixed Churn Prediction Card -->
+      <div class="card mb-4">
+        <div
+          class="card-header d-flex align-items-center justify-content-between pb-0"
+        >
+          <div class="card-title mb-0">
+            <h5 class="m-0 me-2">Churn Risk Analysis</h5>
+            <small class="text-muted">Customer retention prediction</small>
+          </div>
+          <div class="dropdown">
+            <button
+              class="btn p-0"
+              type="button"
+              data-bs-toggle="dropdown"
+              aria-haspopup="true"
+              aria-expanded="false"
+            >
+              <i class="bx bx-dots-vertical-rounded"></i>
+            </button>
+            <div class="dropdown-menu dropdown-menu-end">
+              <a
+                class="dropdown-item"
+                href="javascript:void(0);"
+                (click)="
+                  loadChurnPrediction(
+                    customerData?.customerID?.toString() || ''
+                  )
+                "
+                >Refresh Analysis</a
+              >
+              <a class="dropdown-item" href="javascript:void(0);"
+                >Export Report</a
+              >
             </div>
           </div>
         </div>
-      </div>
 
-      <h6 class="mb-1" [class]="getChurnRiskColor()">
-        {{ getChurnRiskLevel() }} Risk
-      </h6>
-      <p class="text-muted small mb-3">
-        {{ getChurnPredictionText() }}
-      </p>
-
-      <!-- Prediction Probability -->
-      <div class="mb-3">
-        <small class="text-muted d-block mb-2">Prediction Confidence:</small>
-        <div class="row text-center">
-          <div class="col-6">
-            <div class="border-end">
-              <h6 class="mb-0 text-success">
-                {{ (churnData.PredictionProbability && churnData.PredictionProbability[0] ? churnData.PredictionProbability[0] * 100 : 0) | number: "1.0-0" }}%
-              </h6>
-              <small class="text-muted">Stay</small>
+        <div class="card-body text-center">
+          <!-- Loading State -->
+          <div *ngIf="isLoadingChurn" class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
             </div>
+            <p class="text-muted mt-2">Loading churn prediction...</p>
           </div>
-          <div class="col-6">
-            <h6 class="mb-0 text-danger">
-              {{ (churnData.PredictionProbability && churnData.PredictionProbability[1] ? churnData.PredictionProbability[1] * 100 : 0) | number: "1.0-0" }}%
+
+          <!-- Error State -->
+          <div
+            *ngIf="churnError && !isLoadingChurn && !churnData"
+            class="text-center py-4"
+          >
+            <i class="bx bx-error-circle display-4 text-danger mb-3"></i>
+            <p class="text-danger">{{ churnError }}</p>
+            <button
+              class="btn btn-outline-primary btn-sm"
+              (click)="
+                loadChurnPrediction(customerData?.customerID?.toString() || '')
+              "
+            >
+              Retry
+            </button>
+          </div>
+
+          <!-- Churn Data Display - Fixed condition -->
+          <div *ngIf="churnData && !isLoadingChurn">
+            <!-- Churn Score Display -->
+            <div class="mb-3">
+              <div
+                class="d-flex justify-content-center align-items-center mb-3"
+              >
+                <div
+                  class="position-relative d-inline-block churn-score-circle"
+                >
+                  <div
+                    class="rounded-circle d-flex align-items-center justify-content-center mx-auto border-2"
+                    style="width: 80px; height: 80px"
+                    [class]="getChurnRiskBg()"
+                  >
+                    <span class="h4 mb-0 fw-bold" [class]="getChurnRiskColor()">
+                      {{ getChurnScore() | number : "1.0-0" }}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h6 class="mb-1" [class]="getChurnRiskColor()">
+              {{ getChurnRiskLevel() }} Risk
             </h6>
-            <small class="text-muted">Churn</small>
+            <p class="text-muted small mb-3">
+              {{ getChurnPredictionText() }}
+            </p>
+
+            <!-- Prediction Probability -->
+            <div class="mb-3">
+              <small class="text-muted d-block mb-2"
+                >Prediction Confidence:</small
+              >
+              <div class="row text-center">
+                <div class="col-6">
+                  <div class="border-end">
+                    <h6 class="mb-0 text-success">
+                      {{
+                        (churnData.PredictionProbability &&
+                        churnData.PredictionProbability[0]
+                          ? churnData.PredictionProbability[0] * 100
+                          : 0
+                        ) | number : "1.0-0"
+                      }}%
+                    </h6>
+                    <small class="text-muted">Stay</small>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <h6 class="mb-0 text-danger">
+                    {{
+                      (churnData.PredictionProbability &&
+                      churnData.PredictionProbability[1]
+                        ? churnData.PredictionProbability[1] * 100
+                        : 0
+                      ) | number : "1.0-0"
+                    }}%
+                  </h6>
+                  <small class="text-muted">Churn</small>
+                </div>
+              </div>
+            </div>
+
+            <!-- API Prediction Result -->
+            <div class="text-center">
+              <div
+                class="badge"
+                [class]="
+                  churnData.Prediction === 'No' ? 'bg-success' : 'bg-danger'
+                "
+              >
+                {{
+                  churnData.Prediction === "No"
+                    ? "Customer Will Stay"
+                    : "Customer Will Churn"
+                }}
+              </div>
+            </div>
+          </div>
+
+          <!-- No Customer Selected State -->
+          <div
+            *ngIf="!customerData && !isLoadingChurn"
+            class="text-center py-4"
+          >
+            <i class="bx bx-user-x display-4 text-muted mb-3"></i>
+            <p class="text-muted">Select a customer to view churn prediction</p>
           </div>
         </div>
       </div>
-
-      <!-- API Prediction Result -->
-      <div class="text-center">
-        <div class="badge" [class]="churnData.Prediction === 'No' ? 'bg-success' : 'bg-danger'">
-          {{ churnData.Prediction === 'No' ? 'Customer Will Stay' : 'Customer Will Churn' }}
-        </div>
-      </div>
-    </div>
-
-    <!-- No Customer Selected State -->
-    <div *ngIf="!customerData && !isLoadingChurn" class="text-center py-4">
-      <i class="bx bx-user-x display-4 text-muted mb-3"></i>
-      <p class="text-muted">Select a customer to view churn prediction</p>
-    </div>
-  </div>
-</div>
 
       <!-- Notes Section -->
       <div class="card flex-fill">
