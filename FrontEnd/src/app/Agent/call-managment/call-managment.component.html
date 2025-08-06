@@ -612,32 +612,7 @@
             <h5 class="m-0 me-2">Churn Risk Analysis</h5>
             <small class="text-muted">Customer retention prediction</small>
           </div>
-          <div class="dropdown">
-            <button
-              class="btn p-0"
-              type="button"
-              data-bs-toggle="dropdown"
-              aria-haspopup="true"
-              aria-expanded="false"
-            >
-              <i class="bx bx-dots-vertical-rounded"></i>
-            </button>
-            <div class="dropdown-menu dropdown-menu-end">
-              <a
-                class="dropdown-item"
-                href="javascript:void(0);"
-                (click)="
-                  loadChurnPrediction(
-                    customerData?.customerID?.toString() || ''
-                  )
-                "
-                >Refresh Analysis</a
-              >
-              <a class="dropdown-item" href="javascript:void(0);"
-                >Export Report</a
-              >
-            </div>
-          </div>
+     
         </div>
 
         <div class="card-body text-center">
@@ -649,22 +624,7 @@
             <p class="text-muted mt-2">Loading churn prediction...</p>
           </div>
 
-          <!-- Error State -->
-          <div
-            *ngIf="churnError && !isLoadingChurn && !churnData"
-            class="text-center py-4"
-          >
-            <i class="bx bx-error-circle display-4 text-danger mb-3"></i>
-            <p class="text-danger">{{ churnError }}</p>
-            <button
-              class="btn btn-outline-primary btn-sm"
-              (click)="
-                loadChurnPrediction(customerData?.customerID?.toString() || '')
-              "
-            >
-              Retry
-            </button>
-          </div>
+   
 
           <!-- Churn Data Display - Fixed condition -->
           <div *ngIf="churnData && !isLoadingChurn">
@@ -740,7 +700,7 @@
                 "
               >
                 {{
-                  churnData.Prediction === "No"
+                  churnData.Prediction === "No Churn"
                     ? "Customer Will Stay"
                     : "Customer Will Churn"
                 }}

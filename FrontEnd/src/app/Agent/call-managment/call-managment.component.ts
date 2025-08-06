@@ -619,8 +619,8 @@ export class CallManagmentComponent implements OnInit, OnDestroy {
     if (!this.churnData) return 'Loading...';
 
     // Use the prediction directly from API
-    if (this.churnData.Prediction === 'No') return 'Not Likely to Churn';
-    if (this.churnData.Prediction === 'Yes') return 'Likely to Churn';
+    if (this.churnData.Prediction === 'No Churn') return 'Not Likely to Churn';
+    if (this.churnData.Prediction === 'Churn') return 'Likely to Churn';
     return 'Unknown';
   }
 
