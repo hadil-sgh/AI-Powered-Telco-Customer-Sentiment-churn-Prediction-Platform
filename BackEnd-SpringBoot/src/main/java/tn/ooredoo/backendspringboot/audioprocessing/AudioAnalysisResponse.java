@@ -1,5 +1,6 @@
 package tn.ooredoo.backendspringboot.audioprocessing;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 import tn.ooredoo.backendspringboot.call_transcript.CallRecord;
@@ -31,9 +32,10 @@ public class AudioAnalysisResponse {
     private VoiceFeatures voiceFeatures;
     @OneToOne(cascade = CascadeType.ALL)
     private EmotionAnalysis emotionAnalysis;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "call_record_id")
+    @JsonBackReference
     private CallRecord callRecord;
 
     // Additional fields for real-time processing

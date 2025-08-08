@@ -1,6 +1,7 @@
 package tn.ooredoo.backendspringboot.call_transcript;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import tn.ooredoo.backendspringboot.audioprocessing.AudioAnalysisResponse;
@@ -34,6 +35,7 @@ public class CallRecord {
 
 
     @OneToMany(mappedBy = "callRecord")
+    @JsonManagedReference
     private List<AudioAnalysisResponse> callTranscripts;
 
     @JsonIgnore
