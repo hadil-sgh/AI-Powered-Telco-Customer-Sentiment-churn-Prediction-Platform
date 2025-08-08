@@ -92,7 +92,7 @@ export class PostCallComponent implements OnInit {
         console.error('Error loading post-call analysis:', error);
         this.isLoading = false;
         // Don't show error - the component will show a loading state instead
-      }
+      },
     });
   }
 
