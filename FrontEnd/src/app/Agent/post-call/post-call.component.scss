@@ -1,0 +1,460 @@
+// Elegant Post-Call Analysis Styles - Ooredoo Theme
+
+.card {
+  border: 1px solid #ffe7e7;
+  box-shadow: 0 2px 10px rgba(220, 53, 69, 0.08);
+  transition: all 0.3s ease;
+  border-radius: 12px;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(220, 53, 69, 0.12);
+  }
+
+  &.shadow-sm {
+    box-shadow: 0 1px 3px rgba(220, 53, 69, 0.1);
+  }
+}
+
+// Avatar enhancements
+.avatar {
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+}
+
+.avatar-initial {
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 8px;
+}
+
+// Form styling
+.form-select {
+  border: none !important;
+  box-shadow: none !important;
+  transition: all 0.3s ease;
+
+  &:focus {
+    border: none !important;
+    box-shadow: none !important;
+    background-color: #fef8f8;
+    color: #dc3545;
+  }
+}
+
+textarea {
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  transition: all 0.3s ease;
+
+  &:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+  }
+}
+
+// Progress bars
+.progress {
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  height: 8px;
+
+  .progress-bar {
+    border-radius: 10px;
+    transition: width 0.8s ease-in-out;
+
+    &.bg-gradient {
+      background-image: linear-gradient(
+        45deg,
+        rgba(255, 255, 255, 0.15) 25%,
+        transparent 25%,
+        transparent 50%,
+        rgba(255, 255, 255, 0.15) 50%,
+        rgba(255, 255, 255, 0.15) 75%,
+        transparent 75%,
+        transparent
+      );
+    }
+
+    &.bg-danger {
+      background-color: #dc3545 !important;
+    }
+  }
+}
+
+// Button enhancements
+.btn {
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  font-weight: 500;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.15);
+  }
+
+  &.btn-light {
+    background-color: #fff;
+    border: 1px solid #e9ecef;
+    color: #6c757d;
+
+    &:hover {
+      background-color: #fef8f8;
+      border-color: #dc3545;
+      color: #dc3545;
+    }
+  }
+
+  &.btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+
+    &:hover {
+      background-color: #c82333;
+      border-color: #bd2130;
+    }
+  }
+
+  &.btn-outline-danger {
+    color: #dc3545;
+    border-color: #dc3545;
+
+    &:hover {
+      background-color: #dc3545;
+      border-color: #dc3545;
+      color: #fff;
+    }
+  }
+}
+
+// Card header styling
+.card-header {
+  background-color: #fef8f8;
+  border-bottom: 1px solid #f1c4c4;
+  border-radius: 12px 12px 0 0 !important;
+
+  h5 {
+    color: #495057;
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+
+  i {
+    font-size: 1.2rem;
+  }
+}
+
+// Text styling
+.text-dark {
+  color: #495057 !important;
+}
+
+.text-muted {
+  color: #6c757d !important;
+}
+
+// Circular progress styling
+svg circle {
+  transition: stroke-dashoffset 0.8s ease-in-out;
+}
+
+// Loading spinner
+.spinner-border-sm {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+// Background enhancements
+.bg-light {
+  background-color: #fef8f8 !important;
+  border: 1px solid #f1c4c4;
+  border-radius: 8px;
+}
+
+// Enhanced Star Rating
+.star-rating {
+  display: inline-flex;
+  align-items: center;
+
+  .bx {
+    transition: all 0.2s ease-in-out;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+
+    &.bxs-star {
+      color: #dc3545 !important;
+      animation: starGlow 0.3s ease-in-out;
+    }
+
+    &.bx-star {
+      color: #dee2e6 !important;
+    }
+
+    &:hover {
+      transform: scale(1.1);
+    }
+  }
+}
+
+@keyframes starGlow {
+  0% {
+    transform: scale(1);
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+  }
+  50% {
+    transform: scale(1.2);
+    filter: drop-shadow(0 2px 8px rgba(220, 53, 69, 0.3));
+  }
+  100% {
+    transform: scale(1);
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .card {
+    margin-bottom: 1rem;
+  }
+
+  .d-flex.align-items-center {
+    flex-direction: column;
+    align-items: flex-start !important;
+    text-align: left;
+  }
+
+  .avatar {
+    margin-bottom: 0.5rem;
+  }
+
+  .btn {
+    margin-bottom: 0.5rem;
+    width: 100%;
+  }
+
+  .col-md-3 {
+    margin-bottom: 1rem;
+  }
+
+  .star-rating {
+    justify-content: center;
+    margin-bottom: 0.5rem;
+  }
+}
+
+.card-icon {
+  font-size: 2.5rem;
+  opacity: 0.8;
+  color: #dc3545;
+}
+
+// Custom progress bars
+.progress {
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background-color: #f8f9fa;
+}
+
+.progress-bar {
+  transition: width 0.6s ease;
+}
+
+// Modal enhancements
+.modal-content {
+  border: none;
+  border-radius: 1rem;
+  box-shadow: 0 1rem 3rem rgba(220, 53, 69, 0.175);
+}
+
+.modal-header {
+  border-bottom: 1px solid #f1c4c4;
+  background-color: #fef8f8;
+}
+
+// Alert styling
+.alert {
+  border-radius: 8px;
+  border: none;
+
+  &.alert-light {
+    background-color: #fef8f8;
+    color: #495057;
+    border-left: 4px solid #dc3545;
+  }
+}
+
+// Badge styling
+.badge {
+  &.bg-label-danger {
+    background-color: rgba(220, 53, 69, 0.1) !important;
+    color: #dc3545 !important;
+  }
+
+  &.bg-label-secondary {
+    background-color: rgba(108, 117, 125, 0.1) !important;
+    color: #6c757d !important;
+  }
+}
+
+// Hover effects for cards
+.card:hover {
+  .card-header {
+    background-color: #fdf2f2;
+  }
+
+  .star-rating .bx {
+    filter: drop-shadow(0 2px 4px rgba(220, 53, 69, 0.2));
+  }
+}
+
+// Modal header styling
+.modal-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: white;
+  border-radius: 1rem 1rem 0 0;
+
+  .modal-title {
+    color: white;
+  }
+
+  .btn-close {
+    filter: brightness(0) invert(1);
+  }
+}
+
+// Alert enhancements
+.alert {
+  border: none;
+  border-radius: 0.75rem;
+
+  &.alert-light {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  }
+
+  &.alert-info {
+    background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+    border-left: 4px solid #17a2b8;
+  }
+}
+
+// Avatar enhancements
+.avatar {
+  &.avatar-lg {
+    width: 4rem;
+    height: 4rem;
+
+    .avatar-initial {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+  }
+}
+
+// Card header gradients
+.bg-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+.bg-success {
+  background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%) !important;
+}
+
+.bg-warning {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
+}
+
+.bg-info {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important;
+}
+
+.bg-danger {
+  background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%) !important;
+}
+
+// Button enhancements
+.btn {
+  border-radius: 0.5rem;
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  }
+}
+
+// Form enhancements
+.form-control,
+.form-select {
+  border-radius: 0.5rem;
+  border: 1px solid #d1d3e2;
+  transition: all 0.2s ease-in-out;
+
+  &:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+  }
+}
+
+// Loading animation
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .card-icon {
+    font-size: 2rem;
+  }
+
+  .display-6 {
+    font-size: 1rem;
+  }
+
+  .modal-dialog {
+    margin: 1rem;
+  }
+}
+
+// Custom background for outcome select
+.bg-transparent {
+  background-color: transparent !important;
+
+  option {
+    background-color: #343a40;
+    color: white;
+  }
+}
+
+// Enhanced card bodies
+.card-body {
+  padding: 1.5rem;
+}
+
+// Subtle animations
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+// Custom border styles
+.border-start {
+  border-left-width: 4px !important;
+}
+
+.border-3 {
+  border-width: 3px !important;
+}

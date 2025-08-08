@@ -29,7 +29,7 @@ public class PostCallAnalysisController {
                 return ResponseEntity.notFound().build();
             }
 
-            Map<String, Object> result = postCallAnalysisServices.analyzeTranscriptScore(callRecord);
+            Map<String, Object> result = postCallAnalysisServices.analyzeTranscriptScore(callRecordId);
             log.debug("Analysis result for ID {}: {}", callRecordId, result);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
@@ -48,23 +48,10 @@ public class PostCallAnalysisController {
             return ResponseEntity.notFound().build();
         }
 
-        Map<String, Object> result = postCallAnalysisServices.generateTranscriptReport(callRecord);
+        Map<String, Object> result = postCallAnalysisServices.generateTranscriptReport(callRecordId);
         log.debug("Generated report for ID {}: {}", callRecordId, result);
         return ResponseEntity.ok(result);
     }
 
-    @GetMapping("/complete/{callRecordId}")
-    public ResponseEntity<Map<String, Object>> getCompleteAnalysis(@PathVariable Integer callRecordId) {
-        log.debug("Received request for complete analysis of CallRecord ID: {}", callRecordId);
 
-        CallRecord callRecord = callRecordServices.getCallRecordById(callRecordId);
-        if (callRecord == null) {
-            log.warn("CallRecord not found for ID: {}", callRecordId);
-            return ResponseEntity.notFound().build();
-        }
-
-        Map<String, Object> result = postCallAnalysisServices.getCompleteAnalysis(callRecord);
-        log.debug("Complete analysis for ID {}: {}", callRecordId, result);
-        return ResponseEntity.ok(result);
-    }
 }

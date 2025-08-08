@@ -1,7 +1,6 @@
 package tn.ooredoo.backendspringboot.call_transcript;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tn.ooredoo.backendspringboot.customer.Customer;
 import tn.ooredoo.backendspringboot.customer.CustomerServices;
@@ -9,6 +8,7 @@ import tn.ooredoo.backendspringboot.user.User;
 import tn.ooredoo.backendspringboot.user.UserService;
 
 import java.util.Date;
+import java.util.List;
 
 @RestController
 @RequestMapping("/callrecord")
@@ -48,13 +48,18 @@ public class CallRecordController {
             @RequestParam Long duration
     ) {
         User agent = userService.findByEmail(email);
-        Customer customer=customerServices.getCustomerById(customerId);
-        return callRecordServices.saveCallRecord(agent,customer,sessionId,duration);
+        Customer customer = customerServices.getCustomerById(customerId);
+        return callRecordServices.saveCallRecord(agent, customer, sessionId, duration);
     }
 
     @GetMapping("/{id}")
     public CallRecord getCallRecordById(@PathVariable Integer id) {
         return callRecordServices.getCallRecordById(id);
+    }
+
+    @GetMapping("getbysession/{email}")
+    public List<CallRecord> getCallRecordBySession(@PathVariable String email) {
+        return callRecordServices.getCallRecordByAgentId(email);
     }
 
     @PutMapping("/{id}")

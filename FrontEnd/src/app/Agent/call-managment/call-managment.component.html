@@ -340,6 +340,16 @@
                 <span *ngIf="isSavingRecord">Saving...</span>
                 <span *ngIf="recordSaved">Saved</span>
               </button>
+
+              <button
+                (click)="endCallAndNavigate()"
+                [disabled]="!customerData || !recordSaved"
+                class="btn btn-danger"
+                title="End call and proceed to post-call analysis"
+              >
+                <i class="bx bx-phone-off me-1"></i>
+                End Call
+              </button>
             </div>
 
             <!-- Call Timer Display -->

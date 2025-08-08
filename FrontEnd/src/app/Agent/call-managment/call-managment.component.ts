@@ -906,4 +906,34 @@ export class CallManagmentComponent implements OnInit, OnDestroy {
   getConnectionInfo(): any {
     return this.audioStreamService.getConnectionInfo();
   }
+
+  /**
+   * End the call and navigate to post-call analysis
+   */
+  endCallAndNavigate() {
+    if (!this.customerData || !this.recordSaved || !this.currentCallRecord) {
+      Swal.fire({
+        title: 'Cannot End Call',
+        text: 'Please ensure the call record is saved before ending the call.',
+        icon: 'warning',
+        confirmButtonColor: '#3085d6',
+      });
+      return;
+    }
+
+    // Stop analysis if it's running
+    if (this.isAnalyzing) {
+      this.stopAnalysis();
+    }
+
+    // Navigate to post-call analysis with call record data
+    this.router.navigate(['/Agent/postCall'], {
+      state: {
+        callRecord: this.currentCallRecord,
+        customerData: this.customerData,
+        analysisResults: this.analysisResults,
+        callDuration: this.callDuration,
+      },
+    });
+  }
 }

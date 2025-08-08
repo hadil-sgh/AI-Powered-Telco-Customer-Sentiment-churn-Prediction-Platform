@@ -22,9 +22,9 @@ public class PostCallAnalysisServices {
 
     private String flaskApiBaseUrl;
 
-    public Map<String, Object> analyzeTranscriptScore(CallRecord callRecord) {
+    public Map<String, Object> analyzeTranscriptScore(Integer id) {
         try {
-            String transcriptContent = callRecordServices.formatTranscriptForAnalysis(callRecord);
+            String transcriptContent = callRecordServices.getTranscriptForAnalysis(id);
 
             Map<String, String> payload = new HashMap<>();
             payload.put("transcript_content", transcriptContent);
@@ -50,9 +50,9 @@ public class PostCallAnalysisServices {
         }
     }
 
-    public Map<String, Object> generateTranscriptReport(CallRecord callRecord) {
+    public Map<String, Object> generateTranscriptReport(Integer id) {
         try {
-            String transcriptContent = callRecordServices.formatTranscriptForAnalysis(callRecord);
+            String transcriptContent = callRecordServices.getTranscriptForAnalysis(id);
 
             Map<String, String> payload = new HashMap<>();
             payload.put("transcript_content", transcriptContent);
@@ -78,19 +78,7 @@ public class PostCallAnalysisServices {
         }
     }
 
-    public Map<String, Object> getCompleteAnalysis(CallRecord callRecord) {
-        Map<String, Object> completeAnalysis = new HashMap<>();
 
-        // Get both score and report
-        Map<String, Object> scoreResult = analyzeTranscriptScore(callRecord);
-        Map<String, Object> reportResult = generateTranscriptReport(callRecord);
-
-        completeAnalysis.put("score_analysis", scoreResult);
-        completeAnalysis.put("detailed_report", reportResult);
-        completeAnalysis.put("call_record_id", callRecord.getId());
-
-        return completeAnalysis;
-    }
 
 }
 

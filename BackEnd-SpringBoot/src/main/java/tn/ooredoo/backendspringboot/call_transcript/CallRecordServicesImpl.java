@@ -11,6 +11,7 @@ import tn.ooredoo.backendspringboot.user.UserRepository;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -130,9 +131,24 @@ public class CallRecordServicesImpl implements CallRecordServices {
 
     @Override
     public List<CallRecord> getCallRecordByAgentId(String email) {
-        return List.of();
-    }
+        User agent = userRepository.findByEmail(email).orElse(null);
+        List<CallRecord> callsBySession = new ArrayList<>();
 
+        if (agent != null) {
+            try {
+                for (CallRecord callRecord : callRecordRepository.findAll()) {
+                    if (callRecord.getAgent() != null && callRecord.getAgent().getId().equals(agent.getId())) {
+                        callsBySession.add(callRecord);
+                    }
+                }
+            } catch (Exception e) {
+                //TODO: handle this exception in a more defined manner
+                throw new RuntimeException("Error retrieving calls for agent: " + email, e);
+            }
+        }
+
+        return callsBySession;
+    }
     @Override
     public String getTranscriptForAnalysis(Integer callId) {
         CallRecord callRecord = getCallRecordById(callId); // Ensure this fetches transcripts

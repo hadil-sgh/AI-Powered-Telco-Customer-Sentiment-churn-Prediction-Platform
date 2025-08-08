@@ -1,1 +1,457 @@
-<p>post-call works!</p>
+<!-- Post-Call Analysis Interface -->
+<div class="container-xxl flex-grow-1 container-p-y">
+
+
+  <!-- Call Summary Card -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header bg-light">
+      <div class="d-flex align-items-center">
+        <i class="bx bx-phone-call me-2 text-danger"></i>
+        <h5 class="mb-0 text-dark">Call Summary</h5>
+      </div>
+    </div>
+    <div class="card-body pt-4">
+      <div class="row g-4">
+        <!-- Duration -->
+        <div class="col-md-3">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <div class="avatar avatar-sm">
+                <div class="avatar-initial bg-label-danger rounded">
+                  <i class="bx bx-time"></i>
+                </div>
+              </div>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <h6 class="mb-0 text-muted fw-normal">Duration</h6>
+              <h5 class="mb-0 text-dark">{{ formatDuration(callDuration) }}</h5>
+            </div>
+          </div>
+        </div>
+
+        <!-- Average Sentiment -->
+        <div class="col-md-3">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <div class="avatar avatar-sm">
+                <div
+                  class="avatar-initial rounded"
+                  [ngClass]="
+                    'bg-label-' + getSentimentColor(getAverageSentiment())
+                  "
+                >
+                  <i class="bx bx-heart"></i>
+                </div>
+              </div>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <h6 class="mb-0 text-muted fw-normal">Sentiment</h6>
+              <h5
+                class="mb-0"
+                [ngClass]="'text-' + getSentimentColor(getAverageSentiment())"
+              >
+                {{ getAverageSentiment() * 100 | number : "1.0-0" }}%
+              </h5>
+            </div>
+          </div>
+        </div>
+
+        <!-- Call Outcome -->
+        <div class="col-md-3">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <div class="avatar avatar-sm">
+                <div class="avatar-initial bg-label-danger rounded">
+                  <i class="bx bx-check-shield"></i>
+                </div>
+              </div>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <h6 class="mb-0 text-muted fw-normal">Outcome</h6>
+              <select
+                class="form-select form-select-sm border-0 p-0 h-auto bg-transparent"
+                [(ngModel)]="selectedOutcome"
+                (ngModelChange)="updateOutcome()"
+                style="font-size: 1.1rem; font-weight: 500; color: #dc3545"
+              >
+                <option
+                  *ngFor="let option of outcomeOptions"
+                  [value]="option.value"
+                >
+                  {{ option.label }}
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Complaint Type -->
+        <div class="col-md-3">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+              <div class="avatar avatar-sm">
+                <div class="avatar-initial bg-label-secondary rounded">
+                  <i class="bx bx-error-circle"></i>
+                </div>
+              </div>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <h6 class="mb-0 text-muted fw-normal">Issue Type</h6>
+              <h6 class="mb-0 text-dark fw-medium" style="font-size: 0.95rem">
+                {{ postCallAnalysis?.complaintType || "Analyzing..." }}
+              </h6>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Row -->
+  <div class="row">
+    <!-- Left Column -->
+    <div class="col-lg-8">
+      <!-- Quick Actions Card -->
+      <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-light">
+          <div class="d-flex align-items-center">
+            <i class="bx bx-lightning me-2 text-danger"></i>
+            <h5 class="mb-0 text-dark">Quick Actions</h5>
+          </div>
+        </div>
+        <div class="card-body pt-4">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <button
+                class="btn btn-light border w-100 d-flex align-items-center justify-content-start"
+                (click)="openEmailModal()"
+              >
+                <div class="avatar avatar-sm me-3">
+                  <div class="avatar-initial bg-label-primary rounded">
+                    <i class="bx bx-envelope"></i>
+                  </div>
+                </div>
+                <div class="text-start">
+                  <div class="fw-medium">Send Follow-up Email</div>
+                  <small class="text-muted">Email customer with summary</small>
+                </div>
+              </button>
+            </div>
+            <div class="col-md-6">
+              <button
+                class="btn btn-light border w-100 d-flex align-items-center justify-content-start"
+                (click)="saveNotes()"
+              >
+                <div class="avatar avatar-sm me-3">
+                  <div class="avatar-initial bg-label-info rounded">
+                    <i class="bx bx-edit"></i>
+                  </div>
+                </div>
+                <div class="text-start">
+                  <div class="fw-medium">Update Notes</div>
+                  <small class="text-muted">Add call observations</small>
+                </div>
+              </button>
+            </div>
+          </div>
+          <div class="mt-4">
+            <label class="form-label text-muted fw-medium"
+              >Additional Notes</label
+            >
+            <textarea
+              class="form-control border-light"
+              rows="3"
+              placeholder="Record any additional observations or follow-up actions required..."
+              [(ngModel)]="additionalNotes"
+              style="resize: none"
+            ></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Customer Analysis Card -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="bx bx-user-voice me-2 text-info"></i>Customer Analysis
+          </h5>
+        </div>
+        <div class="card-body pt-4">
+          <div class="row">
+            <!-- Average Sentiment -->
+            <div class="col-md-6 mb-4">
+              <div class="d-flex align-items-center mb-2">
+                <i class="bx bx-heart me-2 text-danger"></i>
+                <h6 class="mb-0">Average Sentiment</h6>
+              </div>
+              <div class="progress mb-2" style="height: 10px">
+                <div
+                  class="progress-bar"
+                  [ngClass]="'bg-' + getSentimentColor(getAverageSentiment())"
+                  [style.width.%]="getAverageSentiment() * 100"
+                ></div>
+              </div>
+              <small class="text-muted">
+                {{ getAverageSentiment() * 100 | number : "1.1-1" }}% positive
+                sentiment
+              </small>
+            </div>
+
+            <!-- Escalation Level -->
+            <div class="col-md-6 mb-4">
+              <div class="d-flex align-items-center mb-2">
+                <i class="bx bx-trending-up me-2 text-warning"></i>
+                <h6 class="mb-0">Escalation Level</h6>
+              </div>
+              <div class="progress mb-2" style="height: 10px">
+                <div
+                  class="progress-bar bg-warning"
+                  [style.width.%]="getEscalationLevel() * 100"
+                ></div>
+              </div>
+              <small class="text-muted">
+                {{ getEscalationLevel() * 100 | number : "1.1-1" }}% escalation
+                detected
+              </small>
+            </div>
+          </div>
+
+          <!-- Complaint Summary -->
+          <div *ngIf="postCallAnalysis?.summary" class="mt-3">
+            <h6 class="text-muted mb-2">
+              <i class="bx bx-message-detail me-1"></i>Issue Summary
+            </h6>
+            <div class="alert alert-light border-start border-primary border-3">
+              <p class="mb-0">{{ postCallAnalysis?.summary }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column -->
+    <div class="col-lg-4">
+      <!-- Performance Assessment Card -->
+      <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-light">
+          <div class="d-flex align-items-center">
+            <i class="bx bx-award me-2 text-danger"></i>
+            <h5 class="mb-0 text-dark">Performance Assessment</h5>
+          </div>
+        </div>
+        <div class="card-body pt-4">
+          <!-- Score Display -->
+          <div class="text-center mb-4">
+            <div class="d-flex align-items-center justify-content-center mb-3">
+              <div class="me-3"></div>
+              <div class="flex-grow-1">
+                <div class="mb-2">
+                  <small class="text-muted text-uppercase fw-medium"
+                    >Performance Rating</small
+                  >
+                </div>
+                <!-- Elegant Star Rating -->
+                <div class="mb-3">
+                  <div class="d-flex align-items-center">
+                    <div class="star-rating me-2">
+                      <i
+                        *ngFor="let star of [1, 2, 3, 4, 5]; let i = index"
+                        class="bx"
+                        [ngClass]="{
+                          'bxs-star': i < (postCallAnalysis?.score || 0),
+                          'bx-star': i >= (postCallAnalysis?.score || 0)
+                        }"
+                        [style.color]="
+                          i < (postCallAnalysis?.score || 0)
+                            ? '#dc3545'
+                            : '#dee2e6'
+                        "
+                        style="font-size: 1.2rem; margin-right: 2px"
+                      ></i>
+                    </div>
+                    <small class="text-muted fw-medium">
+                      ({{ postCallAnalysis?.score || 0 }}/5)
+                    </small>
+                  </div>
+                </div>
+                <div class="progress mb-2" style="height: 8px">
+                  <div
+                    class="progress-bar bg-gradient"
+                    [ngClass]="{
+                      'bg-secondary': (postCallAnalysis?.score || 0) <= 2,
+                      'bg-warning': (postCallAnalysis?.score || 0) === 3,
+                      'bg-danger': (postCallAnalysis?.score || 0) >= 4
+                    }"
+                    [style.width.%]="((postCallAnalysis?.score || 0) / 5) * 100"
+                  ></div>
+                </div>
+                <small class="text-muted">
+                  {{ getPerformanceLabel(postCallAnalysis?.score || 0) }}
+                </small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feedback Section -->
+          <div *ngIf="postCallAnalysis?.feedback" class="border-top pt-3">
+            <h6 class="text-muted mb-2">
+              <i class="bx bx-message-detail me-1"></i>Feedback
+            </h6>
+            <div class="bg-light rounded p-3">
+              <p
+                class="mb-0 text-dark"
+                style="font-size: 0.9rem; line-height: 1.5"
+              >
+                {{ postCallAnalysis?.feedback }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Loading State -->
+          <div *ngIf="isLoading" class="text-center py-4">
+            <div
+              class="spinner-border spinner-border-sm text-danger"
+              role="status"
+            >
+              <span class="visually-hidden">Analyzing...</span>
+            </div>
+            <p class="text-muted mt-2 mb-0" style="font-size: 0.9rem">
+              Analyzing call performance...
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Customer Information Card -->
+      <div class="card" *ngIf="customerData">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="bx bx-user me-2 text-danger"></i>Customer Details
+          </h5>
+        </div>
+        <div class="card-body pt-4">
+          <div class="d-flex align-items-center mb-3">
+            <div class="avatar avatar-lg me-3">
+              <span
+                class="avatar-initial bg-label-danger rounded-circle display-6"
+              >
+                {{ customerData.firstName?.charAt(0)
+                }}{{ customerData.lastName?.charAt(0) }}
+              </span>
+            </div>
+            <div>
+              <h6 class="mb-1">
+                {{ customerData.firstName }} {{ customerData.lastName }}
+              </h6>
+              <small class="text-muted"
+                >ID: {{ customerData.customerID }}</small
+              >
+            </div>
+          </div>
+
+          <div class="row text-center mb-3">
+            <div class="col-6">
+              <h6 class="mb-0 text-danger">
+                {{
+                  customerData.MonthlyCharges
+                    | currency : "TND" : "symbol" : "1.2-2"
+                }}
+              </h6>
+              <small class="text-muted">Monthly</small>
+            </div>
+            <div class="col-6">
+              <h6 class="mb-0 text-danger">{{ customerData.tenure }}</h6>
+              <small class="text-muted">Months</small>
+            </div>
+          </div>
+
+          <div class="mb-2">
+            <small class="text-muted">Phone:</small>
+            <span class="fw-medium ms-2">{{ customerData.phone }}</span>
+          </div>
+          <div class="mb-2">
+            <small class="text-muted">Email:</small>
+            <span class="fw-medium ms-2">{{ customerData.email }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="row mt-4">
+    <div class="col-12 text-center">
+      <button class="btn btn-outline-primary me-3" (click)="generateReport()">
+        <i class="bx bx-download me-1"></i>Download Report
+      </button>
+      <button class="btn btn-primary" (click)="navigateToAllCalls()">
+        <i class="bx bx-check me-1"></i>Complete Analysis
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Email Modal -->
+<div
+  class="modal fade"
+  [class.show]="isEmailModalOpen"
+  [style.display]="isEmailModalOpen ? 'block' : 'none'"
+  tabindex="-1"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bx bx-envelope me-2"></i>Send Follow-up Email
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          (click)="isEmailModalOpen = false"
+        ></button>
+      </div>
+      <div class="modal-body pt-4">
+        <div class="mb-3">
+          <label class="form-label">To:</label>
+          <input
+            type="email"
+            class="form-control"
+            [value]="customerData?.email"
+            readonly
+          />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Subject:</label>
+          <input type="text" class="form-control" [(ngModel)]="emailSubject" />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Message:</label>
+          <textarea
+            class="form-control"
+            rows="6"
+            [(ngModel)]="emailBody"
+          ></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          (click)="isEmailModalOpen = false"
+        >
+          Cancel
+        </button>
+        <button type="button" class="btn btn-primary" (click)="sendEmail()">
+          <i class="bx bx-send me-1"></i>Send Email
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Backdrop -->
+<div
+  class="modal-backdrop fade"
+  [class.show]="isEmailModalOpen"
+  *ngIf="isEmailModalOpen"
+></div>
