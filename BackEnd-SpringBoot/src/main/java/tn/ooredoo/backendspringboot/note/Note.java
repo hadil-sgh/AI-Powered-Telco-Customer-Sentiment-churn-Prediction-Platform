@@ -14,22 +14,23 @@ import java.time.Duration;
 @NoArgsConstructor
 @Builder
 @Entity
+@Table(name = "callNotes")
 public class Note {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
-    private Customer customer;
-
-    @OneToOne
+    @ManyToOne
     private User agent;
 
+    @ManyToOne
+    private Customer customer;
+
     private String description;
-    @OneToOne(cascade = CascadeType.ALL)
+
+    @OneToOne
     private CallRecord call;
 
-    private Duration callDuration;
 
 
 }

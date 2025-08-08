@@ -8,6 +8,11 @@ import {
 import { Customer } from '../../models/customer';
 import { ChurnPredictionService } from '../../services/churn-prediction.service';
 import { ChurnPrediction } from '../../models/churn-prediction';
+import { NotesService } from '../../services/notes.service';
+import { TokenService } from '../../services/token.service';
+import { Note } from '../../models/note';
+import { CallRecordService } from '../../services/call-record.service';
+import { CallRecord } from '../../models/call-record';
 
 export interface AudioAnalysisResult {
   timestamp: string;
@@ -82,15 +87,28 @@ export class CallManagmentComponent implements OnInit, OnDestroy {
   // Notes data
   callNotes = '';
   savedNotes: Array<{ timestamp: string; content: string; agent: string }> = [];
+  currentCallRecord: any = null; // This will store the current call record
 
   // Timer for session duration
   private sessionTimer: any;
   private startTime: Date | null = null;
 
+  // Simple call timer
+  callDuration = 0;
+  private callTimer: any;
+  private callStartTime: Date | null = null;
+
+  // Call record saving
+  isSavingRecord = false;
+  recordSaved = false;
+
   constructor(
     private audioStreamService: AudioStreamService,
     private audioAnalysisService: AudioAnalysisService,
     private churnService: ChurnPredictionService,
+    private notesService: NotesService,
+    private tokenService: TokenService,
+    private callRecordService: CallRecordService,
     private router: Router
   ) {
     this.currentSessionId = this.generateSessionId();
@@ -163,6 +181,38 @@ export class CallManagmentComponent implements OnInit, OnDestroy {
 
     // Load real churn prediction for this customer from API
     this.loadChurnPrediction(customer.customerID?.toString() || '');
+
+    // Load existing notes for this call (will only load if call record exists)
+    this.loadCustomerNotes();
+  }
+
+  /**
+   * Load existing notes for the customer using call ID
+   */
+  loadCustomerNotes(callId?: number) {
+    // Only load notes if we have a call record with an ID
+    if (this.currentCallRecord && this.currentCallRecord.id) {
+      this.notesService.getNotesByCustomer(this.currentCallRecord.id).subscribe({
+        next: (notes: Note[]) => {
+          // Convert Note[] to the format expected by the template
+          this.savedNotes = notes.map((note) => ({
+            timestamp: new Date().toLocaleString(), // You may want to use a proper timestamp from the note
+            content: note.description || '',
+            agent:
+              `${note.agent?.firstname || ''} ${
+                note.agent?.lastname || ''
+              }`.trim() || 'Agent',
+          }));
+          console.log('Loaded customer notes:', notes);
+        },
+        error: (error) => {
+          console.error('Error loading customer notes:', error);
+        },
+      });
+    } else {
+      console.log('No call record available to load notes');
+      this.savedNotes = []; // Clear any existing notes
+    }
   }
 
   /**
@@ -199,6 +249,9 @@ export class CallManagmentComponent implements OnInit, OnDestroy {
     this.audioStreamService.disconnect();
     if (this.sessionTimer) {
       clearInterval(this.sessionTimer);
+    }
+    if (this.callTimer) {
+      clearInterval(this.callTimer);
     }
   }
 
@@ -371,10 +424,54 @@ export class CallManagmentComponent implements OnInit, OnDestroy {
     return Math.floor((new Date().getTime() - this.startTime.getTime()) / 1000);
   }
 
+  private startCallTimer() {
+    this.callStartTime = new Date();
+    this.callDuration = 0;
+
+    this.callTimer = setInterval(() => {
+      if (this.callStartTime) {
+        this.callDuration = Math.floor(
+          (new Date().getTime() - this.callStartTime.getTime()) / 1000
+        );
+      }
+    }, 1000);
+  }
+
+  private stopCallTimer() {
+    if (this.callTimer) {
+      clearInterval(this.callTimer);
+      this.callTimer = null;
+    }
+  }
+
+  resetCallTimer() {
+    this.stopCallTimer();
+    this.callDuration = 0;
+    this.callStartTime = null;
+  }
+
+  resetCallRecord() {
+    this.currentCallRecord = null;
+    this.recordSaved = false;
+    this.isSavingRecord = false;
+  }
+
+  getRecordButtonTooltip(): string {
+    if (this.recordSaved) return 'Call record has been saved';
+    if (this.isSavingRecord) return 'Saving call record...';
+    if (!this.customerData) return 'Select a customer to save call record';
+    if (this.callDuration === 0)
+      return 'Start and stop analysis to record call duration';
+    return 'Save this call record to the database';
+  }
+
   async startAnalysis() {
     try {
       this.connectionStatus = 'Connecting...';
       this.lastError = '';
+
+      // Start the simple call timer
+      this.startCallTimer();
 
       // Connect to WebSocket
       await this.audioStreamService.connect();
@@ -390,6 +487,8 @@ export class CallManagmentComponent implements OnInit, OnDestroy {
       console.error('Error starting analysis:', error);
       this.connectionStatus = 'Error: ' + error;
       this.lastError = 'Failed to start analysis: ' + error;
+      // Stop timer if there's an error
+      this.stopCallTimer();
     }
   }
 
@@ -398,7 +497,12 @@ export class CallManagmentComponent implements OnInit, OnDestroy {
       this.audioStreamService.stopRecording();
       this.isAnalyzing = false;
       this.connectionStatus = 'Connected';
+
+      // Stop the simple call timer
+      this.stopCallTimer();
+
       console.log('Enhanced analysis stopped');
+      console.log(`Call duration: ${this.formatDuration(this.callDuration)}`);
     }
   }
 
@@ -411,6 +515,10 @@ export class CallManagmentComponent implements OnInit, OnDestroy {
       avgVolume: 0,
       peakVolume: 0,
     };
+    // Reset the call timer as well
+    this.resetCallTimer();
+    // Reset the call record as well
+    this.resetCallRecord();
   }
 
   testAudioQuality() {
@@ -535,31 +643,6 @@ export class CallManagmentComponent implements OnInit, OnDestroy {
     );
   }
 
-  downloadResults() {
-    const enhancedData = {
-      session: {
-        id: this.currentSessionId,
-        duration: this.sessionStats.duration,
-        timestamp: new Date().toISOString(),
-      },
-      statistics: this.sessionStats,
-      results: this.analysisResults,
-      customer: this.customerData,
-      churnPrediction: this.churnData,
-    };
-
-    const dataStr = JSON.stringify(enhancedData, null, 2);
-    const dataUri =
-      'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
-
-    const exportFileDefaultName = `enhanced_audio_analysis_${new Date().toISOString()}.json`;
-
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
-  }
-
   trackByTimestamp(index: number, result: AudioAnalysisResult): string {
     return result.timestamp + result.speaker;
   }
@@ -580,19 +663,114 @@ export class CallManagmentComponent implements OnInit, OnDestroy {
     ).length;
   }
 
+  /**
+   * Save the call record to the backend
+   */
+  saveCallRecord() {
+    if (!this.customerData || !this.customerData.customerID) {
+      alert(
+        'No customer selected. Please select a customer before saving the call record.'
+      );
+      return;
+    }
+
+    if (this.callDuration === 0) {
+      alert(
+        'No call duration recorded. Please start and stop analysis to record call duration.'
+      );
+      return;
+    }
+
+    this.isSavingRecord = true;
+    this.recordSaved = false;
+
+    // Get agent email from token
+    const agentEmail = this.tokenService.getEmailFromToken();
+    if (!agentEmail) {
+      alert('Unable to get agent email. Please login again.');
+      this.isSavingRecord = false;
+      return;
+    }
+
+    console.log('💾 Saving call record...', {
+      agentEmail,
+      customerId: this.customerData.customerID,
+      sessionId: this.currentSessionId,
+      duration: this.callDuration,
+    });
+
+    this.callRecordService
+      .saveCallRecord(
+        agentEmail,
+        this.customerData.customerID,
+        this.currentSessionId,
+        this.callDuration
+      )
+      .subscribe({
+        next: (savedRecord: CallRecord) => {
+          console.log('✅ Call record saved successfully:', savedRecord);
+          this.currentCallRecord = savedRecord;
+          this.recordSaved = true;
+          this.isSavingRecord = false;
+
+          // Load notes for this call record now that it's saved
+          this.loadCustomerNotes();
+
+          // Show success message
+          alert(`Call record saved successfully! Record ID: ${savedRecord.id}`);
+        },
+        error: (error) => {
+          console.error('❌ Error saving call record:', error);
+          this.isSavingRecord = false;
+
+          // Show error message
+          let errorMessage = 'Failed to save call record. ';
+          if (error.error?.message) {
+            errorMessage += error.error.message;
+          } else if (error.message) {
+            errorMessage += error.message;
+          } else {
+            errorMessage += 'Please try again.';
+          }
+          alert(errorMessage);
+        },
+      });
+  }
+
   // New methods for the enhanced interface
   setActiveTab(tab: string) {
     this.activeTab = tab;
   }
 
   saveNote() {
-    if (this.callNotes.trim()) {
-      this.savedNotes.unshift({
-        timestamp: new Date().toLocaleString(),
-        content: this.callNotes.trim(),
-        agent: 'Current Agent', // Replace with actual agent name
+    if (this.callNotes.trim() && this.currentCallRecord && this.currentCallRecord.id) {
+      // Use the new API format: callId and description as parameters
+      const callId = this.currentCallRecord.id;
+      const description = this.callNotes.trim();
+
+      // Save to backend using new API
+      this.notesService.createNote(callId, description).subscribe({
+        next: (savedNote: Note) => {
+          console.log('Note saved successfully:', savedNote);
+          // Add to local array in the format expected by the template
+          this.savedNotes.unshift({
+            timestamp: new Date().toLocaleString(),
+            content: savedNote.description || '',
+            agent:
+              `${savedNote.agent?.firstname || ''} ${
+                savedNote.agent?.lastname || ''
+              }`.trim() || 'Agent',
+          });
+          this.callNotes = '';
+        },
+        error: (error) => {
+          console.error('Error saving note:', error);
+          // Show error message to user
+          alert('Failed to save note. Please try again.');
+        },
       });
-      this.callNotes = '';
+    } else if (!this.currentCallRecord || !this.currentCallRecord.id) {
+      alert('Please save the call record first before adding notes.');
     }
   }
 

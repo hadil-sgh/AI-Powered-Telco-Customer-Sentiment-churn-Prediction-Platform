@@ -1,0 +1,131 @@
+// Notes Component Styles
+.hover-shadow {
+  transition: box-shadow 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
+}
+
+.text-truncate-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.card {
+  border: 1px solid #e6e9ed;
+
+  &.bg-light {
+    background-color: #f8f9fa !important;
+  }
+}
+
+.avatar-initial {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  font-size: 14px;
+}
+
+.pagination {
+  .page-link {
+    color: #d32f2f;
+    border-color: #dee2e6;
+
+    &:hover {
+      color: #fff;
+      background-color: #d32f2f;
+      border-color: #d32f2f;
+    }
+  }
+
+  .page-item.active .page-link {
+    background-color: #d32f2f;
+    border-color: #d32f2f;
+  }
+}
+
+.btn-outline-primary {
+  color: #d32f2f;
+  border-color: #d32f2f;
+
+  &:hover {
+    color: #fff;
+    background-color: #d32f2f;
+    border-color: #d32f2f;
+  }
+}
+
+.btn-primary {
+  background-color: #d32f2f;
+  border-color: #d32f2f;
+
+  &:hover {
+    background-color: #b71c1c;
+    border-color: #b71c1c;
+  }
+}
+
+.text-primary {
+  color: #d32f2f !important;
+}
+
+// Loading animation
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .col-lg-6.col-xl-4 {
+    margin-bottom: 1rem;
+  }
+
+  .card-body {
+    padding: 1rem;
+  }
+
+  .modal-dialog {
+    margin: 0.5rem;
+  }
+}
+
+// Form styling
+.form-control:focus,
+.form-select:focus {
+  border-color: #d32f2f;
+  box-shadow: 0 0 0 0.2rem rgba(211, 47, 47, 0.25);
+}
+
+// Badge styling
+.bg-label-primary {
+  background-color: rgba(211, 47, 47, 0.12) !important;
+  color: #d32f2f !important;
+}
+
+.bg-label-success {
+  background-color: rgba(76, 175, 80, 0.12) !important;
+  color: #4caf50 !important;
+}
+
+.bg-label-info {
+  background-color: rgba(33, 150, 243, 0.12) !important;
+  color: #2196f3 !important;
+}
+
+.bg-label-warning {
+  background-color: rgba(255, 152, 0, 0.12) !important;
+  color: #ff9800 !important;
+}

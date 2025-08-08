@@ -317,13 +317,42 @@
               </button>
 
               <button
-                (click)="downloadResults()"
-                [disabled]="analysisResults.length === 0"
-                class="btn btn-outline-success"
+                (click)="saveCallRecord()"
+                [disabled]="
+                  !customerData ||
+                  callDuration === 0 ||
+                  isSavingRecord ||
+                  recordSaved
+                "
+                class="btn"
+                [class]="recordSaved ? 'btn-success' : 'btn-outline-warning'"
+                [title]="getRecordButtonTooltip()"
               >
-                <i class="bx bx-download me-1"></i>
-                Download
+                <i
+                  class="bx me-1"
+                  [ngClass]="{
+                    'bx-loader-alt bx-spin': isSavingRecord,
+                    'bx-check-circle': recordSaved && !isSavingRecord,
+                    'bx-save': !isSavingRecord && !recordSaved
+                  }"
+                ></i>
+                <span *ngIf="!isSavingRecord && !recordSaved">Save Record</span>
+                <span *ngIf="isSavingRecord">Saving...</span>
+                <span *ngIf="recordSaved">Saved</span>
               </button>
+            </div>
+
+            <!-- Call Timer Display -->
+            <div class="d-flex align-items-center gap-2">
+              <div
+                class="call-timer d-flex align-items-center gap-2 px-3 py-2 bg-light border rounded"
+              >
+                <i class="bx bx-time text-primary"></i>
+                <span class="text-muted small">Call Duration:</span>
+                <span class="fw-bold text-primary font-monospace">{{
+                  formatDuration(callDuration)
+                }}</span>
+              </div>
             </div>
 
             <!-- Status Badge -->
@@ -612,7 +641,6 @@
             <h5 class="m-0 me-2">Churn Risk Analysis</h5>
             <small class="text-muted">Customer retention prediction</small>
           </div>
-     
         </div>
 
         <div class="card-body text-center">
@@ -623,8 +651,6 @@
             </div>
             <p class="text-muted mt-2">Loading churn prediction...</p>
           </div>
-
-   
 
           <!-- Churn Data Display - Fixed condition -->
           <div *ngIf="churnData && !isLoadingChurn">

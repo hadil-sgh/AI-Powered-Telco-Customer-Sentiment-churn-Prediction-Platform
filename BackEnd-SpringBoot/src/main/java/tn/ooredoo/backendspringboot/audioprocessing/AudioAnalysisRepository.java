@@ -19,5 +19,6 @@ public interface AudioAnalysisRepository extends JpaRepository<AudioAnalysisResp
     long countBySessionId(String sessionId);
 
 
+    List<AudioAnalysisResponse> findBySessionId(String sessionId);
 }
 

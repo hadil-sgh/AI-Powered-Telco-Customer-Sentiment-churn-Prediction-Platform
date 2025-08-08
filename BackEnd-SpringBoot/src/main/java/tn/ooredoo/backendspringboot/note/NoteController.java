@@ -2,6 +2,9 @@ package tn.ooredoo.backendspringboot.note;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import tn.ooredoo.backendspringboot.call_transcript.CallRecord;
+import tn.ooredoo.backendspringboot.call_transcript.CallRecordServices;
+
 import java.util.List;
 
 @RestController
@@ -9,26 +12,30 @@ import java.util.List;
 @RequiredArgsConstructor
 public class NoteController {
     private final NoteService noteService;
+    private final CallRecordServices callRecordServices;
 
-    @PostMapping
-    public Note createNote(@RequestBody Note note) {
-        return noteService.createNote(note);
+    @PostMapping("/save")
+    public Note createNote(@RequestParam Integer callId, @RequestParam String description) {
+        CallRecord callRecord = callRecordServices.getCallRecordById(callId);
+        return noteService.createNote(callRecord, description);
     }
 
-    @GetMapping("/{id}")
-    public Note getNoteById(@PathVariable Long id) {
-        return noteService.getNoteById(id);
+    @PutMapping("/update")
+    public Note updateNote(@RequestParam Integer callId, @RequestParam String description) {
+        CallRecord callRecord = callRecordServices.getCallRecordById(callId);
+        return noteService.createNote(callRecord, description);
     }
 
-    @GetMapping
-    public List<Note> getAllNotes() {
-        return noteService.getAllNotes();
+    @GetMapping("/getALLbyCustomer")
+    public List<Note> getAllAgent(@RequestParam Integer callId) {
+        return noteService.getNoteCustomerId(callId);
     }
 
-    @PutMapping("/{id}")
-    public Note updateNote(@PathVariable Long id, @RequestBody Note note) {
-        return noteService.updateNote(id, note);
+    @GetMapping("/getALLbyAgent")
+    public List<Note> getAllAgent(@RequestParam String email) {
+        return noteService.getNoteByAgentId(email);
     }
+
 
     @DeleteMapping("/{id}")
     public void deleteNote(@PathVariable Long id) {

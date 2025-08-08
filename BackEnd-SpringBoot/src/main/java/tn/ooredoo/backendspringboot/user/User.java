@@ -53,6 +53,8 @@ public class User implements UserDetails, Principal {
     @ManyToOne(fetch = FetchType.EAGER)
     private Team team;
 
+
+
     @CreatedDate
     @Column(updatable = false, nullable = false)
     private LocalDateTime createdAt;

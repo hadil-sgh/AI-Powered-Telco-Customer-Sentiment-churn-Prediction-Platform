@@ -32,4 +32,13 @@ export class TokenService {
     }
     return [];
   }
+
+  getEmailFromToken(): string {
+    const token = localStorage.getItem('token');
+    if (token) {
+      const decodedToken: any = this.jwtHelper.decodeToken(token);
+      return decodedToken.email || decodedToken.sub || '';
+    }
+    return '';
+  }
 }

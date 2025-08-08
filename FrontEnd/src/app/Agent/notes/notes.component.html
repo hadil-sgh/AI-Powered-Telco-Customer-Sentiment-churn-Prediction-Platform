@@ -1,1 +1,398 @@
-<p>notes works!</p>
+<!-- Notes Management Interface -->
+<div class="container-xxl flex-grow-1 container-p-y">
+  <div class="row">
+    <div class="col-12">
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h4 class="fw-bold py-3 mb-0">
+            <i class="bx bx-note me-2 text-primary"></i>My Call Notes
+          </h4>
+          <p class="text-muted">Your personal call notes from customer interactions</p>
+          <div *ngIf="currentAgentName" class="badge bg-label-info">
+            <i class="bx bx-user me-1"></i>{{ currentAgentName }}
+          </div>
+        </div>
+        <div>
+          <button
+            class="btn btn-outline-secondary me-2"
+            (click)="clearFilters()"
+            title="Clear all filters"
+          >
+            <i class="bx bx-refresh me-1"></i>Clear Filters
+          </button>
+          <button
+            class="btn btn-primary"
+            routerLink="/Agent/call"
+            title="Go to Call Management to create new notes"
+          >
+            <i class="bx bx-plus me-1"></i>New Call
+          </button>
+        </div>
+      </div>
+
+      <!-- Filters Card -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="bx bx-filter me-2"></i>Filters & Search
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <!-- Search -->
+            <div class="col-md-6">
+              <label class="form-label">Search Notes</label>
+              <div class="input-group">
+                <span class="input-group-text">
+                  <i class="bx bx-search"></i>
+                </span>
+                <input
+                  type="text"
+                  class="form-control"
+                  placeholder="Search by content or customer name..."
+                  [(ngModel)]="searchTerm"
+                  (input)="onFilterChange()"
+                />
+              </div>
+            </div>
+
+            <!-- Customer Filter -->
+            <div class="col-md-4">
+              <label class="form-label">Filter by Customer</label>
+              <select
+                class="form-select"
+                [(ngModel)]="filterByCustomer"
+                (change)="onFilterChange()"
+              >
+                <option value="">All Customers</option>
+                <option
+                  *ngFor="let customer of getUniqueCustomers()"
+                  [value]="customer.id"
+                >
+                  {{ customer.name }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Sort -->
+            <div class="col-md-2">
+              <label class="form-label">Sort by</label>
+              <select
+                class="form-select"
+                [(ngModel)]="sortBy"
+                (change)="onFilterChange()"
+              >
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="customer">Customer Name</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results Summary -->
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="text-muted">
+              Showing {{ (currentPage - 1) * pageSize + 1 }} to
+              {{ Math.min(currentPage * pageSize, filteredNotes.length) }}
+              of {{ filteredNotes.length }} notes
+            </div>
+            <div class="d-flex align-items-center">
+              <label class="form-label me-2 mb-0">Per page:</label>
+              <select
+                class="form-select form-select-sm"
+                style="width: auto"
+                [(ngModel)]="pageSize"
+                (change)="updatePagination(); onFilterChange()"
+              >
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="loading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="text-muted mt-2">Loading notes...</p>
+      </div>
+
+      <!-- Error State -->
+      <div *ngIf="error" class="alert alert-danger" role="alert">
+        <i class="bx bx-error me-2"></i>{{ error }}
+        <button
+          class="btn btn-sm btn-outline-danger ms-2"
+          (click)="loadNotes()"
+        >
+          <i class="bx bx-refresh me-1"></i>Retry
+        </button>
+      </div>
+
+      <!-- Notes Grid -->
+      <div *ngIf="!loading && !error" class="row">
+        <div *ngFor="let note of paginatedNotes" class="col-lg-6 col-xl-4 mb-4">
+          <div class="card h-100 hover-shadow">
+            <div
+              class="card-header d-flex justify-content-between align-items-center"
+            >
+              <div class="d-flex align-items-center">
+                <div class="avatar avatar-sm me-2">
+                  <span class="avatar-initial rounded bg-label-primary">
+                    <i class="bx bx-note"></i>
+                  </span>
+                </div>
+                <small class="text-muted">Note #{{ note.id }}</small>
+              </div>
+              <div class="dropdown">
+                <button
+                  class="btn btn-sm p-0"
+                  type="button"
+                  data-bs-toggle="dropdown"
+                >
+                  <i class="bx bx-dots-vertical-rounded"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li>
+                    <a class="dropdown-item" (click)="viewNote(note)">
+                      <i class="bx bx-show me-2"></i>View Details
+                    </a>
+                  </li>
+                  <li><hr class="dropdown-divider" /></li>
+                  <li>
+                    <a
+                      class="dropdown-item text-danger"
+                      (click)="deleteNote(note)"
+                    >
+                      <i class="bx bx-trash me-2"></i>Delete
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="card-body">
+              <!-- Customer Info -->
+              <div class="mb-3">
+                <div class="d-flex align-items-center mb-2">
+                  <i class="bx bx-user text-primary me-2"></i>
+                  <strong
+                    >{{ note.customer?.firstName }}
+                    {{ note.customer?.lastName }}</strong
+                  >
+                </div>
+                <small class="text-muted">{{ note.customer?.phone }}</small>
+              </div>
+
+              <!-- Note Content -->
+              <div class="mb-3">
+                <p class="text-truncate-3 mb-0">{{ note.description }}</p>
+              </div>
+
+              <!-- Call Info -->
+              <div class="mb-2">
+                <small class="text-muted">
+                  <i class="bx bx-phone me-1"></i>
+                  Call #{{ note.call?.id || 'N/A' }}
+                  <span *ngIf="note.call?.callOutcome" class="ms-2">
+                    • {{ note.call?.callOutcome }}
+                  </span>
+                </small>
+              </div>
+
+              <!-- Call Duration -->
+            
+            </div>
+
+            <div class="card-footer">
+              <button
+                class="btn btn-outline-primary btn-sm w-100"
+                (click)="viewNote(note)"
+              >
+                <i class="bx bx-show me-1"></i>View Full Note
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div
+        *ngIf="!loading && !error && filteredNotes.length === 0"
+        class="text-center py-5"
+      >
+        <div class="mb-4">
+          <i class="bx bx-note display-1 text-muted"></i>
+        </div>
+        <h5 class="text-muted">No notes found</h5>
+        <p class="text-muted">
+          <span *ngIf="notes.length === 0">
+            You haven't created any notes yet. Start a new call to create your first note.
+          </span>
+          <span *ngIf="notes.length > 0">
+            Try adjusting your filters to see more results.
+          </span>
+        </p>
+        <div *ngIf="notes.length === 0" class="mt-3">
+          <button class="btn btn-primary" routerLink="/Agent/call">
+            <i class="bx bx-plus me-1"></i>Start New Call
+          </button>
+        </div>
+        <button
+          *ngIf="notes.length > 0"
+          class="btn btn-outline-primary"
+          (click)="clearFilters()"
+        >
+          <i class="bx bx-refresh me-1"></i>Clear Filters
+        </button>
+      </div>
+
+      <!-- Pagination -->
+      <nav *ngIf="totalPages > 1" aria-label="Notes pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+          <li class="page-item" [class.disabled]="currentPage === 1">
+            <a class="page-link" (click)="changePage(currentPage - 1)">
+              <i class="bx bx-chevron-left"></i>
+            </a>
+          </li>
+
+          <li
+            *ngFor="let page of [].constructor(totalPages); let i = index"
+            class="page-item"
+            [class.active]="currentPage === i + 1"
+          >
+            <a class="page-link" (click)="changePage(i + 1)">{{ i + 1 }}</a>
+          </li>
+
+          <li class="page-item" [class.disabled]="currentPage === totalPages">
+            <a class="page-link" (click)="changePage(currentPage + 1)">
+              <i class="bx bx-chevron-right"></i>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+<!-- Note Details Modal -->
+<div
+  class="modal fade"
+  id="noteModal"
+  tabindex="-1"
+  [class.show]="showNoteModal"
+  [style.display]="showNoteModal ? 'block' : 'none'"
+  *ngIf="showNoteModal"
+>
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bx bx-note me-2"></i>Note Details</h5>
+        <button
+          type="button"
+          class="btn-close"
+          (click)="closeNoteModal()"
+        ></button>
+      </div>
+
+      <div class="modal-body" *ngIf="selectedNote">
+        <div class="row">
+          <!-- Customer Information -->
+          <div class="col-md-6 mb-3">
+            <h6 class="text-muted mb-2">Customer Information</h6>
+            <div class="card bg-light">
+              <div class="card-body p-3">
+                <div class="d-flex align-items-center mb-2">
+                  <i class="bx bx-user text-primary me-2"></i>
+                  <strong
+                    >{{ selectedNote.customer?.firstName }}
+                    {{ selectedNote.customer?.lastName }}</strong
+                  >
+                </div>
+                <div class="text-muted small">
+                  <div>📧 {{ selectedNote.customer?.email }}</div>
+                  <div>📞 {{ selectedNote.customer?.phone }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Agent Information -->
+          <div class="col-md-6 mb-3">
+            <h6 class="text-muted mb-2">Agent Information</h6>
+            <div class="card bg-light">
+              <div class="card-body p-3">
+                <div class="d-flex align-items-center mb-2">
+                  <i class="bx bx-user-circle text-success me-2"></i>
+                  <strong
+                    >{{ selectedNote.agent?.firstname }}
+                    {{ selectedNote.agent?.lastname }}</strong
+                  >
+                </div>
+                <div class="text-muted small">
+                  Agent ID: {{ selectedNote.agent?.id }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+     
+
+          <!-- Note Content -->
+          <div class="col-12">
+            <h6 class="text-muted mb-2">Note Content</h6>
+            <div class="card">
+              <div class="card-body">
+                <p class="mb-0">{{ selectedNote.description }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Call Information -->
+          <div class="col-12" *ngIf="selectedNote.call">
+            <h6 class="text-muted mb-2">Call Information</h6>
+            <div class="card bg-light">
+              <div class="card-body p-3">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="text-muted small">Call ID</div>
+                    <div class="fw-bold">{{ selectedNote.call.id }}</div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="text-muted small">Call Outcome</div>
+                    <div class="fw-bold">{{ selectedNote.call.callOutcome || 'N/A' }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="closeNoteModal()"
+        >
+          <i class="bx bx-x me-1"></i>Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Backdrop -->
+<div
+  *ngIf="showNoteModal"
+  class="modal-backdrop fade show"
+  (click)="closeNoteModal()"
+></div>

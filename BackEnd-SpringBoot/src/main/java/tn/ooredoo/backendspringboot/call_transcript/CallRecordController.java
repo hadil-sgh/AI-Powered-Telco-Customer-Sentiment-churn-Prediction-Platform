@@ -1,7 +1,12 @@
 package tn.ooredoo.backendspringboot.call_transcript;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import tn.ooredoo.backendspringboot.customer.Customer;
+import tn.ooredoo.backendspringboot.customer.CustomerServices;
+import tn.ooredoo.backendspringboot.user.User;
+import tn.ooredoo.backendspringboot.user.UserService;
 
 import java.util.Date;
 
@@ -12,6 +17,8 @@ public class CallRecordController {
 
     private final CallRecordRepository callRecordRepository;
     private final CallRecordServices callRecordServices;
+    private final UserService userService;
+    private final CustomerServices customerServices;
 
     @GetMapping("/formatTranscript/{id}")
     public String getFormattedTranscript(@PathVariable Integer id) {
@@ -21,15 +28,28 @@ public class CallRecordController {
         return callRecordServices.formatTranscriptForAnalysis(callRecord);
     }
 
+    @GetMapping("/Transcript/{id}")
+    public String getdTranscript(@PathVariable Integer id) {
+
+        return callRecordServices.getTranscriptForAnalysis(id);
+    }
+
 
     @GetMapping("/callsPerDay/{agentId}")
     public Integer getCallsPerDayForAgent(@PathVariable Long agentId, @RequestParam(defaultValue = "today") Date date) {
         return callRecordServices.getCallsPerDayForAgent(agentId, date);
     }
 
-    @PostMapping
-    public CallRecord createCallRecord(@RequestBody CallRecord callRecord) {
-        return callRecordServices.saveCallRecord(callRecord);
+    @PostMapping("/save")
+    public CallRecord saveCallRecord(
+            @RequestParam String email,
+            @RequestParam Integer customerId,
+            @RequestParam String sessionId,
+            @RequestParam Long duration
+    ) {
+        User agent = userService.findByEmail(email);
+        Customer customer=customerServices.getCustomerById(customerId);
+        return callRecordServices.saveCallRecord(agent,customer,sessionId,duration);
     }
 
     @GetMapping("/{id}")

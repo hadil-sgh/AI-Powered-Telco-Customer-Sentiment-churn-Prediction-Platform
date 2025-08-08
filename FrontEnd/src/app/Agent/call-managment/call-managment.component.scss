@@ -424,3 +424,59 @@ ul {
 .bg-red-100 {
   background-color: #ffe0db !important;
 }
+
+// Call Timer Styling
+.call-timer {
+  border: 1px solid #d9dee3 !important;
+  background-color: #f8f9fa !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    background-color: #e9ecef !important;
+    border-color: #adb5bd !important;
+  }
+
+  .text-primary {
+    color: $ooredoo-red !important;
+  }
+
+  .font-monospace {
+    font-family: "Courier New", Courier, monospace !important;
+    font-weight: 600 !important;
+    font-size: 1.1em !important;
+  }
+}
+
+// Save Record Button Styling
+.btn-outline-warning {
+  &:hover {
+    background-color: #ffb400 !important;
+    border-color: #ffb400 !important;
+    color: white !important;
+  }
+}
+
+.btn-success {
+  background-color: #71dd37 !important;
+  border-color: #71dd37 !important;
+
+  &:hover {
+    background-color: #5cb85c !important;
+    border-color: #5cb85c !important;
+  }
+}
+
+// Loading animation for save button
+.bx-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
