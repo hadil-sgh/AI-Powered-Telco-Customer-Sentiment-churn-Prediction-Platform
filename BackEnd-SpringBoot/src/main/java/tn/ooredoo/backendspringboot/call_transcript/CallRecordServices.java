@@ -7,7 +7,6 @@ import java.util.Date;
 import java.util.List;
 
 public interface CallRecordServices {
-    String formatTranscriptForAnalysis(CallRecord callRecord);
     CallRecord saveCallRecord(User agent, Customer customer, String sessionId,Long duration);
     CallRecord getCallRecordById(Integer id);
     void deleteCallRecordById(Integer id);

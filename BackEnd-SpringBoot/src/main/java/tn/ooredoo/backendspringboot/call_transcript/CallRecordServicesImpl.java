@@ -25,36 +25,6 @@ public class CallRecordServicesImpl implements CallRecordServices {
     final UserRepository userRepository;
     final AudioAnalysisRepository audioAnalysisRepository;
 
-    @Override
-    public String formatTranscriptForAnalysis(CallRecord callRecord) {
-        if (callRecord == null || callRecord.getCallTranscripts() == null || callRecord.getCallTranscripts().isEmpty()) {
-            throw new IllegalArgumentException("CallRecord or transcripts cannot be null or empty");
-        }
-
-        StringBuilder transcript = new StringBuilder();
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
-
-        List<AudioAnalysisResponse> sortedTranscripts = callRecord.getCallTranscripts()
-                .stream()
-                .sorted((t1, t2) -> {
-                    LocalDateTime time1 = LocalDateTime.parse(t1.getTimestamp(), formatter);
-                    LocalDateTime time2 = LocalDateTime.parse(t2.getTimestamp(), formatter);
-                    return time1.compareTo(time2);
-                })
-                .collect(Collectors.toList());
-
-        for (AudioAnalysisResponse response : sortedTranscripts) {
-            if (response.getText() != null && !response.getText().trim().isEmpty()) {
-                transcript.append(response.getSpeaker() != null ? response.getSpeaker() : "Unknown Speaker")
-                        .append(": ")
-                        .append(response.getText().trim())
-                        .append("\n\n");
-            }
-        }
-
-        return transcript.toString().trim();
-    }
 
     @Override
     public CallRecord saveCallRecord(User agent, Customer customer, String sessionId, Long duration) {

@@ -153,7 +153,6 @@
         <thead class="table-light">
           <tr>
             <th>Customer</th>
-            <th>Agent</th>
             <th>Date & Time</th>
             <th>Duration</th>
             <th>Outcome</th>
@@ -167,24 +166,18 @@
               <div class="d-flex align-items-center">
                 <div class="avatar avatar-sm me-2">
                   <span class="avatar-initial bg-label-primary rounded-circle">
-                    {{ call.customer?.name?.charAt(0) }}
+                    {{ getCustomerName(call.customer).charAt(0) }}
                   </span>
                 </div>
                 <div>
-                  <strong>{{ call.customer?.name }}</strong
-                  ><br />
+                  <strong>{{ getCustomerName(call.customer) }}</strong><br />
                   <small class="text-muted">{{
-                    call.customer?.phoneNumber
+                    getCustomerPhone(call.customer)
                   }}</small>
                 </div>
-
               </div>
             </td>
-            <td>
-              <span class="fw-medium"
-                >{{ call.agent?.firstName }} {{ call.agent?.lastName }}</span
-              >
-            </td>
+          
             <td>
               <div>
                 {{ call.callDateTime | date : "MMM dd, yyyy" }}<br />
@@ -203,9 +196,9 @@
                 class="badge"
                 [ngClass]="{
                   'bg-label-success': call.callOutcome === 'SUCCESSFUL',
-                  'bg-label-warning': call.callOutcome === 'PENDING',
-                  'bg-label-danger': call.callOutcome === 'FAILED',
-                  'bg-label-info': call.callOutcome === 'ESCALATED'
+                  'bg-label-warning': call.callOutcome === 'NO_ANSWER',
+                  'bg-label-danger': call.callOutcome === 'DROPPED',
+                  'bg-label-info': call.callOutcome === 'RESOLVED'
                 }"
               >
                 {{ call.callOutcome }}
@@ -238,12 +231,8 @@
                   <a class="dropdown-item" (click)="viewCallDetails(call)">
                     <i class="bx bx-show me-1"></i> View Details
                   </a>
-                  <a class="dropdown-item" (click)="playCallRecording(call)">
-                    <i class="bx bx-play me-1"></i> Play Recording
-                  </a>
-                  <a class="dropdown-item" (click)="downloadTranscript(call)">
-                    <i class="bx bx-download me-1"></i> Download Transcript
-                  </a>
+            
+              
                   <div class="dropdown-divider"></div>
                   <a
                     class="dropdown-item text-danger"
@@ -295,12 +284,14 @@
           <div class="d-flex align-items-center">
             <div class="avatar avatar-sm me-2">
               <span class="avatar-initial bg-label-primary rounded-circle">
-                {{ call.customer?.name?.charAt(0) }}
+                {{ getCustomerName(call.customer).charAt(0) }}
               </span>
             </div>
             <div>
-              <h6 class="mb-0">{{ call.customer?.name }}</h6>
-              <small class="text-muted">{{ call.customer?.phoneNumber }}</small>
+              <h6 class="mb-0">{{ getCustomerName(call.customer) }}</h6>
+              <small class="text-muted">{{
+                getCustomerPhone(call.customer)
+              }}</small>
             </div>
           </div>
           <div class="dropdown">
@@ -315,9 +306,7 @@
               <a class="dropdown-item" (click)="viewCallDetails(call)">
                 <i class="bx bx-show me-1"></i> View Details
               </a>
-              <a class="dropdown-item" (click)="playCallRecording(call)">
-                <i class="bx bx-play me-1"></i> Play Recording
-              </a>
+           
             </div>
           </div>
         </div>
@@ -344,9 +333,9 @@
                   class="badge"
                   [ngClass]="{
                     'bg-label-success': call.callOutcome === 'SUCCESSFUL',
-                    'bg-label-warning': call.callOutcome === 'PENDING',
-                    'bg-label-danger': call.callOutcome === 'FAILED',
-                    'bg-label-info': call.callOutcome === 'ESCALATED'
+                    'bg-label-warning': call.callOutcome === 'NO_ANSWER',
+                    'bg-label-danger': call.callOutcome === 'DROPPED',
+                    'bg-label-info': call.callOutcome === 'RESOLVED'
                   }"
                 >
                   {{ call.callOutcome }}
@@ -354,12 +343,7 @@
               </div>
             </div>
           </div>
-          <div class="row">
-            <div class="col-12">
-              <small class="text-muted">Agent</small>
-              <div>{{ call.agent?.firstName }} {{ call.agent?.lastName }}</div>
-            </div>
-          </div>
+        
         </div>
         <div class="card-footer">
           <button
@@ -368,12 +352,7 @@
           >
             <i class="bx bx-show me-1"></i>Details
           </button>
-          <button
-            class="btn btn-outline-secondary btn-sm"
-            (click)="playCallRecording(call)"
-          >
-            <i class="bx bx-play me-1"></i>Play
-          </button>
+        
         </div>
       </div>
     </div>
@@ -396,18 +375,19 @@
         <div class="row mb-3">
           <div class="col-md-6">
             <h6>Customer Information</h6>
-            <p><strong>Name:</strong> {{ selectedCall.customer?.name }}</p>
             <p>
-              <strong>Phone:</strong> {{ selectedCall.customer?.phoneNumber }}
+              <strong>Name:</strong>
+              {{ getCustomerName(selectedCall.customer) }}
+            </p>
+            <p>
+              <strong>Phone:</strong>
+              {{ getCustomerPhone(selectedCall.customer) }}
             </p>
             <p><strong>Email:</strong> {{ selectedCall.customer?.email }}</p>
           </div>
           <div class="col-md-6">
             <h6>Call Information</h6>
-            <p>
-              <strong>Agent:</strong> {{ selectedCall.agent?.firstName }}
-              {{ selectedCall.agent?.lastName }}
-            </p>
+         
             <p>
               <strong>Date:</strong>
               {{ selectedCall.callDateTime | date : "full" }}
@@ -422,9 +402,9 @@
                 class="badge"
                 [ngClass]="{
                   'bg-label-success': selectedCall.callOutcome === 'SUCCESSFUL',
-                  'bg-label-warning': selectedCall.callOutcome === 'PENDING',
-                  'bg-label-danger': selectedCall.callOutcome === 'FAILED',
-                  'bg-label-info': selectedCall.callOutcome === 'ESCALATED'
+                  'bg-label-warning': selectedCall.callOutcome === 'NO_ANSWER',
+                  'bg-label-danger': selectedCall.callOutcome === 'DROPPED',
+                  'bg-label-info': selectedCall.callOutcome === 'RESOLVED'
                 }"
               >
                 {{ selectedCall.callOutcome }}
@@ -478,7 +458,7 @@
               >
                 <div class="mb-3">
                   <strong>Transcript:</strong>
-                  <p class="mt-2">{{ transcript.transcript }}</p>
+                  <p class="mt-2">{{ getTranscriptText(transcript) }}</p>
                 </div>
                 <div class="row">
                   <div class="col-md-4">
@@ -487,36 +467,35 @@
                       <span
                         class="badge"
                         [ngClass]="{
-                          'bg-label-success': transcript.sentimentScore > 0.5,
+                          'bg-label-success':
+                            getTranscriptSentimentScore(transcript) > 0.5,
                           'bg-label-warning':
-                            transcript.sentimentScore > 0 &&
-                            transcript.sentimentScore <= 0.5,
-                          'bg-label-danger': transcript.sentimentScore <= 0
+                            getTranscriptSentimentScore(transcript) > 0 &&
+                            getTranscriptSentimentScore(transcript) <= 0.5,
+                          'bg-label-danger':
+                            getTranscriptSentimentScore(transcript) <= 0
                         }"
                       >
-                        {{ transcript.sentimentScore | number : "1.2-2" }}
+                        {{
+                          getTranscriptSentimentScore(transcript)
+                            | number : "1.2-2"
+                        }}
                       </span>
                     </div>
                   </div>
                   <div class="col-md-4">
-                    <small class="text-muted">Emotions</small>
+                    <small class="text-muted">Speaker</small>
                     <div>
-                      <span
-                        class="badge bg-label-info me-1"
-                        *ngFor="let emotion of transcript.emotions"
-                      >
-                        {{ emotion }}
+                      <span class="badge bg-label-info">
+                        {{ transcript.speaker || "Unknown" }}
                       </span>
                     </div>
                   </div>
                   <div class="col-md-4">
-                    <small class="text-muted">Keywords</small>
+                    <small class="text-muted">Timestamp</small>
                     <div>
-                      <span
-                        class="badge bg-label-secondary me-1"
-                        *ngFor="let keyword of transcript.keywords"
-                      >
-                        {{ keyword }}
+                      <span class="badge bg-label-secondary">
+                        {{ transcript.timestamp | date : "short" }}
                       </span>
                     </div>
                   </div>
@@ -534,13 +513,7 @@
         >
           Close
         </button>
-        <button
-          type="button"
-          class="btn btn-primary"
-          (click)="selectedCall && downloadTranscript(selectedCall)"
-        >
-          <i class="bx bx-download me-1"></i>Download Report
-        </button>
+  
       </div>
     </div>
   </div>

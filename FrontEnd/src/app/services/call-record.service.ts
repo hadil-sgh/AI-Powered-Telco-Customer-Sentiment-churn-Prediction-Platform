@@ -11,9 +11,6 @@ export class CallRecordService {
 
   constructor(private http: HttpClient) {}
 
-  /**
-   * Save a call record with agent email, customer ID, session ID, and duration
-   */
   saveCallRecord(
     email: string,
     customerId: number,
@@ -50,5 +47,12 @@ export class CallRecordService {
    */
   getCallRecordById(id: number): Observable<CallRecord> {
     return this.http.get<CallRecord>(`${this.baseUrl}/${id}`);
+  }
+
+  /**
+   * Get call records by session (agent email)
+   */
+  getCallRecordBySession(email: string): Observable<CallRecord[]> {
+    return this.http.get<CallRecord[]>(`${this.baseUrl}/getbysession/${email}`);
   }
 }

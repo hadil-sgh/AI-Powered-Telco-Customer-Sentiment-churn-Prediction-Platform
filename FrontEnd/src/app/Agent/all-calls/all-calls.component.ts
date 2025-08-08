@@ -7,32 +7,10 @@ import {
   animate,
 } from '@angular/animations';
 import { AudioStreamService } from '../../services/audio-stream.service';
-
-interface CallRecord {
-  id: number;
-  customer: {
-    name: string;
-    phoneNumber: string;
-    email: string;
-  };
-  agent: {
-    firstName: string;
-    lastName: string;
-  };
-  callTranscripts: AudioAnalysisResponse[];
-  callDuration: string;
-  callOutcome: 'SUCCESSFUL' | 'PENDING' | 'FAILED' | 'ESCALATED';
-  callDateTime: Date;
-}
-
-interface AudioAnalysisResponse {
-  id: number;
-  transcript: string;
-  sentimentScore: number;
-  emotions: string[];
-  keywords: string[];
-  timestamp: Date;
-}
+import { CallRecordService } from '../../services/call-record.service';
+import { TokenService } from '../../services/token.service';
+import { CallRecord } from '../../models/call-record';
+import { AudioAnalysisResponse } from '../../models/audio-analysis-response';
 
 interface CallStats {
   totalCalls: number;
@@ -89,11 +67,14 @@ export class AllCallsComponent implements OnInit, OnDestroy {
   // Math reference for template
   Math = Math;
 
-  constructor(private audioStreamService: AudioStreamService) {}
+  constructor(
+    private audioStreamService: AudioStreamService,
+    private callRecordService: CallRecordService,
+    private tokenService: TokenService
+  ) {}
 
   ngOnInit(): void {
     this.loadCalls();
-    this.calculateStats();
   }
 
   ngOnDestroy(): void {
@@ -101,61 +82,27 @@ export class AllCallsComponent implements OnInit, OnDestroy {
   }
 
   loadCalls(): void {
-    // Mock data - replace with actual service call
-    this.calls = [
-      {
-        id: 1,
-        customer: {
-          name: 'Ahmed Ben Ali',
-          phoneNumber: '+216 98 123 456',
-          email: 'ahmed.benali@email.com',
+    const userEmail = this.tokenService.getEmailFromToken();
+    if (userEmail) {
+      this.callRecordService.getCallRecordBySession(userEmail).subscribe({
+        next: (calls) => {
+          this.calls = calls;
+          this.applyFilters();
+          this.calculateStats();
         },
-        agent: {
-          firstName: 'Hadil',
-          lastName: 'Sghair',
+        error: (error) => {
+          console.error('Error loading calls:', error);
+          this.calls = [];
+          this.applyFilters();
+          this.calculateStats();
         },
-        callTranscripts: [
-          {
-            id: 1,
-            transcript: 'Hello, I need help with my internet connection',
-            sentimentScore: 0.2,
-            emotions: ['frustrated', 'concerned'],
-            keywords: ['internet', 'connection', 'help'],
-            timestamp: new Date('2024-01-15T10:30:00'),
-          },
-        ],
-        callDuration: 'PT15M30S',
-        callOutcome: 'SUCCESSFUL',
-        callDateTime: new Date('2024-01-15T10:00:00'),
-      },
-      {
-        id: 2,
-        customer: {
-          name: 'Fatma Trabelsi',
-          phoneNumber: '+216 97 456 789',
-          email: 'fatma.trabelsi@email.com',
-        },
-        agent: {
-          firstName: 'Hadil',
-          lastName: 'Sghair',
-        },
-        callTranscripts: [
-          {
-            id: 2,
-            transcript: 'Thank you for the excellent service',
-            sentimentScore: 0.9,
-            emotions: ['happy', 'satisfied'],
-            keywords: ['thank you', 'excellent', 'service'],
-            timestamp: new Date('2024-01-15T11:00:00'),
-          },
-        ],
-        callDuration: 'PT8M45S',
-        callOutcome: 'SUCCESSFUL',
-        callDateTime: new Date('2024-01-15T11:00:00'),
-      },
-    ];
-
-    this.applyFilters();
+      });
+    } else {
+      console.error('No user email found in token');
+      this.calls = [];
+      this.applyFilters();
+      this.calculateStats();
+    }
   }
 
   calculateStats(): void {
@@ -164,12 +111,12 @@ export class AllCallsComponent implements OnInit, OnDestroy {
       (call) => call.callOutcome === 'SUCCESSFUL'
     ).length;
     this.callStats.pendingCalls = this.calls.filter(
-      (call) => call.callOutcome === 'PENDING'
+      (call) => call.callOutcome === 'NO_ANSWER'
     ).length;
 
     // Calculate average duration
     const totalMinutes = this.calls.reduce((sum, call) => {
-      return sum + this.parseDuration(call.callDuration);
+      return sum + this.parseDurationFromObject(call.callDuration);
     }, 0);
     const avgMinutes =
       this.calls.length > 0 ? totalMinutes / this.calls.length : 0;
@@ -191,19 +138,26 @@ export class AllCallsComponent implements OnInit, OnDestroy {
 
   applyFilters(): void {
     this.filteredCalls = this.calls.filter((call) => {
+      const customerName = call.customer
+        ? `${call.customer.firstName || ''} ${
+            call.customer.lastName || ''
+          }`.trim()
+        : '';
+      const customerPhone = call.customer?.phone || '';
+
       const matchesSearch =
         !this.searchTerm ||
-        call.customer.name
-          .toLowerCase()
-          .includes(this.searchTerm.toLowerCase()) ||
-        call.customer.phoneNumber.includes(this.searchTerm);
+        customerName.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        customerPhone.includes(this.searchTerm);
 
       const matchesOutcome =
         !this.selectedOutcome || call.callOutcome === this.selectedOutcome;
 
       const matchesDate =
         !this.selectedDate ||
-        call.callDateTime.toISOString().split('T')[0] === this.selectedDate;
+        (call.callDateTime &&
+          new Date(call.callDateTime).toISOString().split('T')[0] ===
+            this.selectedDate);
 
       return matchesSearch && matchesOutcome && matchesDate;
     });
@@ -216,19 +170,29 @@ export class AllCallsComponent implements OnInit, OnDestroy {
     this.filteredCalls.sort((a, b) => {
       switch (this.sortBy) {
         case 'callDateTime':
-          return (
-            new Date(b.callDateTime).getTime() -
-            new Date(a.callDateTime).getTime()
-          );
+          const dateA = a.callDateTime ? new Date(a.callDateTime).getTime() : 0;
+          const dateB = b.callDateTime ? new Date(b.callDateTime).getTime() : 0;
+          return dateB - dateA;
         case 'callDuration':
-          return (
-            this.parseDuration(b.callDuration) -
-            this.parseDuration(a.callDuration)
-          );
+          const durationA = this.parseDurationFromObject(a.callDuration);
+          const durationB = this.parseDurationFromObject(b.callDuration);
+          return durationB - durationA;
         case 'customer.name':
-          return a.customer.name.localeCompare(b.customer.name);
+          const nameA = a.customer
+            ? `${a.customer.firstName || ''} ${
+                a.customer.lastName || ''
+              }`.trim()
+            : '';
+          const nameB = b.customer
+            ? `${b.customer.firstName || ''} ${
+                b.customer.lastName || ''
+              }`.trim()
+            : '';
+          return nameA.localeCompare(nameB);
         case 'callOutcome':
-          return a.callOutcome.localeCompare(b.callOutcome);
+          const outcomeA = a.callOutcome || '';
+          const outcomeB = b.callOutcome || '';
+          return outcomeA.localeCompare(outcomeB);
         default:
           return 0;
       }
@@ -308,23 +272,9 @@ export class AllCallsComponent implements OnInit, OnDestroy {
     );
   }
 
-  playCallRecording(call: CallRecord): void {
-    // Implement audio playback functionality
-    console.log('Playing recording for call:', call.id);
-    // You can integrate with your audio service here
-  }
 
-  downloadTranscript(call: CallRecord): void {
-    // Generate and download transcript
-    const transcript = this.generateTranscriptReport(call);
-    const blob = new Blob([transcript], { type: 'text/plain' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `call-transcript-${call.id}.txt`;
-    link.click();
-    window.URL.revokeObjectURL(url);
-  }
+
+
 
   deleteCall(call: CallRecord): void {
     if (confirm('Are you sure you want to delete this call record?')) {
@@ -340,10 +290,9 @@ export class AllCallsComponent implements OnInit, OnDestroy {
   }
 
   // Utility methods
-  formatDuration(duration: string): string {
+  formatDuration(duration: any): string {
     try {
-      // Parse ISO 8601 duration format (PT15M30S)
-      const minutes = this.parseDuration(duration);
+      const minutes = this.parseDurationFromObject(duration);
       const hrs = Math.floor(minutes / 60);
       const mins = Math.floor(minutes % 60);
       const secs = Math.floor((minutes % 1) * 60);
@@ -357,6 +306,22 @@ export class AllCallsComponent implements OnInit, OnDestroy {
     } catch {
       return '0:00';
     }
+  }
+
+  private parseDurationFromObject(duration: any): number {
+    if (!duration) return 0;
+
+    // Handle Java Duration object with seconds field
+    if (typeof duration === 'object' && duration.seconds !== undefined) {
+      return duration.seconds / 60; // Convert seconds to minutes
+    }
+
+    // Handle string format (legacy)
+    if (typeof duration === 'string') {
+      return this.parseDuration(duration);
+    }
+
+    return 0;
   }
 
   private parseDuration(duration: string): number {
@@ -382,11 +347,16 @@ export class AllCallsComponent implements OnInit, OnDestroy {
 
   getSentimentScore(call: CallRecord): number {
     if (!call.callTranscripts || call.callTranscripts.length === 0) return 0;
+
+    const validSentiments = call.callTranscripts
+      .filter((transcript) => transcript.sentiment?.score !== undefined)
+      .map((transcript) => transcript.sentiment!.score!);
+
+    if (validSentiments.length === 0) return 0;
+
     const avgSentiment =
-      call.callTranscripts.reduce(
-        (sum, transcript) => sum + transcript.sentimentScore,
-        0
-      ) / call.callTranscripts.length;
+      validSentiments.reduce((sum, score) => sum + score, 0) /
+      validSentiments.length;
     return avgSentiment;
   }
 
@@ -397,27 +367,73 @@ export class AllCallsComponent implements OnInit, OnDestroy {
     return 'Negative';
   }
 
+  // Helper methods for template
+  getCustomerName(customer: any): string {
+    if (!customer) return 'Unknown Customer';
+    return (
+      `${customer.firstName || ''} ${customer.lastName || ''}`.trim() ||
+      'Unknown Customer'
+    );
+  }
+
+  getCustomerPhone(customer: any): string {
+    return customer?.phone || 'N/A';
+  }
+
+  getAgentName(agent: any): string {
+    if (!agent) return 'Unknown Agent';
+    return (
+      `${agent.firstname || ''} ${agent.lastname || ''}`.trim() ||
+      'Unknown Agent'
+    );
+  }
+
+  getTranscriptText(transcript: any): string {
+    return transcript?.text || 'No transcript available';
+  }
+
+  getTranscriptSentimentScore(transcript: any): number {
+    return transcript?.sentiment?.score || 0;
+  }
+
   private generateTranscriptReport(call: CallRecord): string {
     let report = `Call Transcript Report\n`;
     report += `========================\n\n`;
     report += `Call ID: ${call.id}\n`;
-    report += `Customer: ${call.customer.name}\n`;
-    report += `Phone: ${call.customer.phoneNumber}\n`;
-    report += `Agent: ${call.agent.firstName} ${call.agent.lastName}\n`;
-    report += `Date: ${call.callDateTime.toLocaleString()}\n`;
+
+    const customerName = call.customer
+      ? `${call.customer.firstName || ''} ${
+          call.customer.lastName || ''
+        }`.trim()
+      : 'Unknown';
+    const customerPhone = call.customer?.phone || 'Unknown';
+    const agentName = call.agent
+      ? `${call.agent.firstname || ''} ${call.agent.lastname || ''}`.trim()
+      : 'Unknown';
+    const callDate = call.callDateTime
+      ? new Date(call.callDateTime).toLocaleString()
+      : 'Unknown';
+
+    report += `Customer: ${customerName}\n`;
+    report += `Phone: ${customerPhone}\n`;
+    report += `Agent: ${agentName}\n`;
+    report += `Date: ${callDate}\n`;
     report += `Duration: ${this.formatDuration(call.callDuration)}\n`;
-    report += `Outcome: ${call.callOutcome}\n\n`;
+    report += `Outcome: ${call.callOutcome || 'Unknown'}\n\n`;
 
     if (call.callTranscripts && call.callTranscripts.length > 0) {
       report += `Transcript:\n`;
       report += `-----------\n`;
       call.callTranscripts.forEach((transcript, index) => {
-        report += `\n[${transcript.timestamp.toLocaleTimeString()}] ${
-          transcript.transcript
-        }\n`;
-        report += `Sentiment Score: ${transcript.sentimentScore.toFixed(2)}\n`;
-        report += `Emotions: ${transcript.emotions.join(', ')}\n`;
-        report += `Keywords: ${transcript.keywords.join(', ')}\n`;
+        const timestamp = transcript.timestamp
+          ? new Date(transcript.timestamp).toLocaleTimeString()
+          : 'Unknown time';
+        const text = transcript.text || 'No text available';
+        const sentiment = transcript.sentiment?.score?.toFixed(2) || 'N/A';
+        const speaker = transcript.speaker || 'Unknown';
+
+        report += `\n[${timestamp}] ${speaker}: ${text}\n`;
+        report += `Sentiment Score: ${sentiment}\n`;
       });
     }
 

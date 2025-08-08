@@ -15,18 +15,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CallRecordController {
 
-    private final CallRecordRepository callRecordRepository;
     private final CallRecordServices callRecordServices;
     private final UserService userService;
     private final CustomerServices customerServices;
 
-    @GetMapping("/formatTranscript/{id}")
-    public String getFormattedTranscript(@PathVariable Integer id) {
-        CallRecord callRecord = callRecordRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("CallRecord not found with ID: " + id));
-
-        return callRecordServices.formatTranscriptForAnalysis(callRecord);
-    }
 
     @GetMapping("/Transcript/{id}")
     public String getdTranscript(@PathVariable Integer id) {
