@@ -8,7 +8,9 @@
           <h4 class="fw-bold py-3 mb-0">
             <i class="bx bx-note me-2 text-primary"></i>My Call Notes
           </h4>
-          <p class="text-muted">Your personal call notes from customer interactions</p>
+          <p class="text-muted">
+            Your personal call notes from customer interactions
+          </p>
           <div *ngIf="currentAgentName" class="badge bg-label-info">
             <i class="bx bx-user me-1"></i>{{ currentAgentName }}
           </div>
@@ -67,7 +69,7 @@
               >
                 <option value="">All Customers</option>
                 <option
-                  *ngFor="let customer of getUniqueCustomers()"
+                  *ngFor="let customer of uniqueCustomers"
                   [value]="customer.id"
                 >
                   {{ customer.name }}
@@ -97,8 +99,8 @@
         <div class="col-12">
           <div class="d-flex justify-content-between align-items-center">
             <div class="text-muted">
-              Showing {{ (currentPage - 1) * pageSize + 1 }} to
-              {{ Math.min(currentPage * pageSize, filteredNotes.length) }}
+              Showing {{ totalDisplayStart }} to
+              {{ totalDisplayEnd }}
               of {{ filteredNotes.length }} notes
             </div>
             <div class="d-flex align-items-center">
@@ -139,7 +141,10 @@
 
       <!-- Notes Grid -->
       <div *ngIf="!loading && !error" class="row">
-        <div *ngFor="let note of paginatedNotes" class="col-lg-6 col-xl-4 mb-4">
+        <div
+          *ngFor="let note of paginatedNotesCache"
+          class="col-lg-6 col-xl-4 mb-4"
+        >
           <div class="card h-100 hover-shadow">
             <div
               class="card-header d-flex justify-content-between align-items-center"
@@ -201,7 +206,7 @@
               <div class="mb-2">
                 <small class="text-muted">
                   <i class="bx bx-phone me-1"></i>
-                  Call #{{ note.call?.id || 'N/A' }}
+                  Call #{{ note.call?.id || "N/A" }}
                   <span *ngIf="note.call?.callOutcome" class="ms-2">
                     • {{ note.call?.callOutcome }}
                   </span>
@@ -209,7 +214,6 @@
               </div>
 
               <!-- Call Duration -->
-            
             </div>
 
             <div class="card-footer">
@@ -235,7 +239,8 @@
         <h5 class="text-muted">No notes found</h5>
         <p class="text-muted">
           <span *ngIf="notes.length === 0">
-            You haven't created any notes yet. Start a new call to create your first note.
+            You haven't created any notes yet. Start a new call to create your
+            first note.
           </span>
           <span *ngIf="notes.length > 0">
             Try adjusting your filters to see more results.
@@ -344,8 +349,6 @@
             </div>
           </div>
 
-     
-
           <!-- Note Content -->
           <div class="col-12">
             <h6 class="text-muted mb-2">Note Content</h6>
@@ -368,7 +371,9 @@
                   </div>
                   <div class="col-md-6">
                     <div class="text-muted small">Call Outcome</div>
-                    <div class="fw-bold">{{ selectedNote.call.callOutcome || 'N/A' }}</div>
+                    <div class="fw-bold">
+                      {{ selectedNote.call.callOutcome || "N/A" }}
+                    </div>
                   </div>
                 </div>
               </div>

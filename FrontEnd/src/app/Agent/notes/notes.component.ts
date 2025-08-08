@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { NotesService } from '../../services/notes.service';
 import { TokenService } from '../../services/token.service';
 import { Note } from '../../models/note';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-notes',
@@ -28,6 +29,12 @@ export class NotesComponent implements OnInit {
   currentAgentName = '';
   currentAgentEmail = '';
 
+  // Cached data to prevent infinite loops
+  uniqueCustomers: { id: number; name: string }[] = [];
+  paginatedNotesCache: Note[] = [];
+  totalDisplayStart = 0;
+  totalDisplayEnd = 0;
+
   // Selected note for viewing
   selectedNote: Note | null = null;
   showNoteModal = false;
@@ -41,6 +48,7 @@ export class NotesComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    console.log('Notes component initialized');
     this.loadNotes();
   }
 
@@ -51,7 +59,7 @@ export class NotesComponent implements OnInit {
     // Get agent email from token for session-based notes
     const agentEmail = this.tokenService.getEmailFromToken();
     const agentName = this.tokenService.getFullNameFromToken();
-    
+
     if (!agentEmail) {
       this.error = 'Unable to get agent information. Please login again.';
       this.loading = false;
@@ -67,6 +75,7 @@ export class NotesComponent implements OnInit {
         this.notes = notes;
         this.applyFilters();
         this.loading = false;
+        console.log('Notes loaded successfully:', notes.length, 'notes');
       },
       error: (error) => {
         console.error('Error loading notes:', error);
@@ -77,6 +86,7 @@ export class NotesComponent implements OnInit {
   }
 
   applyFilters(): void {
+    console.log('Applying filters to', this.notes.length, 'notes');
     let filtered = [...this.notes];
 
     // Search filter
@@ -119,7 +129,24 @@ export class NotesComponent implements OnInit {
     });
 
     this.filteredNotes = filtered;
+    console.log('Filtered down to', filtered.length, 'notes');
     this.updatePagination();
+    this.updateUniqueCustomers();
+  }
+
+  updateUniqueCustomers(): void {
+    const customers = new Map();
+    this.notes.forEach((note) => {
+      if (note.customer?.customerID) {
+        customers.set(note.customer.customerID, {
+          id: note.customer.customerID,
+          name: `${note.customer.firstName || ''} ${
+            note.customer.lastName || ''
+          }`.trim(),
+        });
+      }
+    });
+    this.uniqueCustomers = Array.from(customers.values());
   }
 
   updatePagination(): void {
@@ -127,12 +154,17 @@ export class NotesComponent implements OnInit {
     if (this.currentPage > this.totalPages && this.totalPages > 0) {
       this.currentPage = this.totalPages;
     }
-  }
 
-  get paginatedNotes(): Note[] {
+    // Update cached paginated results and display info
     const start = (this.currentPage - 1) * this.pageSize;
     const end = start + this.pageSize;
-    return this.filteredNotes.slice(start, end);
+    this.paginatedNotesCache = this.filteredNotes.slice(start, end);
+
+    this.totalDisplayStart = (this.currentPage - 1) * this.pageSize + 1;
+    this.totalDisplayEnd = Math.min(
+      this.currentPage * this.pageSize,
+      this.filteredNotes.length
+    );
   }
 
   onFilterChange(): void {
@@ -152,38 +184,46 @@ export class NotesComponent implements OnInit {
   }
 
   deleteNote(note: Note): void {
-    if (confirm(`Are you sure you want to delete this note?`)) {
-      this.notesService.deleteNote(note.id!).subscribe({
-        next: () => {
-          this.notes = this.notes.filter((n) => n.id !== note.id);
-          this.applyFilters();
-        },
-        error: (error) => {
-          console.error('Error deleting note:', error);
-          alert('Failed to delete note. Please try again.');
-        },
-      });
-    }
+    Swal.fire({
+      title: 'Delete Note?',
+      text: 'Are you sure you want to delete this note? This action cannot be undone.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'Cancel',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.notesService.deleteNote(note.id!).subscribe({
+          next: () => {
+            this.notes = this.notes.filter((n) => n.id !== note.id);
+            this.applyFilters();
+            Swal.fire({
+              title: 'Deleted!',
+              text: 'The note has been deleted successfully.',
+              icon: 'success',
+              timer: 2000,
+              showConfirmButton: false,
+            });
+          },
+          error: (error) => {
+            console.error('Error deleting note:', error);
+            Swal.fire({
+              title: 'Error!',
+              text: 'Failed to delete note. Please try again.',
+              icon: 'error',
+              confirmButtonColor: '#3085d6',
+            });
+          },
+        });
+      }
+    });
   }
 
   closeNoteModal(): void {
     this.showNoteModal = false;
     this.selectedNote = null;
-  }
-
-  getUniqueCustomers(): { id: number; name: string }[] {
-    const customers = new Map();
-    this.notes.forEach((note) => {
-      if (note.customer?.customerID) {
-        customers.set(note.customer.customerID, {
-          id: note.customer.customerID,
-          name: `${note.customer.firstName || ''} ${
-            note.customer.lastName || ''
-          }`.trim(),
-        });
-      }
-    });
-    return Array.from(customers.values());
   }
 
   getCallInfo(note: Note): string {
@@ -202,7 +242,7 @@ export class NotesComponent implements OnInit {
   getNotesStats(): { total: number; filtered: number } {
     return {
       total: this.notes.length,
-      filtered: this.filteredNotes.length
+      filtered: this.filteredNotes.length,
     };
   }
 

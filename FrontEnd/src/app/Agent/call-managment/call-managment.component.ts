@@ -13,6 +13,7 @@ import { TokenService } from '../../services/token.service';
 import { Note } from '../../models/note';
 import { CallRecordService } from '../../services/call-record.service';
 import { CallRecord } from '../../models/call-record';
+import Swal from 'sweetalert2';
 
 export interface AudioAnalysisResult {
   timestamp: string;
@@ -192,23 +193,25 @@ export class CallManagmentComponent implements OnInit, OnDestroy {
   loadCustomerNotes(callId?: number) {
     // Only load notes if we have a call record with an ID
     if (this.currentCallRecord && this.currentCallRecord.id) {
-      this.notesService.getNotesByCustomer(this.currentCallRecord.id).subscribe({
-        next: (notes: Note[]) => {
-          // Convert Note[] to the format expected by the template
-          this.savedNotes = notes.map((note) => ({
-            timestamp: new Date().toLocaleString(), // You may want to use a proper timestamp from the note
-            content: note.description || '',
-            agent:
-              `${note.agent?.firstname || ''} ${
-                note.agent?.lastname || ''
-              }`.trim() || 'Agent',
-          }));
-          console.log('Loaded customer notes:', notes);
-        },
-        error: (error) => {
-          console.error('Error loading customer notes:', error);
-        },
-      });
+      this.notesService
+        .getNotesByCustomer(this.currentCallRecord.id)
+        .subscribe({
+          next: (notes: Note[]) => {
+            // Convert Note[] to the format expected by the template
+            this.savedNotes = notes.map((note) => ({
+              timestamp: new Date().toLocaleString(), // You may want to use a proper timestamp from the note
+              content: note.description || '',
+              agent:
+                `${note.agent?.firstname || ''} ${
+                  note.agent?.lastname || ''
+                }`.trim() || 'Agent',
+            }));
+            console.log('Loaded customer notes:', notes);
+          },
+          error: (error) => {
+            console.error('Error loading customer notes:', error);
+          },
+        });
     } else {
       console.log('No call record available to load notes');
       this.savedNotes = []; // Clear any existing notes
@@ -668,16 +671,22 @@ export class CallManagmentComponent implements OnInit, OnDestroy {
    */
   saveCallRecord() {
     if (!this.customerData || !this.customerData.customerID) {
-      alert(
-        'No customer selected. Please select a customer before saving the call record.'
-      );
+      Swal.fire({
+        title: 'Customer Required',
+        text: 'No customer selected. Please select a customer before saving the call record.',
+        icon: 'warning',
+        confirmButtonColor: '#3085d6',
+      });
       return;
     }
 
     if (this.callDuration === 0) {
-      alert(
-        'No call duration recorded. Please start and stop analysis to record call duration.'
-      );
+      Swal.fire({
+        title: 'Call Duration Required',
+        text: 'No call duration recorded. Please start and stop analysis to record call duration.',
+        icon: 'warning',
+        confirmButtonColor: '#3085d6',
+      });
       return;
     }
 
@@ -687,7 +696,12 @@ export class CallManagmentComponent implements OnInit, OnDestroy {
     // Get agent email from token
     const agentEmail = this.tokenService.getEmailFromToken();
     if (!agentEmail) {
-      alert('Unable to get agent email. Please login again.');
+      Swal.fire({
+        title: 'Authentication Error',
+        text: 'Unable to get agent email. Please login again.',
+        icon: 'error',
+        confirmButtonColor: '#3085d6',
+      });
       this.isSavingRecord = false;
       return;
     }
@@ -717,7 +731,14 @@ export class CallManagmentComponent implements OnInit, OnDestroy {
           this.loadCustomerNotes();
 
           // Show success message
-          alert(`Call record saved successfully! Record ID: ${savedRecord.id}`);
+          Swal.fire({
+            title: 'Success!',
+            text: `Call record saved successfully! Record ID: ${savedRecord.id}`,
+            icon: 'success',
+            confirmButtonColor: '#3085d6',
+            timer: 3000,
+            showConfirmButton: true,
+          });
         },
         error: (error) => {
           console.error('❌ Error saving call record:', error);
@@ -732,7 +753,12 @@ export class CallManagmentComponent implements OnInit, OnDestroy {
           } else {
             errorMessage += 'Please try again.';
           }
-          alert(errorMessage);
+          Swal.fire({
+            title: 'Error!',
+            text: errorMessage,
+            icon: 'error',
+            confirmButtonColor: '#3085d6',
+          });
         },
       });
   }
@@ -743,7 +769,11 @@ export class CallManagmentComponent implements OnInit, OnDestroy {
   }
 
   saveNote() {
-    if (this.callNotes.trim() && this.currentCallRecord && this.currentCallRecord.id) {
+    if (
+      this.callNotes.trim() &&
+      this.currentCallRecord &&
+      this.currentCallRecord.id
+    ) {
       // Use the new API format: callId and description as parameters
       const callId = this.currentCallRecord.id;
       const description = this.callNotes.trim();
@@ -762,15 +792,36 @@ export class CallManagmentComponent implements OnInit, OnDestroy {
               }`.trim() || 'Agent',
           });
           this.callNotes = '';
+
+          // Show success message
+          Swal.fire({
+            title: 'Note Saved!',
+            text: 'Your note has been saved successfully.',
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false,
+            position: 'top-end',
+            toast: true,
+          });
         },
         error: (error) => {
           console.error('Error saving note:', error);
           // Show error message to user
-          alert('Failed to save note. Please try again.');
+          Swal.fire({
+            title: 'Error!',
+            text: 'Failed to save note. Please try again.',
+            icon: 'error',
+            confirmButtonColor: '#3085d6',
+          });
         },
       });
     } else if (!this.currentCallRecord || !this.currentCallRecord.id) {
-      alert('Please save the call record first before adding notes.');
+      Swal.fire({
+        title: 'Call Record Required',
+        text: 'Please save the call record first before adding notes.',
+        icon: 'info',
+        confirmButtonColor: '#3085d6',
+      });
     }
   }
 
