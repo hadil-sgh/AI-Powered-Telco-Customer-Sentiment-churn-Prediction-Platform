@@ -4,13 +4,15 @@ import jakarta.persistence.*;
 import lombok.*;
 import tn.ooredoo.backendspringboot.call_transcript.CallRecord;
 
+import java.io.Serializable;
+
 @Entity
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class SentimentPoint {
+public class SentimentPoint implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

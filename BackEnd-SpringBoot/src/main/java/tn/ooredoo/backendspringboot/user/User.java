@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import tn.ooredoo.backendspringboot.role.Role;
 import tn.ooredoo.backendspringboot.team.Team;
 
+import java.io.Serializable;
 import java.security.Principal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -25,10 +26,9 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = " user1")
 @EntityListeners(AuditingEntityListener.class)
 // ? This class is used to listen to entity events creation and update
-public class User implements UserDetails, Principal {
+public class User implements UserDetails, Principal, Serializable {
 
     //? userDetails is an interface provided by Spring Security that represents a user in the security context
     // ? Principal is a Java interface that represents an entity (user) that can be authenticated

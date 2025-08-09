@@ -4,6 +4,7 @@ package tn.ooredoo.backendspringboot.audioprocessing;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.io.Serializable;
 import java.util.List;
 
 @Getter
@@ -13,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @Entity
 
-public class EmotionAnalysis {
+public class EmotionAnalysis implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;

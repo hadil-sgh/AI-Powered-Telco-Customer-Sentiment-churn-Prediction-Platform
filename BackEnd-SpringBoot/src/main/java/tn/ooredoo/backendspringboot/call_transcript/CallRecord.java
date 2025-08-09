@@ -9,6 +9,7 @@ import tn.ooredoo.backendspringboot.customer.Customer;
 import tn.ooredoo.backendspringboot.sentiment.SentimentPoint;
 import tn.ooredoo.backendspringboot.user.User;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -20,7 +21,7 @@ import java.util.List;
 @Entity
 @Table(name = "call_records")
 
-public class CallRecord {
+public class CallRecord implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

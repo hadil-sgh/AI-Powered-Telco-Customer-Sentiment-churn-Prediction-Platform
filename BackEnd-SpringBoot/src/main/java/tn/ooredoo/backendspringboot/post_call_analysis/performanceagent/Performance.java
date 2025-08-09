@@ -5,13 +5,15 @@ import jakarta.persistence.*;
 import lombok.*;
 import tn.ooredoo.backendspringboot.call_transcript.CallRecord;
 
+import java.io.Serializable;
+
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @Entity
-public class Performance {
+public class Performance implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;

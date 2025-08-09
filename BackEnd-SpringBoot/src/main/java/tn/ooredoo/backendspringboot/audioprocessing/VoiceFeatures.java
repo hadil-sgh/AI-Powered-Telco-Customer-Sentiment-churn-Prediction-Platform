@@ -8,13 +8,15 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.*;
 
+import java.io.Serializable;
+
 @Getter
 @Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-public class VoiceFeatures {
+public class VoiceFeatures implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;

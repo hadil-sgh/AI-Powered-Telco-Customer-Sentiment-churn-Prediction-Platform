@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/audio-analysis")  // Updated to match Angular service
@@ -76,9 +77,8 @@ public class AudioPipelineController {
      * Get session statistics
      */
     @GetMapping("/session/{sessionId}/statistics")
-    public ResponseEntity<?> getSessionStatistics(@PathVariable String sessionId) {
+    public ResponseEntity<Map<String, Object>> getSessionStatistics(@PathVariable String sessionId) {
         try {
-            // You can implement statistics calculation in the service
             var stats = audioPipelineService.getSessionStatistics(sessionId);
             return ResponseEntity.ok(stats);
         } catch (Exception e) {
@@ -86,6 +86,7 @@ public class AudioPipelineController {
             return ResponseEntity.status(500).build();
         }
     }
+
 
     /**
      * Get analysis result by ID

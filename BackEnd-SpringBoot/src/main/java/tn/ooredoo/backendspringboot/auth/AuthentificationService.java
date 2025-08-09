@@ -20,7 +20,6 @@ import tn.ooredoo.backendspringboot.user.UserRepository;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -122,7 +121,7 @@ public class AuthentificationService {
     //@Transactional
     public void activateAccount(String token) throws MessagingException {
         Token savedToken = tokenRepository.findByToken(token)
-                // ToDo: better exception handling
+                // TODO: better exception handling
                 .orElseThrow(() -> new RuntimeException("Invalid token"));
         if (LocalDateTime.now().isAfter(savedToken.getExpiresAt())) {
             sendValidationEmail(savedToken.getUser());

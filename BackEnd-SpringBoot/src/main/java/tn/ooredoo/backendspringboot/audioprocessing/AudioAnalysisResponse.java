@@ -32,7 +32,6 @@ public class AudioAnalysisResponse {
     private VoiceFeatures voiceFeatures;
     @OneToOne(cascade = CascadeType.ALL)
     private EmotionAnalysis emotionAnalysis;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "call_record_id")
     @JsonBackReference

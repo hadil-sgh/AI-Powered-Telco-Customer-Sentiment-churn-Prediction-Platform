@@ -7,13 +7,15 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.*;
 
+import java.io.Serializable;
+
 @Getter
 @Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-public class TranscriptSentiment {
+public class TranscriptSentiment implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

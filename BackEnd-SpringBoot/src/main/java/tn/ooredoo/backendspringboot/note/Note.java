@@ -6,7 +6,7 @@ import tn.ooredoo.backendspringboot.call_transcript.CallRecord;
 import tn.ooredoo.backendspringboot.customer.Customer;
 import tn.ooredoo.backendspringboot.user.User;
 
-import java.time.Duration;
+import java.io.Serializable;
 
 @Getter
 @Setter
@@ -14,8 +14,8 @@ import java.time.Duration;
 @NoArgsConstructor
 @Builder
 @Entity
-@Table(name = "callNotes")
-public class Note {
+@Table(name = "call_Notes")
+public class Note implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -30,7 +30,6 @@ public class Note {
 
     @OneToOne
     private CallRecord call;
-
 
 
 }

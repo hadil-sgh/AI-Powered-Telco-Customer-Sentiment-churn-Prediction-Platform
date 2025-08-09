@@ -3,6 +3,7 @@ package tn.ooredoo.backendspringboot.user;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Getter
@@ -12,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Entity
 
-public class Token {
+public class Token implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

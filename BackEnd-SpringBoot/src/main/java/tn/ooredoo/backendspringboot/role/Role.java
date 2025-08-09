@@ -9,6 +9,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import tn.ooredoo.backendspringboot.user.User;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -19,7 +20,7 @@ import java.util.List;
 @NoArgsConstructor
 @Entity
 @EntityListeners(AuditingEntityListener.class)
-public class Role {
+public class Role implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

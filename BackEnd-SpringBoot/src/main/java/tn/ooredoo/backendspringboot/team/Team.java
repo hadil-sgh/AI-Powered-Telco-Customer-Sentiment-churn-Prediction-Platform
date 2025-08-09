@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import tn.ooredoo.backendspringboot.user.User;
 
+import java.io.Serializable;
 import java.util.List;
 @Getter
 @Setter
@@ -11,7 +12,7 @@ import java.util.List;
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
-public class Team {
+public class Team implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

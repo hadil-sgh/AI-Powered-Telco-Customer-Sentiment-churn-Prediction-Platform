@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import tn.ooredoo.backendspringboot.user.User;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Entity
@@ -12,7 +13,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DailyStats {
+public class DailyStats implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
