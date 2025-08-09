@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import tn.ooredoo.backendspringboot.call_transcript.CallRecord;
 
+import java.io.Serializable;
+
 
 @Getter
 @Setter
@@ -12,7 +14,7 @@ import tn.ooredoo.backendspringboot.call_transcript.CallRecord;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-public class AudioAnalysisResponse {
+public class AudioAnalysisResponse implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;

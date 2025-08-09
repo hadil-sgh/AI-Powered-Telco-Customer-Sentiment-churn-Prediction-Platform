@@ -7,6 +7,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.*;
 
+import java.io.Serializable;
 import java.util.List;
 
 @Getter
@@ -15,7 +16,7 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 @Entity
-public class ChurnPrediction {
+public class ChurnPrediction implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
