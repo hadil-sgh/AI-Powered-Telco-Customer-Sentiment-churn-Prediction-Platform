@@ -56,7 +56,7 @@ export class LoginComponent implements OnInit {
       const authorities = this.tokenService.getUserAuthorities();
       if (authorities.includes('Administrator')) {
         this.router.navigate(['/Admin/dashboard']);
-      } else if (authorities.includes('Agent')) {
+      } else if (authorities.includes('User')) {
         this.router.navigate(['/Agent/dashboard']);
       } else {
         Swal.fire({

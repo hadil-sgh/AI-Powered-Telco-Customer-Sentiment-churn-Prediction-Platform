@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-agent-sidebar',
@@ -6,19 +7,24 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
   styleUrls: ['./agent-sidebar.component.scss'],
 })
 export class AgentSidebarComponent implements OnInit, OnDestroy {
-  constructor() {}
+  constructor(private router: Router) {}
 
   ngOnInit(): void {
-    // Initialize Perfect Scrollbar or other sidebar functionality if needed
+  
   }
 
   ngOnDestroy(): void {
-    // Cleanup if needed
+   
   }
+logout() {
+  localStorage.removeItem('token');
+  console.log('Tokens removed:', localStorage.getItem('token'));
+  this.router.navigate(['/login']);
+}
 
-  /**
-   * Toggle mobile menu
-   */
+
+
+
   toggleMobileMenu(): void {
     const layoutMenu = document.getElementById('layout-menu');
     if (layoutMenu) {
