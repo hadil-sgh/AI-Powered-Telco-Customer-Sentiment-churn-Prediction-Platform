@@ -10,7 +10,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/audio-analysis")  // Updated to match Angular service
-@CrossOrigin(origins = "*")
+
 @RequiredArgsConstructor
 @Slf4j
 public class AudioPipelineController {

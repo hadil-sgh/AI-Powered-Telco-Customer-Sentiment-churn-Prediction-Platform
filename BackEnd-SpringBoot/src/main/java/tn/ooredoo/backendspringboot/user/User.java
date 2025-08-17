@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @Entity
 @EntityListeners(AuditingEntityListener.class)
+@Table(name = "user1") // ? This annotation is used to specify the name of the table in the database
 // ? This class is used to listen to entity events creation and update
 public class User implements UserDetails, Principal, Serializable {
 

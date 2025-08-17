@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@CrossOrigin("*")
+
 @RequestMapping("/user")
 @RequiredArgsConstructor
 @Tag(name = "User Management", description = "Operations related to user management")

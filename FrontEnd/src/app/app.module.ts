@@ -23,6 +23,12 @@ import { AllCallsComponent } from './Agent/all-calls/all-calls.component';
 import { NotesComponent } from './Agent/notes/notes.component';
 import { JwtModule } from "@auth0/angular-jwt";
 import { ProfileManagementComponent } from './profile-management/profile-management.component';
+import { TeamManagementComponent } from './Admin/team-management/team-management.component';
+import { AgentsPerformancesComponent } from './Admin/agents-performances/agents-performances.component';
+import { ComplaintsListComponent } from './Admin/complaints-list/complaints-list.component';
+import { KnowlageBaseComponent } from './Admin/knowlage-base/knowlage-base.component';
+import { QuickTipsComponent } from './Admin/quick-tips/quick-tips.component';
+import { AdminDashboeardComponent } from './Admin/admin-dashboeard/admin-dashboeard.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -43,6 +49,12 @@ import { ProfileManagementComponent } from './profile-management/profile-managem
     AllCallsComponent,
     NotesComponent,
     ProfileManagementComponent,
+    TeamManagementComponent,
+    AgentsPerformancesComponent,
+    ComplaintsListComponent,
+    KnowlageBaseComponent,
+    QuickTipsComponent,
+    AdminDashboeardComponent,
   ],
   imports: [
     

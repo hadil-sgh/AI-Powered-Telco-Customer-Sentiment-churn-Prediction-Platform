@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from 'src/app/services/auth.service';
+import { TokenService } from 'src/app/services/token.service';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -17,7 +18,8 @@ export class LoginComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private tokenService: TokenService
   ) {}
 
   ngOnInit(): void {
@@ -39,28 +41,42 @@ export class LoginComponent implements OnInit {
     this.showPassword = !this.showPassword;
   }
 
-  onSubmit(): void {
-    if (this.loginForm.invalid) {
-      this.loginForm.markAllAsTouched();
-      return;
-    }
-
-    this.isSubmitting = true;
-
-    this.authService.authenticate(this.loginForm.value).subscribe({
-      next: (res) => {
-        localStorage.setItem('token', res.token);
- 
-        this.router.navigate(['/Agent/dashboard']);
-      },
-      error: (err) => {
-        Swal.fire({
-          icon: 'error',
-          title: 'Login failed',
-          text: err?.error?.message || 'Invalid email or password',
-        });
-        this.isSubmitting = false;
-      }
-    });
+ onSubmit(): void {
+  if (this.loginForm.invalid) {
+    this.loginForm.markAllAsTouched();
+    return;
   }
+
+  this.isSubmitting = true;
+
+  this.authService.authenticate(this.loginForm.value).subscribe({
+    next: (res) => {
+    
+      localStorage.setItem('token', res.token);
+      const authorities = this.tokenService.getUserAuthorities();
+      if (authorities.includes('Administrator')) {
+        this.router.navigate(['/Admin/dashboard']);
+      } else if (authorities.includes('Agent')) {
+        this.router.navigate(['/Agent/dashboard']);
+      } else {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Access Denied',
+          text: 'No valid role found for this account.',
+        });
+      }
+
+      this.isSubmitting = false;
+    },
+    error: (err) => {
+      Swal.fire({
+        icon: 'error',
+        title: 'Login failed',
+        text: err?.error?.message || 'Invalid email or password',
+      });
+      this.isSubmitting = false;
+    }
+  });
+}
+
 }

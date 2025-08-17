@@ -12,6 +12,12 @@ import { AgentAllTemplateComponent } from './Agent/agent-all-template/agent-all-
 import { AllCallsComponent } from './Agent/all-calls/all-calls.component';
 import { NotesComponent } from './Agent/notes/notes.component';
 import { ProfileManagementComponent } from './profile-management/profile-management.component';
+import { QuickTipsComponent } from './Admin/quick-tips/quick-tips.component';
+import { TeamManagementComponent } from './Admin/team-management/team-management.component';
+import { AgentsPerformancesComponent } from './Admin/agents-performances/agents-performances.component';
+import { ComplaintsListComponent } from './Admin/complaints-list/complaints-list.component';
+import { KnowlageBaseComponent } from './Admin/knowlage-base/knowlage-base.component';
+import { AdminDashboeardComponent } from './Admin/admin-dashboeard/admin-dashboeard.component';
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -28,6 +34,19 @@ const routes: Routes = [
       { path: 'allCalls', component: AllCallsComponent },
       { path: 'notes', component: NotesComponent },
       { path: 'profile', component: ProfileManagementComponent }
+    ],
+  },
+  {
+    path: 'Admin',
+    component: AdminAllTemplateComponent,
+    children: [
+        { path: 'profile', component: ProfileManagementComponent },
+        { path: 'dashboard', component: AdminDashboeardComponent },
+        { path: 'team', component: TeamManagementComponent },
+        { path: 'agents', component: AgentsPerformancesComponent },
+        { path: 'complaints', component: ComplaintsListComponent },
+        { path: 'knowledge', component: KnowlageBaseComponent },
+        { path: 'quick-tips', component: QuickTipsComponent }
     ],
   },
 ];

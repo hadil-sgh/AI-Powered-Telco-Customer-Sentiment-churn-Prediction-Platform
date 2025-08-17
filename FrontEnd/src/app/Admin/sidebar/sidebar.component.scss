@@ -1,0 +1,104 @@
+/* Agent Sidebar Component Styles */
+
+#layout-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 260px;
+  overflow: hidden;
+  z-index: 1000;
+
+  /* Ensure the sidebar doesn't get cut off */
+  .menu-inner {
+    height: calc(100vh - 75px); /* Subtract header height */
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    /* Custom scrollbar styling */
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 3px;
+
+      &:hover {
+        background: rgba(0, 0, 0, 0.3);
+      }
+    }
+  }
+
+  /* Ensure all menu items are visible */
+  .menu-item {
+    width: 100%;
+
+    .menu-link {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  /* Fix for long menu lists */
+  .menu-sub {
+    max-height: none;
+
+    .menu-item {
+      .menu-link {
+        padding-left: 3rem;
+      }
+    }
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 1199.98px) {
+  #layout-menu {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+
+    &.show {
+      transform: translateX(0);
+    }
+  }
+}
+
+/* Perfect Scrollbar adjustments for the menu */
+.menu-inner.ps {
+  .ps__rail-y {
+    right: 3px !important;
+    width: 6px !important;
+    background: transparent !important;
+  }
+
+  .ps__thumb-y {
+    background: rgba(0, 0, 0, 0.2) !important;
+    border-radius: 3px !important;
+    width: 6px !important;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.3) !important;
+    }
+  }
+}
+
+/* Ensure menu content doesn't overflow */
+.layout-menu {
+  .menu-inner {
+    padding-bottom: 1rem;
+  }
+
+  .menu-item {
+    .menu-link {
+      display: flex;
+      align-items: center;
+      min-height: 44px;
+    }
+  }
+}

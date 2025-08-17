@@ -8,7 +8,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/churn")
-@CrossOrigin(origins = "*")
+
 @RequiredArgsConstructor
 public class ChurnPredictionController {
 
