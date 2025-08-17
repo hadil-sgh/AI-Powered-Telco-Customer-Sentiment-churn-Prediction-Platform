@@ -88,11 +88,11 @@
                 (change)="onFilterChange()"
               >
                 <option value="all">All Scores</option>
-                <option value="excellent">Excellent (90-100)</option>
-                <option value="good">Good (75-89)</option>
-                <option value="average">Average (60-74)</option>
+                <option value="excellent">Excellent (4.5 - 5)</option>
+                <option value="good">Good (3.5 - 4.49)</option>
+                <option value="average">Average (2.5 - 3.49)</option>
                 <option value="needs-improvement">
-                  Needs Improvement (< 60)
+                  Needs Improvement (&lt; 2.5)
                 </option>
               </select>
             </div>
@@ -115,9 +115,9 @@
                 class="card-text mb-1"
                 [ngClass]="getPerformanceScoreClass(overallStats.averageScore)"
               >
-                {{ overallStats.averageScore | number : "1.1-1" }}%
+                {{ overallStats.averageScore | number : "1.2-2" }} / 5
               </h2>
-              <small class="text-muted">Average Score</small>
+              <small class="text-muted">Average Score (0-5)</small>
             </div>
             <div class="avatar flex-shrink-0">
               <span class="avatar-initial rounded bg-label-primary">
@@ -128,7 +128,7 @@
           <div class="progress mt-3" style="height: 6px">
             <div
               class="progress-bar"
-              [style.width.%]="overallStats.averageScore"
+              [style.width.%]="(overallStats.averageScore / 5) * 100"
               [ngClass]="getPerformanceProgressClass(overallStats.averageScore)"
             ></div>
           </div>
@@ -312,7 +312,7 @@
         <div class="card-body">
           <div class="performance-distribution mb-3">
             <div class="d-flex justify-content-between align-items-center mb-2">
-              <span class="text-success fw-medium">Excellent (90-100)</span>
+              <span class="text-success fw-medium">Excellent (4.5 - 5)</span>
               <span class="text-success"
                 >{{ scoreDistribution.excellent }}%</span
               >
@@ -323,9 +323,8 @@
                 [style.width.%]="scoreDistribution.excellent"
               ></div>
             </div>
-
             <div class="d-flex justify-content-between align-items-center mb-2">
-              <span class="text-info fw-medium">Good (75-89)</span>
+              <span class="text-info fw-medium">Good (3.5 - 4.49)</span>
               <span class="text-info">{{ scoreDistribution.good }}%</span>
             </div>
             <div class="progress mb-3" style="height: 6px">
@@ -334,9 +333,8 @@
                 [style.width.%]="scoreDistribution.good"
               ></div>
             </div>
-
             <div class="d-flex justify-content-between align-items-center mb-2">
-              <span class="text-warning fw-medium">Average (60-74)</span>
+              <span class="text-warning fw-medium">Average (2.5 - 3.49)</span>
               <span class="text-warning">{{ scoreDistribution.average }}%</span>
             </div>
             <div class="progress mb-3" style="height: 6px">
@@ -345,10 +343,9 @@
                 [style.width.%]="scoreDistribution.average"
               ></div>
             </div>
-
             <div class="d-flex justify-content-between align-items-center mb-2">
               <span class="text-danger fw-medium"
-                >Needs Improvement (< 60)</span
+                >Needs Improvement (&lt; 2.5)</span
               >
               <span class="text-danger"
                 >{{ scoreDistribution.needsImprovement }}%</span
