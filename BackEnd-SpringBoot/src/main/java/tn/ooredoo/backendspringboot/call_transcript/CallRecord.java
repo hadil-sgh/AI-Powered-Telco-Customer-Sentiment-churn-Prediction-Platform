@@ -39,14 +39,11 @@ public class CallRecord implements Serializable {
     @JsonManagedReference
     private List<AudioAnalysisResponse> callTranscripts;
 
-    @JsonIgnore
     private Long callDuration;
 
-    @JsonIgnore
     @OneToOne
     private SentimentPoint sentimentPoint;
 
-    @JsonIgnore
     @Enumerated(EnumType.STRING)
     private Outcome callOutcome;
     private LocalDateTime callDateTime;

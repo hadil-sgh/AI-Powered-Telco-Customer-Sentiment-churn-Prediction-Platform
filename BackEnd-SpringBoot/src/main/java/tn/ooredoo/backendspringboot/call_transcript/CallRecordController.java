@@ -82,6 +82,10 @@ public class CallRecordController {
 
         return ResponseEntity.ok("Outcome updated successfully for call ID: " + callId);
     }
+    @GetMapping("/calls/average-duration")
+    public Double getAverageCallDuration() {
+        return callRecordServices.getAverageCallDuration();
+    }
 
 
 }

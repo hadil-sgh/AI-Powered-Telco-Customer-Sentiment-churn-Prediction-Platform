@@ -11,6 +11,17 @@ export class CallRecordService {
 
   constructor(private http: HttpClient) {}
 
+  /**
+   * Delete a call record by ID
+   */
+  deleteCallRecord(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  }
+
+  getAverageCallDuration(): Observable<number> {
+    return this.http.get<number>(`${this.baseUrl}/calls/average-duration`);
+  }
+
   saveCallRecord(
     email: string,
     customerId: number,
@@ -26,32 +37,20 @@ export class CallRecordService {
     return this.http.post<CallRecord>(`${this.baseUrl}/save`, null, { params });
   }
 
-  /**
-   * Get all call records for an agent
-   */
   getCallRecordsByAgent(agentId: number): Observable<CallRecord[]> {
     return this.http.get<CallRecord[]>(`${this.baseUrl}/agent/${agentId}`);
   }
 
-  /**
-   * Get all call records for a customer
-   */
   getCallRecordsByCustomer(customerId: number): Observable<CallRecord[]> {
     return this.http.get<CallRecord[]>(
       `${this.baseUrl}/customer/${customerId}`
     );
   }
 
-  /**
-   * Get a specific call record by ID
-   */
   getCallRecordById(id: number): Observable<CallRecord> {
     return this.http.get<CallRecord>(`${this.baseUrl}/${id}`);
   }
 
-  /**
-   * Get call records by session (agent email)
-   */
   getCallRecordBySession(email: string): Observable<CallRecord[]> {
     return this.http.get<CallRecord[]>(`${this.baseUrl}/getbysession/${email}`);
   }

@@ -108,6 +108,10 @@ public class CallRecordServicesImpl implements CallRecordServices {
         callRecordRepository.save(callRecord);
 
     }
+    public Double getAverageCallDuration() {
+        Long avg = callRecordRepository.getAverageCallDuration();
+        return avg != null ? avg.doubleValue() : 0.0;
+    }
 
 
 }

@@ -170,14 +170,11 @@
                   </span>
                 </div>
                 <div>
-                  <strong>{{ getCustomerName(call.customer) }}</strong><br />
-                  <small class="text-muted">{{
-                    getCustomerPhone(call.customer)
-                  }}</small>
+                  <strong>{{ getCustomerName(call.customer) }}</strong>
                 </div>
               </div>
             </td>
-          
+
             <td>
               <div>
                 {{ call.callDateTime | date : "MMM dd, yyyy" }}<br />
@@ -231,8 +228,7 @@
                   <a class="dropdown-item" (click)="viewCallDetails(call)">
                     <i class="bx bx-show me-1"></i> View Details
                   </a>
-            
-              
+
                   <div class="dropdown-divider"></div>
                   <a
                     class="dropdown-item text-danger"
@@ -289,9 +285,7 @@
             </div>
             <div>
               <h6 class="mb-0">{{ getCustomerName(call.customer) }}</h6>
-              <small class="text-muted">{{
-                getCustomerPhone(call.customer)
-              }}</small>
+              <!-- Phone removed for cleaner design -->
             </div>
           </div>
           <div class="dropdown">
@@ -306,7 +300,6 @@
               <a class="dropdown-item" (click)="viewCallDetails(call)">
                 <i class="bx bx-show me-1"></i> View Details
               </a>
-           
             </div>
           </div>
         </div>
@@ -343,7 +336,6 @@
               </div>
             </div>
           </div>
-        
         </div>
         <div class="card-footer">
           <button
@@ -352,7 +344,6 @@
           >
             <i class="bx bx-show me-1"></i>Details
           </button>
-        
         </div>
       </div>
     </div>
@@ -379,15 +370,12 @@
               <strong>Name:</strong>
               {{ getCustomerName(selectedCall.customer) }}
             </p>
-            <p>
-              <strong>Phone:</strong>
-              {{ getCustomerPhone(selectedCall.customer) }}
-            </p>
+            <!-- Phone removed for cleaner design -->
             <p><strong>Email:</strong> {{ selectedCall.customer?.email }}</p>
           </div>
           <div class="col-md-6">
             <h6>Call Information</h6>
-         
+
             <p>
               <strong>Date:</strong>
               {{ selectedCall.callDateTime | date : "full" }}
@@ -413,7 +401,7 @@
           </div>
         </div>
 
-        <!-- Call Transcript -->
+        <!-- Call Transcript as Lines -->
         <div
           *ngIf="
             selectedCall.callTranscripts &&
@@ -421,88 +409,40 @@
           "
         >
           <h6>Call Transcript & Analysis</h6>
-          <div class="custom-accordion">
-            <div
-              class="card mb-2"
-              *ngFor="
-                let transcript of selectedCall.callTranscripts;
-                let i = index
-              "
+          <ul class="list-group">
+            <li
+              class="list-group-item"
+              *ngFor="let transcript of selectedCall.callTranscripts"
             >
-              <div class="card-header p-0">
-                <button
-                  class="btn btn-link w-100 text-start"
-                  type="button"
-                  (click)="toggleAccordion(i)"
-                  [attr.aria-expanded]="activeAccordionIndex === i"
-                >
-                  <div
-                    class="d-flex justify-content-between align-items-center"
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <strong>{{ transcript.speaker || "Unknown" }}:</strong>
+                  {{ getTranscriptText(transcript) }}
+                </div>
+                <div class="text-end">
+                  <span class="badge bg-label-secondary me-2">
+                    {{ transcript.timestamp | date : "short" }}
+                  </span>
+                  <span
+                    class="badge"
+                    [ngClass]="{
+                      'bg-label-success':
+                        getTranscriptSentimentScore(transcript) > 0.5,
+                      'bg-label-warning':
+                        getTranscriptSentimentScore(transcript) > 0 &&
+                        getTranscriptSentimentScore(transcript) <= 0.5,
+                      'bg-label-danger':
+                        getTranscriptSentimentScore(transcript) <= 0
+                    }"
                   >
-                    <span
-                      >Segment {{ i + 1 }} -
-                      {{ transcript.timestamp | date : "HH:mm:ss" }}</span
-                    >
-                    <i
-                      class="bx"
-                      [class.bx-chevron-down]="activeAccordionIndex !== i"
-                      [class.bx-chevron-up]="activeAccordionIndex === i"
-                    ></i>
-                  </div>
-                </button>
-              </div>
-              <div
-                class="card-body"
-                *ngIf="activeAccordionIndex === i"
-                [@slideInOut]
-              >
-                <div class="mb-3">
-                  <strong>Transcript:</strong>
-                  <p class="mt-2">{{ getTranscriptText(transcript) }}</p>
-                </div>
-                <div class="row">
-                  <div class="col-md-4">
-                    <small class="text-muted">Sentiment</small>
-                    <div>
-                      <span
-                        class="badge"
-                        [ngClass]="{
-                          'bg-label-success':
-                            getTranscriptSentimentScore(transcript) > 0.5,
-                          'bg-label-warning':
-                            getTranscriptSentimentScore(transcript) > 0 &&
-                            getTranscriptSentimentScore(transcript) <= 0.5,
-                          'bg-label-danger':
-                            getTranscriptSentimentScore(transcript) <= 0
-                        }"
-                      >
-                        {{
-                          getTranscriptSentimentScore(transcript)
-                            | number : "1.2-2"
-                        }}
-                      </span>
-                    </div>
-                  </div>
-                  <div class="col-md-4">
-                    <small class="text-muted">Speaker</small>
-                    <div>
-                      <span class="badge bg-label-info">
-                        {{ transcript.speaker || "Unknown" }}
-                      </span>
-                    </div>
-                  </div>
-                  <div class="col-md-4">
-                    <small class="text-muted">Timestamp</small>
-                    <div>
-                      <span class="badge bg-label-secondary">
-                        {{ transcript.timestamp | date : "short" }}
-                      </span>
-                    </div>
-                  </div>
+                    {{
+                      getTranscriptSentimentScore(transcript) | number : "1.2-2"
+                    }}
+                  </span>
                 </div>
               </div>
-            </div>
-          </div>
+            </li>
+          </ul>
         </div>
       </div>
       <div class="modal-footer">
@@ -513,7 +453,6 @@
         >
           Close
         </button>
-  
       </div>
     </div>
   </div>

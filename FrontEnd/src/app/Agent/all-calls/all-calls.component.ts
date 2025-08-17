@@ -86,7 +86,13 @@ export class AllCallsComponent implements OnInit, OnDestroy {
     if (userEmail) {
       this.callRecordService.getCallRecordBySession(userEmail).subscribe({
         next: (calls) => {
-          this.calls = calls;
+          this.calls = calls.map((call) => ({
+            ...call,
+            callDuration:
+              typeof call.callDuration === 'number'
+                ? { seconds: call.callDuration }
+                : call.callDuration,
+          }));
           this.applyFilters();
           this.calculateStats();
         },
@@ -114,13 +120,18 @@ export class AllCallsComponent implements OnInit, OnDestroy {
       (call) => call.callOutcome === 'NO_ANSWER'
     ).length;
 
-    // Calculate average duration
-    const totalMinutes = this.calls.reduce((sum, call) => {
-      return sum + this.parseDurationFromObject(call.callDuration);
-    }, 0);
-    const avgMinutes =
-      this.calls.length > 0 ? totalMinutes / this.calls.length : 0;
-    this.callStats.avgDuration = this.formatMinutes(avgMinutes);
+    // Fetch average duration from backend
+    this.callRecordService.getAverageCallDuration().subscribe({
+      next: (avgSeconds) => {
+        // avgSeconds is in seconds, convert to minutes for display
+        const avgMinutes = avgSeconds / 60;
+        this.callStats.avgDuration = this.formatMinutes(avgMinutes);
+      },
+      error: (err) => {
+        console.error('Failed to fetch average call duration:', err);
+        this.callStats.avgDuration = '0:00';
+      },
+    });
   }
 
   // Search and Filter methods
@@ -272,10 +283,6 @@ export class AllCallsComponent implements OnInit, OnDestroy {
     );
   }
 
-
-
-
-
   deleteCall(call: CallRecord): void {
     if (confirm('Are you sure you want to delete this call record?')) {
       this.calls = this.calls.filter((c) => c.id !== call.id);
@@ -337,12 +344,16 @@ export class AllCallsComponent implements OnInit, OnDestroy {
   }
 
   private formatMinutes(minutes: number): string {
-    const hrs = Math.floor(minutes / 60);
-    const mins = Math.floor(minutes % 60);
+    const totalSeconds = Math.round(minutes * 60);
+    const hrs = Math.floor(totalSeconds / 3600);
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
     if (hrs > 0) {
-      return `${hrs}:${mins.toString().padStart(2, '0')}`;
+      return `${hrs}:${mins.toString().padStart(2, '0')}:${secs
+        .toString()
+        .padStart(2, '0')}`;
     }
-    return `${mins}:00`;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   }
 
   getSentimentScore(call: CallRecord): number {
