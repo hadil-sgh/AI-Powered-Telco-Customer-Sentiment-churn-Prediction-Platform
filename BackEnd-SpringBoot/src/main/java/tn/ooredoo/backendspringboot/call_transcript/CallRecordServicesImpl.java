@@ -105,6 +105,7 @@ public class CallRecordServicesImpl implements CallRecordServices {
     public void updateOutcomePostCall(Integer callId, Outcome outcome) {
         CallRecord callRecord = getCallRecordById(callId);
         callRecord.setCallOutcome(outcome);
+        callRecordRepository.save(callRecord);
 
     }
 

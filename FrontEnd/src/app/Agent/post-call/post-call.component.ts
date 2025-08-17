@@ -4,6 +4,7 @@ import {
   PostCallService,
   PostCallAnalysisResult,
 } from '../../services/post-call.service';
+import { TokenService } from '../../services/token.service';
 import { CallRecord } from '../../models/call-record';
 import { Customer } from '../../models/customer';
 import Swal from 'sweetalert2';
@@ -45,7 +46,8 @@ export class PostCallComponent implements OnInit {
 
   constructor(
     private router: Router,
-    private postCallService: PostCallService
+    private postCallService: PostCallService,
+    private tokenService: TokenService
   ) {
     // Get data from router state
     const navigation = this.router.getCurrentNavigation();
@@ -150,7 +152,7 @@ export class PostCallComponent implements OnInit {
     if (!this.callRecord?.id) return;
 
     this.postCallService
-      .updateCallOutcome(this.callRecord.id, this.selectedOutcome)
+      .updateOutcomePostCall(this.callRecord.id, this.selectedOutcome)
       .subscribe({
         next: () => {
           Swal.fire({
@@ -273,8 +275,59 @@ export class PostCallComponent implements OnInit {
       });
   }
 
-  navigateToAllCalls() {
-    this.router.navigate(['/Agent/allCalls']);
+  completeCallActivities() {
+    if (!this.callRecord?.id || !this.postCallAnalysis) {
+      this.router.navigate(['/Agent/allCalls']);
+      return;
+    }
+
+    const recordId = this.callRecord.id;
+    const email = this.tokenService.getEmailFromToken();
+    const score = this.postCallAnalysis.score || 0;
+    const complaintType = this.postCallAnalysis.complaintType || '';
+    const feedback = this.postCallAnalysis.feedback || '';
+    const summary = this.postCallAnalysis.summary || '';
+    const outcome = { outcome: this.selectedOutcome };
+
+    // 1. Update daily stats
+    this.postCallService.updateDailyStats(recordId, email, score).subscribe({
+      next: () => {
+        // 2. Save performance
+        this.postCallService
+          .savePerformancePostCall(
+            complaintType,
+            feedback,
+            score,
+            recordId,
+            summary
+          )
+          .subscribe({
+            next: () => {
+              // 3. Optionally get average sentiment (not used here)
+              // this.postCallService.getAverageSentiment(recordId).subscribe();
+              Swal.fire({
+                title: 'Call Activities Completed!',
+                text: 'All post-call activities have been completed.',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false,
+                position: 'top-end',
+                toast: true,
+              }).then(() => {
+                this.router.navigate(['/Agent/allCalls']);
+              });
+            },
+            error: (err: any) => {
+              console.error('Error saving performance:', err);
+              this.router.navigate(['/Agent/allCalls']);
+            },
+          });
+      },
+      error: (err: any) => {
+        console.error('Error updating daily stats:', err);
+        this.router.navigate(['/Agent/allCalls']);
+      },
+    });
   }
 
   startNewCall() {

@@ -1,6 +1,7 @@
 package tn.ooredoo.backendspringboot.call_transcript;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tn.ooredoo.backendspringboot.customer.Customer;
 import tn.ooredoo.backendspringboot.customer.CustomerServices;
@@ -62,6 +63,24 @@ public class CallRecordController {
     @GetMapping("/byCallId/{callId}")
     public CallRecord getCallRecordByCallId(@PathVariable Integer callId) {
         return callRecordServices.getCallRecordByCallId(callId);
+    }
+
+    @PutMapping("/{callId}/outcome")
+    public ResponseEntity<String> updateOutcome(
+            @PathVariable Integer callId,
+            @RequestBody String outcomeString) {
+
+        Outcome outcome;
+        try {
+            outcome = Outcome.valueOf(outcomeString.toUpperCase()); // convert string to enum
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body("Invalid outcome value: " + outcomeString);
+        }
+
+        callRecordServices.updateOutcomePostCall(callId, outcome);
+
+        return ResponseEntity.ok("Outcome updated successfully for call ID: " + callId);
     }
 
 
