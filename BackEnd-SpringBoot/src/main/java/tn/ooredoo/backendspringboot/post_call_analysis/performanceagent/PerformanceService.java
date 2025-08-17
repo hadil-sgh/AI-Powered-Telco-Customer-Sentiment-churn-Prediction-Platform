@@ -4,11 +4,12 @@ import java.util.List;
 import java.util.Optional;
 
 public interface PerformanceService {
-    Performance savePerformance(Performance performance);
+    Performance savePerformancePostCall(String complaintType,String feedback,Integer score, Integer callId , String summary);
     List<Performance> getAllPerformances();
     Optional<Performance> getPerformanceById(Long id);
     Performance updatePerformance( Performance performance);
     void deletePerformance(Long id);
+
 
 }
 

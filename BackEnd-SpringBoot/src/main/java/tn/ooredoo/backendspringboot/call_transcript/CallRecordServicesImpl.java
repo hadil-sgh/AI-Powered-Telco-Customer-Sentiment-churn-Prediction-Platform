@@ -5,25 +5,20 @@ import org.springframework.stereotype.Service;
 import tn.ooredoo.backendspringboot.audioprocessing.AudioAnalysisRepository;
 import tn.ooredoo.backendspringboot.audioprocessing.AudioAnalysisResponse;
 import tn.ooredoo.backendspringboot.customer.Customer;
-import tn.ooredoo.backendspringboot.dailystats.DailyStatsService;
 import tn.ooredoo.backendspringboot.user.User;
 import tn.ooredoo.backendspringboot.user.UserRepository;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class CallRecordServicesImpl implements CallRecordServices {
 
-    final CallRecordRepository callRecordRepository;
-    final DailyStatsService dailyStatsService;
-    final UserRepository userRepository;
-    final AudioAnalysisRepository audioAnalysisRepository;
+    private final CallRecordRepository callRecordRepository;
+
+    private final UserRepository userRepository;
+    private final AudioAnalysisRepository audioAnalysisRepository;
 
 
     @Override
@@ -70,34 +65,6 @@ public class CallRecordServicesImpl implements CallRecordServices {
         return callRecordRepository.findById(id).orElse(null);
     }
 
-    @Override
-
-    public Integer getCallsPerDayForAgent(Long agentId, Date date) {
-        String dateString = date.toString();
-        if (agentId == null) {
-            throw new IllegalArgumentException("Agent does not exist in the DB");
-        }
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime startOfDay;
-        LocalDateTime endOfDay;
-        if ("today".equalsIgnoreCase(dateString)) {
-            startOfDay = now.toLocalDate().atStartOfDay();
-            endOfDay = now.toLocalDate().atTime(23, 59, 59);
-        } else if ("yesterday".equalsIgnoreCase(dateString)) {
-            startOfDay = now.toLocalDate().minusDays(1).atStartOfDay();
-            endOfDay = now.toLocalDate().minusDays(1).atTime(23, 59, 59);
-        } else {
-            throw new IllegalArgumentException("Date parameter must be 'today' or 'yesterday'");
-        }
-        Integer count = callRecordRepository.countByAgent_IdAndCallDateTimeBetween(agentId, startOfDay, endOfDay);
-        if ("today".equalsIgnoreCase(dateString)) {
-            User user = userRepository.findById(agentId).orElse(null);
-            if (user != null) {
-                dailyStatsService.updateCallsCompletedForToday(user, count);
-            }
-        }
-        return count;
-    }
 
     @Override
     public List<CallRecord> getCallRecordByAgentId(String email) {
@@ -119,6 +86,7 @@ public class CallRecordServicesImpl implements CallRecordServices {
 
         return callsBySession;
     }
+
     @Override
     public String getTranscriptForAnalysis(Integer callId) {
         CallRecord callRecord = getCallRecordById(callId); // Ensure this fetches transcripts
@@ -133,6 +101,12 @@ public class CallRecordServicesImpl implements CallRecordServices {
         return transcript.toString().trim();
     }
 
+    @Override
+    public void updateOutcomePostCall(Integer callId, Outcome outcome) {
+        CallRecord callRecord = getCallRecordById(callId);
+        callRecord.setCallOutcome(outcome);
+
+    }
 
 
 }

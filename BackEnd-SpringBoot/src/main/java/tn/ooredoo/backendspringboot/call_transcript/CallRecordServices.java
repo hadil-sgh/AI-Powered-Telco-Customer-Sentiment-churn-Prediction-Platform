@@ -3,6 +3,7 @@ package tn.ooredoo.backendspringboot.call_transcript;
 import tn.ooredoo.backendspringboot.customer.Customer;
 import tn.ooredoo.backendspringboot.user.User;
 
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 
@@ -12,9 +13,10 @@ public interface CallRecordServices {
     void deleteCallRecordById(Integer id);
     CallRecord updateCallRecord(CallRecord callRecord);
     CallRecord getCallRecordByCallId(Integer callId);
-    Integer getCallsPerDayForAgent(Long agentId, Date date);
     List<CallRecord> getCallRecordByAgentId(String email);
     String getTranscriptForAnalysis(Integer callId);
+    void updateOutcomePostCall(Integer callId, Outcome outcome);
+
 
 
 

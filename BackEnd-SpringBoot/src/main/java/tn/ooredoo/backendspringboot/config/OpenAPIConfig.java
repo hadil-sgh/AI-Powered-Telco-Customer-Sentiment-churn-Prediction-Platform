@@ -16,7 +16,7 @@ import io.swagger.v3.oas.annotations.servers.Server;
                         name = "Ooredoo Backend Team",
                         email = "hadil.sghair@esprit.tn"
                 ),
-                description = "Documentation for Ooredoo's Customer Interactions /Marketing Management",
+                description = "Documentation for Ooredoo's Customer Interactions /Agent Management Backend API",
                 title = "Ooredoo Backend API",
                 version = "1.0",
                 license = @License(

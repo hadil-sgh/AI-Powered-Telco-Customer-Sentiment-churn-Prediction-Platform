@@ -157,11 +157,11 @@ export class AgentPerformanceComponent
   }
 
   private loadMockData(): void {
-    // Mock data for demonstration - enhanced with proper sentiment handling
+    // Mock data for demonstration - now using 0-5 scale for scores
     this.performanceRecords = [
       {
         id: 1,
-        score: 85,
+        score: 3.8,
         feedback: 'Good call handling, needs improvement in closing techniques',
         callTranscripts: {
           id: 1001,
@@ -185,7 +185,7 @@ export class AgentPerformanceComponent
       },
       {
         id: 2,
-        score: 92,
+        score: 4.8,
         feedback: 'Excellent customer service, very professional approach',
         callTranscripts: {
           id: 1002,
@@ -209,7 +209,7 @@ export class AgentPerformanceComponent
       },
       {
         id: 3,
-        score: 76,
+        score: 2.8,
         feedback: 'Average performance, could improve active listening skills',
         callTranscripts: {
           id: 1003,
@@ -233,7 +233,7 @@ export class AgentPerformanceComponent
       },
       {
         id: 4,
-        score: 88,
+        score: 4.2,
         feedback: 'Strong technical knowledge, good problem resolution',
         callTranscripts: {
           id: 1004,
@@ -257,7 +257,7 @@ export class AgentPerformanceComponent
       },
       {
         id: 5,
-        score: 94,
+        score: 4.9,
         feedback: 'Outstanding call, exceeded customer expectations',
         callTranscripts: {
           id: 1005,
@@ -345,19 +345,19 @@ export class AgentPerformanceComponent
       performanceTrend: (Math.random() - 0.5) * 10, // Mock trend data
     };
 
-    // Calculate score distribution
+    // Calculate score distribution for 0-5 scale
     const total = this.filteredPerformanceRecords.length;
     const excellent = this.filteredPerformanceRecords.filter(
-      (r) => (r.score || 0) >= 90
+      (r) => (r.score || 0) >= 4.5
     ).length;
     const good = this.filteredPerformanceRecords.filter(
-      (r) => (r.score || 0) >= 75 && (r.score || 0) < 90
+      (r) => (r.score || 0) >= 3.5 && (r.score || 0) < 4.5
     ).length;
     const average = this.filteredPerformanceRecords.filter(
-      (r) => (r.score || 0) >= 60 && (r.score || 0) < 75
+      (r) => (r.score || 0) >= 2.5 && (r.score || 0) < 3.5
     ).length;
     const needsImprovement = this.filteredPerformanceRecords.filter(
-      (r) => (r.score || 0) < 60
+      (r) => (r.score || 0) < 2.5
     ).length;
 
     this.scoreDistribution = {
@@ -516,14 +516,32 @@ export class AgentPerformanceComponent
             legend: {
               position: 'top',
             },
+            tooltip: {
+              callbacks: {
+                label: function (context: any) {
+                  const label = context.dataset.label || '';
+                  const value = context.parsed.y;
+                  if (label.includes('Score')) {
+                    return `${label}: ${value.toFixed(2)} / 5`;
+                  }
+                  return `${label}: ${value}`;
+                },
+              },
+            },
           },
           scales: {
             y: {
               beginAtZero: true,
-              max: 100,
+              max: 5,
               title: {
                 display: true,
-                text: 'Performance Score (%)',
+                text: 'Performance Score (0-5)',
+              },
+              ticks: {
+                stepSize: 1,
+                callback: function (value: number) {
+                  return value.toFixed(1);
+                },
               },
             },
             x: {
@@ -649,10 +667,10 @@ export class AgentPerformanceComponent
       const date = new Date(today);
       date.setDate(date.getDate() - i);
 
-      // Generate realistic sample data with some variation
-      const basePerformance = 75 + Math.random() * 20; // 75-95 range
-      const trend = Math.sin(i * 0.1) * 5; // Small sine wave for trend
-      const performance = Math.max(60, Math.min(100, basePerformance + trend));
+      // Generate realistic sample data in 0-5 range
+      const basePerformance = 3.5 + Math.random() * 1.5; // 3.5-5 range
+      const trend = Math.sin(i * 0.1) * 0.3; // Small sine wave for trend
+      const performance = Math.max(0, Math.min(5, basePerformance + trend));
 
       // Generate sentiment percentages that add up to 100
       const positive = 40 + Math.random() * 30; // 40-70%
@@ -664,7 +682,7 @@ export class AgentPerformanceComponent
           month: 'short',
           day: 'numeric',
         }),
-        performance: Math.round(performance * 10) / 10,
+        performance: Math.round(performance * 100) / 100,
         positive: Math.round(positive * 10) / 10,
         neutral: Math.round(neutral * 10) / 10,
         negative: Math.round(negative * 10) / 10,
@@ -990,34 +1008,34 @@ export class AgentPerformanceComponent
 
   // Styling helper methods
   getPerformanceScoreClass(score: number | undefined): string {
-    if (!score) return 'text-muted';
-    if (score >= 90) return 'text-success';
-    if (score >= 75) return 'text-info';
-    if (score >= 60) return 'text-warning';
+    if (score === undefined || score === null) return 'text-muted';
+    if (score >= 4.5) return 'text-success';
+    if (score >= 3.5) return 'text-info';
+    if (score >= 2.5) return 'text-warning';
     return 'text-danger';
   }
 
   getPerformanceProgressClass(score: number | undefined): string {
-    if (!score) return 'bg-secondary';
-    if (score >= 90) return 'bg-success';
-    if (score >= 75) return 'bg-info';
-    if (score >= 60) return 'bg-warning';
+    if (score === undefined || score === null) return 'bg-secondary';
+    if (score >= 4.5) return 'bg-success';
+    if (score >= 3.5) return 'bg-info';
+    if (score >= 2.5) return 'bg-warning';
     return 'bg-danger';
   }
 
   getPerformanceBadgeClass(score: number | undefined): string {
-    if (!score) return 'bg-label-secondary';
-    if (score >= 90) return 'bg-label-success';
-    if (score >= 75) return 'bg-label-info';
-    if (score >= 60) return 'bg-label-warning';
+    if (score === undefined || score === null) return 'bg-label-secondary';
+    if (score >= 4.5) return 'bg-label-success';
+    if (score >= 3.5) return 'bg-label-info';
+    if (score >= 2.5) return 'bg-label-warning';
     return 'bg-label-danger';
   }
 
   getPerformanceLabel(score: number | undefined): string {
-    if (!score) return 'N/A';
-    if (score >= 90) return 'Excellent';
-    if (score >= 75) return 'Good';
-    if (score >= 60) return 'Average';
+    if (score === undefined || score === null) return 'N/A';
+    if (score >= 4.5) return 'Excellent';
+    if (score >= 3.5) return 'Good';
+    if (score >= 2.5) return 'Average';
     return 'Needs Improvement';
   }
 

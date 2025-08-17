@@ -7,7 +7,6 @@ import tn.ooredoo.backendspringboot.customer.CustomerServices;
 import tn.ooredoo.backendspringboot.user.User;
 import tn.ooredoo.backendspringboot.user.UserService;
 
-import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -26,11 +25,6 @@ public class CallRecordController {
         return callRecordServices.getTranscriptForAnalysis(id);
     }
 
-
-    @GetMapping("/callsPerDay/{agentId}")
-    public Integer getCallsPerDayForAgent(@PathVariable Long agentId, @RequestParam(defaultValue = "today") Date date) {
-        return callRecordServices.getCallsPerDayForAgent(agentId, date);
-    }
 
     @PostMapping("/save")
     public CallRecord saveCallRecord(
@@ -69,4 +63,6 @@ public class CallRecordController {
     public CallRecord getCallRecordByCallId(@PathVariable Integer callId) {
         return callRecordServices.getCallRecordByCallId(callId);
     }
+
+
 }

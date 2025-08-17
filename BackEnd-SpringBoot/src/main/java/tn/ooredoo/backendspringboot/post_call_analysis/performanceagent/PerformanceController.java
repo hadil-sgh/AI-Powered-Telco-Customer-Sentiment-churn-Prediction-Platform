@@ -14,10 +14,19 @@ public class PerformanceController {
 
     private final PerformanceService performanceService;
 
-    @PostMapping("/create")
-    public ResponseEntity<Performance> createPerformance(@RequestBody Performance performance) {
-        Performance saved = performanceService.savePerformance(performance);
-        return ResponseEntity.ok(saved);
+    @PostMapping("/save")
+    public ResponseEntity<Performance> savePerformanceWithPostCallResults(
+            @RequestParam String complaintType,
+            @RequestParam String feedback,
+            @RequestParam Integer score,
+            @RequestParam Integer callId,
+            @RequestParam String summary) {
+
+        Performance savedPerformance = performanceService.savePerformancePostCall(
+                complaintType, feedback, score, callId, summary
+        );
+
+        return ResponseEntity.ok(savedPerformance);
     }
 
     @GetMapping("/all")
