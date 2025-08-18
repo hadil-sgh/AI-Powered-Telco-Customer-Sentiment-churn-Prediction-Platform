@@ -5,6 +5,26 @@
   min-height: 100vh;
 }
 
+// Star rating styles
+.star-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+
+  i {
+    transition: all 0.2s ease;
+    cursor: default;
+    
+    &.text-warning {
+      color: #ffc107 !important;
+    }
+    
+    &.text-muted {
+      color: #dee2e6 !important;
+    }
+  }
+}
+
 // Card hover effects
 .card {
   transition: all 0.3s ease;

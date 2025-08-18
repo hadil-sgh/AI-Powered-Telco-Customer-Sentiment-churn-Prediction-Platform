@@ -111,13 +111,21 @@
           <div class="d-flex justify-content-between align-items-start">
             <div>
               <h6 class="card-title text-nowrap mb-1">Overall Performance</h6>
-              <h2
-                class="card-text mb-1"
-                [ngClass]="getPerformanceScoreClass(overallStats.averageScore)"
-              >
-                {{ overallStats.averageScore | number : "1.2-2" }} / 5
-              </h2>
-              <small class="text-muted">Average Score (1-5)</small>
+              <div class="d-flex align-items-center mb-2">
+                <div class="star-rating me-2">
+                  <i
+                    *ngFor="let star of getStarArray(overallStats.averageScore)"
+                    class="bx"
+                    [ngClass]="getStarClass(star)"
+                    [class]="getStarColor(star)"
+                    style="font-size: 1.2rem;"
+                  ></i>
+                </div>
+                <span class="text-muted small">
+                  ({{ overallStats.averageScore | number : "1.1-1" }})
+                </span>
+              </div>
+              <small class="text-muted">Star Rating (1-5)</small>
             </div>
             <div class="avatar flex-shrink-0">
               <span class="avatar-initial rounded bg-label-primary">
@@ -206,38 +214,6 @@
               +{{ overallStats.callsGrowth | number : "1.1-1" }}%
             </span>
             <small class="text-muted">vs last period</small>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Improvement Trend -->
-    <div class="col-md-3 col-sm-6 mb-3">
-      <div class="card h-100">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-start">
-            <div>
-              <h6 class="card-title text-nowrap mb-1">Performance Trend</h6>
-              <h2
-                class="card-text mb-1"
-                [ngClass]="getTrendClass(overallStats.performanceTrend)"
-              >
-                {{ overallStats.performanceTrend > 0 ? "+" : ""
-                }}{{ overallStats.performanceTrend | number : "1.1-1" }}%
-              </h2>
-              <small class="text-muted">Change from last period</small>
-            </div>
-            <div class="avatar flex-shrink-0">
-              <span
-                class="avatar-initial rounded"
-                [ngClass]="getTrendAvatarClass(overallStats.performanceTrend)"
-              >
-                <i
-                  class="bx"
-                  [ngClass]="getTrendIcon(overallStats.performanceTrend)"
-                ></i>
-              </span>
-            </div>
           </div>
         </div>
       </div>
@@ -711,85 +687,37 @@
           </div>
 
           <!-- Pagination -->
-          <nav
-            aria-label="Performance records pagination"
-            *ngIf="totalPages > 1"
-          >
-            <ul class="pagination justify-content-center">
-              <li class="page-item" [class.disabled]="currentPage === 1">
-                <a
-                  class="page-link"
-                  href="javascript:void(0);"
-                  (click)="goToPage(currentPage - 1)"
+          <div class="d-flex justify-content-between align-items-center mt-3" *ngIf="filteredPerformanceRecords.length > 0">
+            <div>
+              Showing {{ (currentPage - 1) * pageSize + 1 }} to
+              {{ Math.min(currentPage * pageSize, filteredPerformanceRecords.length) }} of
+              {{ filteredPerformanceRecords.length }} entries
+            </div>
+            <nav *ngIf="totalPages > 1">
+              <ul class="pagination pagination-sm mb-0">
+                <li class="page-item" [class.disabled]="currentPage === 1">
+                  <a class="page-link" (click)="goToPage(currentPage - 1)">Previous</a>
+                </li>
+                <li
+                  class="page-item"
+                  *ngFor="let page of getPageNumbers()"
+                  [class.active]="page === currentPage"
                 >
-                  <i class="bx bx-chevron-left"></i>
-                </a>
-              </li>
-              <li
-                class="page-item"
-                *ngFor="let page of getPageNumbers()"
-                [class.active]="page === currentPage"
-              >
-                <a
-                  class="page-link"
-                  href="javascript:void(0);"
-                  (click)="goToPage(page)"
-                  >{{ page }}</a
-                >
-              </li>
-              <li
-                class="page-item"
-                [class.disabled]="currentPage === totalPages"
-              >
-                <a
-                  class="page-link"
-                  href="javascript:void(0);"
-                  (click)="goToPage(currentPage + 1)"
-                >
-                  <i class="bx bx-chevron-right"></i>
-                </a>
-              </li>
-            </ul>
-          </nav>
+                  <a class="page-link" (click)="goToPage(page)">{{ page }}</a>
+                </li>
+                <li class="page-item" [class.disabled]="currentPage === totalPages">
+                  <a class="page-link" (click)="goToPage(currentPage + 1)">Next</a>
+                </li>
+              </ul>
+            </nav>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Coaching Tips Section -->
-  <div class="row">
-    <div class="col-12">
-      <div class="card">
-        <div class="card-header">
-          <h5 class="card-title mb-0">
-            <i class="bx bx-bulb me-2"></i>Performance Insights & Coaching Tips
-          </h5>
-        </div>
-        <div class="card-body">
-          <div class="row">
-            <div class="col-md-4 mb-3" *ngFor="let tip of coachingTips">
-              <div
-                class="alert"
-                [ngClass]="getTipAlertClass(tip.priority)"
-                role="alert"
-              >
-                <div class="d-flex align-items-start">
-                  <i
-                    class="bx me-2 mt-1"
-                    [ngClass]="getTipIcon(tip.category)"
-                  ></i>
-                  <div>
-                    <h6 class="alert-heading mb-1">{{ tip.title }}</h6>
-                    <p class="mb-0">{{ tip.description }}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+
 </div>
 
 <!-- Call Details Modal -->
@@ -875,20 +803,26 @@
             <div class="mb-2">
               <strong>Average Sentiment:</strong>
               <span
-                class="badge"
-                [ngClass]="{
-                  'bg-label-success':
-                    getCallSentimentScore(selectedCallRecord) >= 0.5,
-                  'bg-label-warning':
-                    getCallSentimentScore(selectedCallRecord) >= 0 &&
-                    getCallSentimentScore(selectedCallRecord) < 0.5,
-                  'bg-label-danger':
-                    getCallSentimentScore(selectedCallRecord) < 0
-                }"
+                class="fw-medium me-2"
+                [ngClass]="
+                  getSentimentScoreClass(
+                    getCallSentimentScore(selectedCallRecord)
+                  )
+                "
               >
                 {{
                   getCallSentimentScore(selectedCallRecord) | number : "1.2-2"
                 }}
+              </span>
+              <span
+                class="badge"
+                [ngClass]="
+                  getSentimentAvatarClass(
+                    getCallSentimentScore(selectedCallRecord)
+                  )
+                "
+              >
+                {{ getSentimentLabel(getCallSentimentScore(selectedCallRecord)) }}
               </span>
             </div>
           </div>
@@ -1089,25 +1023,6 @@
                 </span>
               </div>
             </div>
-            <div class="mb-3">
-              <strong>Performance Trend:</strong>
-              <div class="mt-1 d-flex align-items-center">
-                <i
-                  class="bx"
-                  [ngClass]="getTrendIcon(overallStats.performanceTrend)"
-                  [class.text-success]="overallStats.performanceTrend > 0"
-                  [class.text-danger]="overallStats.performanceTrend < 0"
-                  [class.text-muted]="overallStats.performanceTrend === 0"
-                ></i>
-                <span
-                  class="ms-2"
-                  [ngClass]="getTrendClass(overallStats.performanceTrend)"
-                >
-                  {{ overallStats.performanceTrend > 0 ? "+" : ""
-                  }}{{ overallStats.performanceTrend | number : "1.1-1" }}%
-                </span>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -1128,19 +1043,25 @@
             <div class="col-md-6 mb-3">
               <div class="card">
                 <div class="card-body text-center">
-                  <h5
-                    class="card-title"
-                    [ngClass]="
-                      getPerformanceScoreClass(selectedPerformanceRecord.score)
-                    "
-                  >
-                    {{ selectedPerformanceRecord.score }}%
-                  </h5>
+                  <div class="mb-2">
+                    <div class="star-rating mb-2">
+                      <i
+                        *ngFor="let star of getStarArray(selectedPerformanceRecord.score)"
+                        class="bx"
+                        [ngClass]="getStarClass(star)"
+                        [class]="getStarColor(star)"
+                        style="font-size: 1.5rem;"
+                      ></i>
+                    </div>
+                    <small class="text-muted">
+                      {{ selectedPerformanceRecord.score | number : "1.1-1" }} / 5
+                    </small>
+                  </div>
                   <p class="card-text text-muted">Overall Performance</p>
                   <div class="progress" style="height: 8px">
                     <div
                       class="progress-bar"
-                      [style.width.%]="selectedPerformanceRecord.score"
+                      [style.width.%]="((selectedPerformanceRecord.score || 0) / 5) * 100"
                       [ngClass]="
                         getPerformanceProgressClass(
                           selectedPerformanceRecord.score
@@ -1158,34 +1079,36 @@
                     class="card-title"
                     [ngClass]="
                       getSentimentScoreClass(
-                        getCallSentimentScore(
-                          selectedPerformanceRecord.callTranscripts
-                        )
+                        getSentimentScoreForPerformance(selectedPerformanceRecord)
                       )
                     "
                   >
                     {{
-                      getCallSentimentScore(
-                        selectedPerformanceRecord.callTranscripts
-                      ) | number : "1.2-2"
+                      getSentimentScoreForPerformance(selectedPerformanceRecord) | number : "1.2-2"
                     }}
                   </h5>
+                  <span
+                    class="badge mb-2"
+                    [ngClass]="
+                      getSentimentAvatarClass(
+                        getSentimentScoreForPerformance(selectedPerformanceRecord)
+                      )
+                    "
+                  >
+                    {{ getSentimentLabel(getSentimentScoreForPerformance(selectedPerformanceRecord)) }}
+                  </span>
                   <p class="card-text text-muted">Customer Sentiment</p>
                   <div class="progress" style="height: 8px">
                     <div
                       class="progress-bar"
                       [style.width.%]="
                         getSentimentProgressWidth(
-                          getCallSentimentScore(
-                            selectedPerformanceRecord.callTranscripts
-                          )
+                          getSentimentScoreForPerformance(selectedPerformanceRecord)
                         )
                       "
                       [ngClass]="
                         getSentimentProgressClass(
-                          getCallSentimentScore(
-                            selectedPerformanceRecord.callTranscripts
-                          )
+                          getSentimentScoreForPerformance(selectedPerformanceRecord)
                         )
                       "
                     ></div>

@@ -25,7 +25,6 @@ interface OverallStats {
   averageSentiment: number;
   totalCalls: number;
   callsGrowth: number;
-  performanceTrend: number;
 }
 
 interface ScoreDistribution {
@@ -91,7 +90,6 @@ export class AgentPerformanceComponent
     averageSentiment: 0,
     totalCalls: 0,
     callsGrowth: 0,
-    performanceTrend: 0,
   };
 
   scoreDistribution: ScoreDistribution = {
@@ -130,6 +128,9 @@ export class AgentPerformanceComponent
   sentimentPoints: SentimentPoint[] = [];
   userEmail: string = '';
   private subscription = new Subscription();
+
+  // Math reference for template
+  Math = Math;
 
   constructor(
     private dailyStatsService: DailyStatsService,
@@ -318,6 +319,11 @@ export class AgentPerformanceComponent
   getCallSentimentScore(callRecord: CallRecord | undefined): number {
     if (!callRecord) return 0;
 
+    // First check if the call has a direct sentimentPoint property
+    if (callRecord.sentimentPoint?.sentimentScore !== undefined) {
+      return callRecord.sentimentPoint.sentimentScore;
+    }
+
     const enhancedRecord = callRecord as EnhancedCallRecord;
     if (enhancedRecord.averageSentimentScore !== undefined) {
       return enhancedRecord.averageSentimentScore;
@@ -397,7 +403,6 @@ export class AgentPerformanceComponent
 
     // Calculate growth and trend (using daily stats if available)
     let callsGrowth = 0;
-    let performanceTrend = 0;
 
     if (this.dailyStats.length > 1) {
       // Calculate growth (compare first vs last)
@@ -407,15 +412,6 @@ export class AgentPerformanceComponent
       if (firstDayCalls > 0) {
         callsGrowth = ((lastDayCalls - firstDayCalls) / firstDayCalls) * 100;
       }
-
-      // Calculate performance trend
-      const firstDayScore = this.dailyStats[0].totalScore || 0;
-      const lastDayScore =
-        this.dailyStats[this.dailyStats.length - 1].totalScore || 0;
-      if (firstDayScore > 0) {
-        performanceTrend =
-          ((lastDayScore - firstDayScore) / firstDayScore) * 100;
-      }
     }
 
     this.overallStats = {
@@ -423,7 +419,6 @@ export class AgentPerformanceComponent
       averageSentiment: averageSentiment,
       totalCalls: totalCalls,
       callsGrowth: callsGrowth,
-      performanceTrend: performanceTrend,
     };
 
     console.log('Calculated Overall Stats:', this.overallStats);
@@ -603,7 +598,7 @@ export class AgentPerformanceComponent
           plugins: {
             title: {
               display: true,
-              text: 'Performance Trend Over Time',
+              text: 'Performance Over Time',
             },
             legend: {
               position: 'top',
@@ -988,16 +983,15 @@ export class AgentPerformanceComponent
   }
 
   getPageNumbers(): number[] {
-    const pages: number[] = [];
-    const maxPages = 5;
-    let start = Math.max(1, this.currentPage - Math.floor(maxPages / 2));
-    let end = Math.min(this.totalPages, start + maxPages - 1);
+    const pages = [];
+    const maxPagesToShow = 5;
+    const startPage = Math.max(
+      1,
+      this.currentPage - Math.floor(maxPagesToShow / 2)
+    );
+    const endPage = Math.min(this.totalPages, startPage + maxPagesToShow - 1);
 
-    if (end - start < maxPages - 1) {
-      start = Math.max(1, end - maxPages + 1);
-    }
-
-    for (let i = start; i <= end; i++) {
+    for (let i = startPage; i <= endPage; i++) {
       pages.push(i);
     }
     return pages;
@@ -1194,19 +1188,35 @@ export class AgentPerformanceComponent
     return 'Negative';
   }
 
-  getTrendClass(trend: number | undefined): string {
-    if (!trend) return 'text-muted';
-    return trend > 0 ? 'text-success' : 'text-danger';
+  // Star rating methods for performance scores
+  getStarArray(score: number | undefined): number[] {
+    if (score === undefined || score === null) return [0, 0, 0, 0, 0];
+    // Convert score from 0-5 scale to star array
+    const fullStars = Math.floor(score);
+    const hasHalfStar = score % 1 >= 0.5;
+    const stars = [];
+    
+    for (let i = 0; i < 5; i++) {
+      if (i < fullStars) {
+        stars.push(1); // full star
+      } else if (i === fullStars && hasHalfStar) {
+        stars.push(0.5); // half star
+      } else {
+        stars.push(0); // empty star
+      }
+    }
+    return stars;
   }
 
-  getTrendAvatarClass(trend: number | undefined): string {
-    if (!trend) return 'bg-label-secondary';
-    return trend > 0 ? 'bg-label-success' : 'bg-label-danger';
+  getStarClass(starValue: number): string {
+    if (starValue === 1) return 'bx-star'; // full star
+    if (starValue === 0.5) return 'bx-star-half'; // half star
+    return 'bx-star'; // empty star (will be styled differently)
   }
 
-  getTrendIcon(trend: number | undefined): string {
-    if (!trend) return 'bx-minus';
-    return trend > 0 ? 'bx-trending-up' : 'bx-trending-down';
+  getStarColor(starValue: number): string {
+    if (starValue >= 0.5) return 'text-warning'; // filled/half stars are yellow
+    return 'text-muted'; // empty stars are muted
   }
 
   getTipAlertClass(priority: string): string {
