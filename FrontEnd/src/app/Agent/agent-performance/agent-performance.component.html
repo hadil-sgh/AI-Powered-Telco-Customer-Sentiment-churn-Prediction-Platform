@@ -561,6 +561,16 @@
                             | number : "1.2-2"
                         }}
                       </span>
+                      <span
+                        class="badge me-2"
+                        [ngClass]="
+                          getSentimentAvatarClass(
+                            getSentimentScoreForPerformance(record)
+                          )
+                        "
+                      >
+                        {{ getSentimentLabel(getSentimentScoreForPerformance(record)) }}
+                      </span>
                       <i
                         class="bx"
                         [ngClass]="
@@ -634,26 +644,38 @@
                     </div>
                     <div class="col-6">
                       <small class="text-muted">Sentiment</small>
-                      <div
-                        class="fw-medium d-flex align-items-center"
-                        [ngClass]="
-                          getSentimentScoreClass(
-                            getSentimentScoreForPerformance(record)
-                          )
-                        "
-                      >
-                        {{
-                          getSentimentScoreForPerformance(record)
-                            | number : "1.2-2"
-                        }}
-                        <i
-                          class="bx ms-1"
+                      <div class="d-flex flex-column">
+                        <div
+                          class="fw-medium"
                           [ngClass]="
-                            getSentimentIcon(
+                            getSentimentScoreClass(
                               getSentimentScoreForPerformance(record)
                             )
                           "
-                        ></i>
+                        >
+                          {{
+                            getSentimentScoreForPerformance(record)
+                              | number : "1.2-2"
+                          }}
+                          <i
+                            class="bx ms-1"
+                            [ngClass]="
+                              getSentimentIcon(
+                                getSentimentScoreForPerformance(record)
+                              )
+                            "
+                          ></i>
+                        </div>
+                        <span
+                          class="badge badge-sm mt-1"
+                          [ngClass]="
+                            getSentimentAvatarClass(
+                              getSentimentScoreForPerformance(record)
+                            )
+                          "
+                        >
+                          {{ getSentimentLabel(getSentimentScoreForPerformance(record)) }}
+                        </span>
                       </div>
                     </div>
                   </div>

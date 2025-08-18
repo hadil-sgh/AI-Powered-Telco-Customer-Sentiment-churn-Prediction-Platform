@@ -9,7 +9,9 @@ import {
 import { AudioStreamService } from '../../services/audio-stream.service';
 import { CallRecordService } from '../../services/call-record.service';
 import { TokenService } from '../../services/token.service';
+import { SentimentPointService } from '../../services/sentiment-point.service';
 import { CallRecord } from '../../models/call-record';
+import { SentimentPoint } from '../../models/SentimentPoint';
 import { AudioAnalysisResponse } from '../../models/audio-analysis-response';
 import Swal from 'sweetalert2';
 
@@ -42,6 +44,7 @@ export class AllCallsComponent implements OnInit, OnDestroy {
   filteredCalls: CallRecord[] = [];
   paginatedCalls: CallRecord[] = [];
   selectedCall: CallRecord | null = null;
+  sentimentPoints: SentimentPoint[] = [];
 
   // UI state
   viewMode: 'table' | 'cards' = 'table';
@@ -69,15 +72,33 @@ export class AllCallsComponent implements OnInit, OnDestroy {
   constructor(
     private audioStreamService: AudioStreamService,
     private callRecordService: CallRecordService,
-    private tokenService: TokenService
+    private tokenService: TokenService,
+    private sentimentPointService: SentimentPointService
   ) {}
 
   ngOnInit(): void {
     this.loadCalls();
+    this.loadSentimentPoints();
   }
 
   ngOnDestroy(): void {
     // Cleanup subscriptions if any
+  }
+
+  loadSentimentPoints(): void {
+    const userEmail = this.tokenService.getEmailFromToken();
+    if (userEmail) {
+      this.sentimentPointService.getSentimentPointsByUser(userEmail).subscribe({
+        next: (sentimentPoints) => {
+          this.sentimentPoints = sentimentPoints;
+          console.log('Loaded sentiment points:', this.sentimentPoints);
+        },
+        error: (error) => {
+          console.error('Error loading sentiment points:', error);
+          this.sentimentPoints = [];
+        },
+      });
+    }
   }
 
   loadCalls(): void {
@@ -85,6 +106,7 @@ export class AllCallsComponent implements OnInit, OnDestroy {
     if (userEmail) {
       this.callRecordService.getCallRecordBySession(userEmail).subscribe({
         next: (calls) => {
+          console.log('Raw calls data:', calls);
           this.calls = calls.map((call) => ({
             ...call,
             callDuration:
@@ -92,6 +114,12 @@ export class AllCallsComponent implements OnInit, OnDestroy {
                 ? { seconds: call.callDuration }
                 : call.callDuration,
           }));
+          console.log('Processed calls with sentiment:', this.calls.map(call => ({
+            id: call.id,
+            customer: call.customer?.firstName + ' ' + call.customer?.lastName,
+            sentimentPoint: call.sentimentPoint,
+            sentimentScore: call.sentimentPoint?.sentimentScore
+          })));
           this.applyFilters();
           this.calculateStats();
         },
@@ -382,24 +410,48 @@ export class AllCallsComponent implements OnInit, OnDestroy {
   }
 
   getSentimentScore(call: CallRecord): number {
-    if (!call.callTranscripts || call.callTranscripts.length === 0) return 0;
+    // First check if the call has a direct sentimentPoint property
+    if (call.sentimentPoint?.sentimentScore !== undefined) {
+      console.log(`Found sentiment score for call ${call.id}:`, call.sentimentPoint.sentimentScore);
+      return call.sentimentPoint.sentimentScore;
+    }
 
-    const validSentiments = call.callTranscripts
-      .filter((transcript) => transcript.sentiment?.score !== undefined)
-      .map((transcript) => transcript.sentiment!.score!);
+    // Fallback: try to get sentiment from associated sentiment point using our service
+    const sentimentPoint = this.sentimentPoints.find(
+      (sp) => sp.call?.id === call.id
+    );
 
-    if (validSentiments.length === 0) return 0;
+    if (sentimentPoint && sentimentPoint.sentimentScore !== undefined) {
+      console.log(`Found sentiment score from service for call ${call.id}:`, sentimentPoint.sentimentScore);
+      return sentimentPoint.sentimentScore;
+    }
 
-    const avgSentiment =
-      validSentiments.reduce((sum, score) => sum + score, 0) /
-      validSentiments.length;
-    return avgSentiment;
+    // Fallback: try to get sentiment from call transcripts
+    if (call.callTranscripts && call.callTranscripts.length > 0) {
+      const validSentiments = call.callTranscripts
+        .filter((transcript) => transcript.sentiment?.score !== undefined)
+        .map((transcript) => transcript.sentiment!.score!);
+
+      if (validSentiments.length > 0) {
+        const avgSentiment =
+          validSentiments.reduce((sum, score) => sum + score, 0) /
+          validSentiments.length;
+        console.log(`Calculated sentiment from transcripts for call ${call.id}:`, avgSentiment);
+        return avgSentiment;
+      }
+    }
+
+    console.log(`No sentiment data found for call ${call.id}`);
+    // Default fallback
+    return 0;
   }
 
   getSentimentLabel(call: CallRecord): string {
     const score = this.getSentimentScore(call);
-    if (score > 0.5) return 'Positive';
-    if (score > 0) return 'Neutral';
+    if (score >= 0.85) return 'Excellent';
+    if (score >= 0.7) return 'Positive';
+    if (score >= 0.5) return 'Good';
+    if (score >= 0.3) return 'Average';
     return 'Negative';
   }
 

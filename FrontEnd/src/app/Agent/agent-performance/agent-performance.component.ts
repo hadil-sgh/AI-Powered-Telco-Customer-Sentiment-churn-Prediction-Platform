@@ -16,10 +16,9 @@ import { forkJoin, Subscription } from 'rxjs';
 import { DailyStats } from 'src/app/models/daily-stats';
 import { SentimentPoint } from 'src/app/models/SentimentPoint';
 import { Performance } from '../../models/performance';
-import { PerformancesService} from 'src/app/services/perfomances.service';
+import { PerformancesService } from 'src/app/services/perfomances.service';
 import { DailyStatsService } from 'src/app/services/daily-stats.service';
 import { SentimentPointService } from 'src/app/services/sentiment-point.service';
-
 
 interface OverallStats {
   averageScore: number;
@@ -197,8 +196,12 @@ export class AgentPerformanceComponent
     // Load all data in parallel
     const dataSubscription = forkJoin({
       dailyStats: this.dailyStatsService.getDailyStatsByAgent(this.userEmail),
-      performances: this.performancesService.getAllPerformancesByAgent(this.userEmail),
-      sentimentPoints: this.sentimentPointService.getSentimentPointsByUser(this.userEmail)
+      performances: this.performancesService.getAllPerformancesByAgent(
+        this.userEmail
+      ),
+      sentimentPoints: this.sentimentPointService.getSentimentPointsByUser(
+        this.userEmail
+      ),
     }).subscribe({
       next: (data) => {
         console.log('=== SERVICE RESULTS ===');
@@ -208,23 +211,29 @@ export class AgentPerformanceComponent
         console.log('Performance Records sample:', data.performances?.[0]);
         console.log('Sentiment Points:', data.sentimentPoints);
         console.log('Sentiment Points sample:', data.sentimentPoints?.[0]);
-        
+
         // Debug: Check data relationships
         if (data.performances?.[0] && data.sentimentPoints?.[0]) {
-          console.log('First performance call ID:', data.performances[0].callTranscripts?.id);
-          console.log('First sentiment point call ID:', data.sentimentPoints[0].call?.id);
+          console.log(
+            'First performance call ID:',
+            data.performances[0].callTranscripts?.id
+          );
+          console.log(
+            'First sentiment point call ID:',
+            data.sentimentPoints[0].call?.id
+          );
         }
         console.log('=======================');
 
         this.dailyStats = data.dailyStats;
         this.performanceRecords = data.performances;
         this.sentimentPoints = data.sentimentPoints;
-        
+
         // Process and calculate statistics
         this.calculateStatistics();
         this.filterPerformanceRecords();
         this.chartsLoading = false;
-        
+
         // Initialize charts with real data only once
         if (!this.performanceChartInstance && !this.sentimentChartInstance) {
           setTimeout(() => {
@@ -241,29 +250,69 @@ export class AgentPerformanceComponent
         this.chartsLoading = false;
         // Keep data arrays empty - no fallback data
         // The UI should handle empty state gracefully
-      }
+      },
     });
 
     this.subscription.add(dataSubscription);
   }
 
   getSentimentScoreForPerformance(performanceRecord: Performance): number {
-    if (!performanceRecord.callTranscripts?.id) {
-      console.log('No call transcript ID found for performance record:', performanceRecord);
+    if (!performanceRecord) {
+      console.log('No performance record provided');
       return 0;
     }
-    
-    // Find the sentiment point that matches this call
-    const sentimentPoint = this.sentimentPoints.find(sp => 
-      sp.call?.id === performanceRecord.callTranscripts?.id
+
+    // First try to find sentiment point by call ID from performance record
+    if (performanceRecord.callTranscripts?.id) {
+      const sentimentPoint = this.sentimentPoints.find(
+        (sp) => sp.call?.id === performanceRecord.callTranscripts?.id
+      );
+
+      if (sentimentPoint?.sentimentScore !== undefined) {
+        console.log(
+          `Found sentiment point for call ID ${performanceRecord.callTranscripts.id}:`,
+          sentimentPoint.sentimentScore
+        );
+        return sentimentPoint.sentimentScore;
+      }
+    }
+
+    // Fallback: try to find by performance record ID if available
+    const sentimentPointByPerformance = this.sentimentPoints.find(
+      (sp) => sp.id === performanceRecord.id
     );
-    
-    console.log(`Looking for sentiment point for call ID ${performanceRecord.callTranscripts.id}:`, sentimentPoint);
-    
-    const score = sentimentPoint?.sentimentScore || 0;
-    console.log(`Sentiment score for performance record ${performanceRecord.id}:`, score);
-    
-    return score;
+
+    if (sentimentPointByPerformance?.sentimentScore !== undefined) {
+      console.log(
+        `Found sentiment point by performance ID ${performanceRecord.id}:`,
+        sentimentPointByPerformance.sentimentScore
+      );
+      return sentimentPointByPerformance.sentimentScore;
+    }
+
+    // Fallback: calculate from call transcripts if available
+    if (performanceRecord.callTranscripts?.callTranscripts) {
+      const callTranscripts = performanceRecord.callTranscripts.callTranscripts;
+      const validSentiments = callTranscripts
+        .filter((transcript) => transcript.sentiment?.score !== undefined)
+        .map((transcript) => transcript.sentiment!.score!);
+
+      if (validSentiments.length > 0) {
+        const avgSentiment =
+          validSentiments.reduce((sum, score) => sum + score, 0) /
+          validSentiments.length;
+        console.log(
+          `Calculated sentiment from transcripts for performance ${performanceRecord.id}:`,
+          avgSentiment
+        );
+        return avgSentiment;
+      }
+    }
+
+    console.log(
+      `No sentiment data found for performance record ${performanceRecord.id}`
+    );
+    return 0;
   }
 
   getCallSentimentScore(callRecord: CallRecord | undefined): number {
@@ -275,10 +324,10 @@ export class AgentPerformanceComponent
     }
 
     // Find sentiment from sentiment points
-    const sentimentPoint = this.sentimentPoints.find(sp => 
-      sp.call?.id === callRecord.id
+    const sentimentPoint = this.sentimentPoints.find(
+      (sp) => sp.call?.id === callRecord.id
     );
-    
+
     if (sentimentPoint?.sentimentScore !== undefined) {
       return sentimentPoint.sentimentScore;
     }
@@ -317,9 +366,12 @@ export class AgentPerformanceComponent
 
   private calculateStatistics(): void {
     console.log('=== CALCULATING STATISTICS ===');
-    console.log('Performance Records for calculation:', this.filteredPerformanceRecords);
+    console.log(
+      'Performance Records for calculation:',
+      this.filteredPerformanceRecords
+    );
     console.log('Sentiment Points for calculation:', this.sentimentPoints);
-    
+
     // Calculate Overall Performance Score (average from performance records)
     let averageScore = 0;
     if (this.filteredPerformanceRecords.length > 0) {
@@ -346,20 +398,23 @@ export class AgentPerformanceComponent
     // Calculate growth and trend (using daily stats if available)
     let callsGrowth = 0;
     let performanceTrend = 0;
-    
+
     if (this.dailyStats.length > 1) {
       // Calculate growth (compare first vs last)
       const firstDayCalls = this.dailyStats[0].callsCompleted || 0;
-      const lastDayCalls = this.dailyStats[this.dailyStats.length - 1].callsCompleted || 0;
+      const lastDayCalls =
+        this.dailyStats[this.dailyStats.length - 1].callsCompleted || 0;
       if (firstDayCalls > 0) {
         callsGrowth = ((lastDayCalls - firstDayCalls) / firstDayCalls) * 100;
       }
-      
+
       // Calculate performance trend
       const firstDayScore = this.dailyStats[0].totalScore || 0;
-      const lastDayScore = this.dailyStats[this.dailyStats.length - 1].totalScore || 0;
+      const lastDayScore =
+        this.dailyStats[this.dailyStats.length - 1].totalScore || 0;
       if (firstDayScore > 0) {
-        performanceTrend = ((lastDayScore - firstDayScore) / firstDayScore) * 100;
+        performanceTrend =
+          ((lastDayScore - firstDayScore) / firstDayScore) * 100;
       }
     }
 
@@ -443,7 +498,7 @@ export class AgentPerformanceComponent
 
   private initializeCharts(): void {
     console.log('Initializing charts...');
-    
+
     // Prevent multiple initializations
     if (this.performanceChartInstance || this.sentimentChartInstance) {
       console.log('Charts already initialized, skipping...');
@@ -532,7 +587,9 @@ export class AgentPerformanceComponent
             },
             {
               label: 'Average Score',
-              data: Array(last30Days.length).fill(this.overallStats.averageScore),
+              data: Array(last30Days.length).fill(
+                this.overallStats.averageScore
+              ),
               borderColor: 'rgb(255, 99, 132)',
               backgroundColor: 'transparent',
               borderDash: [5, 5],
@@ -698,24 +755,27 @@ export class AgentPerformanceComponent
   private generateLast30DaysData(): any[] {
     const data: any[] = [];
     console.log('Generating chart data from dailyStats:', this.dailyStats);
-    
+
     if (this.dailyStats.length > 0) {
       // Use real daily stats data
-      this.dailyStats.forEach(stat => {
+      this.dailyStats.forEach((stat) => {
         if (stat.date) {
           const date = new Date(stat.date);
           // Fix: Use totalScore directly as it should already be in 1-5 scale
           // If totalScore represents sum of all scores, we need to average it
           const performance = stat.totalScore || 0; // Assuming totalScore is already averaged
           const sentiment = stat.averageSentiment || 0;
-          
-          console.log(`Date: ${date.toDateString()}, Performance: ${performance}, Sentiment: ${sentiment}`);
-          
+
+          console.log(
+            `Date: ${date.toDateString()}, Performance: ${performance}, Sentiment: ${sentiment}`
+          );
+
           // Convert sentiment score to percentages (assuming sentiment is 0-1 scale)
-          const positive = sentiment >= 0.6 ? 60 + (sentiment - 0.6) * 100 : sentiment * 100;
+          const positive =
+            sentiment >= 0.6 ? 60 + (sentiment - 0.6) * 100 : sentiment * 100;
           const negative = sentiment <= 0.4 ? (0.4 - sentiment) * 50 : 0;
           const neutral = 100 - positive - negative;
-          
+
           data.push({
             date: date.toLocaleDateString('en-US', {
               month: 'short',
@@ -752,9 +812,9 @@ export class AgentPerformanceComponent
       this.performanceChartInstance.data.datasets[0].data = newData.map(
         (d) => d.performance
       );
-      this.performanceChartInstance.data.datasets[1].data = Array(newData.length).fill(
-        this.overallStats.averageScore
-      );
+      this.performanceChartInstance.data.datasets[1].data = Array(
+        newData.length
+      ).fill(this.overallStats.averageScore);
       this.performanceChartInstance.update();
     }
 
@@ -1084,37 +1144,54 @@ export class AgentPerformanceComponent
   }
 
   getSentimentScoreClass(sentiment: number | undefined): string {
-    if (sentiment === undefined) return 'text-muted';
-    if (sentiment >= 0.5) return 'text-success';
-    if (sentiment >= 0) return 'text-warning';
-    return 'text-danger';
+    if (sentiment === undefined || sentiment === 0) return 'text-muted';
+    if (sentiment >= 0.85) return 'text-success fw-bold'; // Excellent
+    if (sentiment >= 0.7) return 'text-success'; // Positive
+    if (sentiment >= 0.5) return 'text-info'; // Good
+    if (sentiment >= 0.3) return 'text-warning'; // Average
+    return 'text-danger'; // Negative
   }
 
   getSentimentAvatarClass(sentiment: number | undefined): string {
-    if (sentiment === undefined) return 'bg-label-secondary';
-    if (sentiment >= 0.5) return 'bg-label-success';
-    if (sentiment >= 0) return 'bg-label-warning';
-    return 'bg-label-danger';
+    if (sentiment === undefined || sentiment === 0) return 'bg-label-secondary';
+    if (sentiment >= 0.85) return 'bg-label-success'; // Excellent
+    if (sentiment >= 0.7) return 'bg-success'; // Positive
+    if (sentiment >= 0.5) return 'bg-label-info'; // Good
+    if (sentiment >= 0.3) return 'bg-label-warning'; // Average
+    return 'bg-label-danger'; // Negative
   }
 
   getSentimentProgressClass(sentiment: number | undefined): string {
-    if (sentiment === undefined) return 'bg-secondary';
-    if (sentiment >= 0.5) return 'bg-success';
-    if (sentiment >= 0) return 'bg-warning';
-    return 'bg-danger';
+    if (sentiment === undefined || sentiment === 0) return 'bg-secondary';
+    if (sentiment >= 0.85) return 'bg-success'; // Excellent
+    if (sentiment >= 0.7) return 'bg-primary'; // Positive
+    if (sentiment >= 0.5) return 'bg-info'; // Good
+    if (sentiment >= 0.3) return 'bg-warning'; // Average
+    return 'bg-danger'; // Negative
   }
 
   getSentimentProgressWidth(sentiment: number | undefined): number {
-    if (sentiment === undefined) return 0;
-    // Convert sentiment score (-1 to 1) to percentage (0 to 100)
-    return ((sentiment + 1) / 2) * 100;
+    if (sentiment === undefined || sentiment === 0) return 0;
+    // Convert sentiment score (0 to 1) to percentage (0 to 100)
+    return Math.min(sentiment * 100, 100);
   }
 
   getSentimentIcon(sentiment: number | undefined): string {
-    if (sentiment === undefined) return 'bx-meh';
-    if (sentiment >= 0.5) return 'bx-happy';
-    if (sentiment >= 0) return 'bx-meh';
-    return 'bx-sad';
+    if (sentiment === undefined || sentiment === 0) return 'bx-meh';
+    if (sentiment >= 0.85) return 'bx-smile'; // Excellent
+    if (sentiment >= 0.7) return 'bx-happy'; // Positive
+    if (sentiment >= 0.5) return 'bx-meh-alt'; // Good
+    if (sentiment >= 0.3) return 'bx-meh'; // Average
+    return 'bx-sad'; // Negative
+  }
+
+  getSentimentLabel(sentiment: number | undefined): string {
+    if (sentiment === undefined || sentiment === 0) return 'N/A';
+    if (sentiment >= 0.85) return 'Excellent';
+    if (sentiment >= 0.7) return 'Positive';
+    if (sentiment >= 0.5) return 'Good';
+    if (sentiment >= 0.3) return 'Average';
+    return 'Negative';
   }
 
   getTrendClass(trend: number | undefined): string {

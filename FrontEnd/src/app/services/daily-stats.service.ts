@@ -4,12 +4,12 @@ import { Observable } from 'rxjs';
 import { DailyStats } from '../models/daily-stats';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class DailyStatsService {
   private baseUrl = 'http://localhost:8088/api/v1/dailystats';
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
   getDailyStatsByAgent(userEmail: string): Observable<DailyStats[]> {
     const url = `${this.baseUrl}/getDailyStatusByAgent?userEmail=${userEmail}`;

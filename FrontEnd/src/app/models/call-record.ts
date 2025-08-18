@@ -3,6 +3,8 @@
 import { AudioAnalysisResponse } from './audio-analysis-response';
 import { Customer } from './customer';
 import { User } from './user';
+import { SentimentPoint } from './SentimentPoint';
+
 export interface CallRecord {
   agent?: User;
   callDateTime?: string;
@@ -21,4 +23,5 @@ export interface CallRecord {
   callTranscripts?: Array<AudioAnalysisResponse>;
   customer?: Customer;
   id?: number;
+  sentimentPoint?: SentimentPoint;
 }
