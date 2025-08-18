@@ -6,6 +6,7 @@ import java.util.Optional;
 public interface PerformanceService {
     Performance savePerformancePostCall(String complaintType,String feedback,Integer score, Integer callId , String summary);
     List<Performance> getAllPerformances();
+    List<Performance> getAllPerformancesByAgentEmail(String email);
     Optional<Performance> getPerformanceById(Long id);
     Performance updatePerformance( Performance performance);
     void deletePerformance(Long id);

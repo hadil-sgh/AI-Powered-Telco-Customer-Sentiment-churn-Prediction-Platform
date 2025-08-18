@@ -18,33 +18,39 @@ public class AudioAnalysisResponse implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+
     private String timestamp;
     private String speaker;
 
     @Column(length = 10000)
     private String text;
 
-
-    @OneToOne(cascade = CascadeType.ALL)
+    // CASCADE ALL - when AudioAnalysisResponse is deleted, its related entities are deleted
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "sentiment_id")
     private TranscriptSentiment sentiment;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "voicefeatures_id")
     private VoiceFeatures voiceFeatures;
-    @OneToOne(cascade = CascadeType.ALL)
+
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "emotion_analysis_id")
     private EmotionAnalysis emotionAnalysis;
+
+    // NO cascade here - this is the child side of the relationship
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "call_record_id")
     @JsonBackReference
     private CallRecord callRecord;
 
-    // Additional fields for real-time processing
     private String sessionId;
     private String analysisType;
-
-
-
-
-
 }
+
+
+
+
+
+
+

@@ -117,7 +117,7 @@
               >
                 {{ overallStats.averageScore | number : "1.2-2" }} / 5
               </h2>
-              <small class="text-muted">Average Score (0-5)</small>
+              <small class="text-muted">Average Score (1-5)</small>
             </div>
             <div class="avatar flex-shrink-0">
               <span class="avatar-initial rounded bg-label-primary">
@@ -128,7 +128,7 @@
           <div class="progress mt-3" style="height: 6px">
             <div
               class="progress-bar"
-              [style.width.%]="(overallStats.averageScore / 5) * 100"
+              [style.width.%]="((overallStats.averageScore - 1) / 4) * 100"
               [ngClass]="getPerformanceProgressClass(overallStats.averageScore)"
             ></div>
           </div>
@@ -536,7 +536,7 @@
                         class="fw-medium me-2"
                         [ngClass]="getPerformanceScoreClass(record.score)"
                       >
-                        {{ record.score }}%
+                        {{ record.score }}/5
                       </span>
                       <span
                         class="badge"
@@ -552,12 +552,12 @@
                         class="fw-medium me-2"
                         [ngClass]="
                           getSentimentScoreClass(
-                            getCallSentimentScore(record.callTranscripts)
+                            getSentimentScoreForPerformance(record)
                           )
                         "
                       >
                         {{
-                          getCallSentimentScore(record.callTranscripts)
+                          getSentimentScoreForPerformance(record)
                             | number : "1.2-2"
                         }}
                       </span>
@@ -565,7 +565,7 @@
                         class="bx"
                         [ngClass]="
                           getSentimentIcon(
-                            getCallSentimentScore(record.callTranscripts)
+                            getSentimentScoreForPerformance(record)
                           )
                         "
                       ></i>
@@ -629,7 +629,7 @@
                         class="fw-medium"
                         [ngClass]="getPerformanceScoreClass(record.score)"
                       >
-                        {{ record.score }}%
+                        {{ record.score }}/5
                       </div>
                     </div>
                     <div class="col-6">
@@ -638,19 +638,19 @@
                         class="fw-medium d-flex align-items-center"
                         [ngClass]="
                           getSentimentScoreClass(
-                            getCallSentimentScore(record.callTranscripts)
+                            getSentimentScoreForPerformance(record)
                           )
                         "
                       >
                         {{
-                          getCallSentimentScore(record.callTranscripts)
+                          getSentimentScoreForPerformance(record)
                             | number : "1.2-2"
                         }}
                         <i
                           class="bx ms-1"
                           [ngClass]="
                             getSentimentIcon(
-                              getCallSentimentScore(record.callTranscripts)
+                              getSentimentScoreForPerformance(record)
                             )
                           "
                         ></i>

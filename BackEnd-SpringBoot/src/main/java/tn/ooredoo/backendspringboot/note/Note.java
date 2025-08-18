@@ -29,7 +29,9 @@ public class Note implements Serializable {
     private String description;
 
     @OneToOne
-    private CallRecord call;
+    @JoinColumn(name = "call_record_id")
+    private CallRecord call;;
+
 
 
 }

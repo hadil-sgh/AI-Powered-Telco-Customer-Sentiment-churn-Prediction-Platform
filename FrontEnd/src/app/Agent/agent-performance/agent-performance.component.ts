@@ -6,9 +6,20 @@ import {
   ElementRef,
   AfterViewInit,
 } from '@angular/core';
-import { Performance } from '../../models/performance';
+
 import { CallRecord } from '../../models/call-record';
 import { AudioAnalysisResponse } from '../../models/audio-analysis-response';
+
+import { TokenService } from '../../services/token.service';
+import { forkJoin, Subscription } from 'rxjs';
+
+import { DailyStats } from 'src/app/models/daily-stats';
+import { SentimentPoint } from 'src/app/models/SentimentPoint';
+import { Performance } from '../../models/performance';
+import { PerformancesService} from 'src/app/services/perfomances.service';
+import { DailyStatsService } from 'src/app/services/daily-stats.service';
+import { SentimentPointService } from 'src/app/services/sentiment-point.service';
+
 
 interface OverallStats {
   averageScore: number;
@@ -115,14 +126,28 @@ export class AgentPerformanceComponent
   selectedCallRecord: EnhancedCallRecord | null = null;
   selectedPerformanceRecord: Performance | null = null;
 
-  constructor() {}
+  // Real data properties
+  dailyStats: DailyStats[] = [];
+  sentimentPoints: SentimentPoint[] = [];
+  userEmail: string = '';
+  private subscription = new Subscription();
+
+  constructor(
+    private dailyStatsService: DailyStatsService,
+    private performancesService: PerformancesService,
+    private sentimentPointService: SentimentPointService,
+    private tokenService: TokenService
+  ) {}
 
   ngOnInit(): void {
     this.initializeDateRange();
-    this.loadMockData();
-    this.calculateStatistics();
+    this.userEmail = this.tokenService.getEmailFromToken();
+    console.log('=== COMPONENT INITIALIZATION ===');
+    console.log('User email from token:', this.userEmail);
+    console.log('Token exists:', !!localStorage.getItem('token'));
+    console.log('================================');
+    this.loadRealData();
     this.generateCoachingTips();
-    this.filterPerformanceRecords();
     // Set charts as not loading initially
     this.chartsLoading = false;
   }
@@ -142,6 +167,8 @@ export class AgentPerformanceComponent
     if (this.sentimentChartInstance) {
       this.sentimentChartInstance.destroy();
     }
+    // Clean up subscriptions
+    this.subscription.unsubscribe();
   }
 
   private initializeDateRange(): void {
@@ -156,130 +183,87 @@ export class AgentPerformanceComponent
     this.dateRange.to = now.toISOString().split('T')[0];
   }
 
-  private loadMockData(): void {
-    // Mock data for demonstration - now using 0-5 scale for scores
-    this.performanceRecords = [
-      {
-        id: 1,
-        score: 3.8,
-        feedback: 'Good call handling, needs improvement in closing techniques',
-        callTranscripts: {
-          id: 1001,
-          callDateTime: '2024-01-15T10:30:00Z',
-          callTranscripts: [
-            {
-              id: 1,
-              sentiment: {
-                id: 1,
-                score: 0.65,
-                text: 'Positive',
-                voice: 'agent',
-              },
-              text: 'Thank you for calling',
-              speaker: 'agent',
-            },
-          ],
-          averageSentimentScore: 0.65,
-          callDate: new Date('2024-01-15'),
-        } as EnhancedCallRecord,
+  private loadRealData(): void {
+    if (!this.userEmail) {
+      console.error('User email not found');
+      return;
+    }
+
+    console.log('Loading data for user email:', this.userEmail);
+
+    // Show loading state
+    this.chartsLoading = true;
+
+    // Load all data in parallel
+    const dataSubscription = forkJoin({
+      dailyStats: this.dailyStatsService.getDailyStatsByAgent(this.userEmail),
+      performances: this.performancesService.getAllPerformancesByAgent(this.userEmail),
+      sentimentPoints: this.sentimentPointService.getSentimentPointsByUser(this.userEmail)
+    }).subscribe({
+      next: (data) => {
+        console.log('=== SERVICE RESULTS ===');
+        console.log('Daily Stats:', data.dailyStats);
+        console.log('Daily Stats sample:', data.dailyStats?.[0]);
+        console.log('Performance Records:', data.performances);
+        console.log('Performance Records sample:', data.performances?.[0]);
+        console.log('Sentiment Points:', data.sentimentPoints);
+        console.log('Sentiment Points sample:', data.sentimentPoints?.[0]);
+        
+        // Debug: Check data relationships
+        if (data.performances?.[0] && data.sentimentPoints?.[0]) {
+          console.log('First performance call ID:', data.performances[0].callTranscripts?.id);
+          console.log('First sentiment point call ID:', data.sentimentPoints[0].call?.id);
+        }
+        console.log('=======================');
+
+        this.dailyStats = data.dailyStats;
+        this.performanceRecords = data.performances;
+        this.sentimentPoints = data.sentimentPoints;
+        
+        // Process and calculate statistics
+        this.calculateStatistics();
+        this.filterPerformanceRecords();
+        this.chartsLoading = false;
+        
+        // Initialize charts with real data only once
+        if (!this.performanceChartInstance && !this.sentimentChartInstance) {
+          setTimeout(() => {
+            this.initializeCharts();
+          }, 500);
+        }
       },
-      {
-        id: 2,
-        score: 4.8,
-        feedback: 'Excellent customer service, very professional approach',
-        callTranscripts: {
-          id: 1002,
-          callDateTime: '2024-01-14T14:20:00Z',
-          callTranscripts: [
-            {
-              id: 2,
-              sentiment: {
-                id: 2,
-                score: 0.78,
-                text: 'Very Positive',
-                voice: 'customer',
-              },
-              text: 'Great service',
-              speaker: 'customer',
-            },
-          ],
-          averageSentimentScore: 0.78,
-          callDate: new Date('2024-01-14'),
-        } as EnhancedCallRecord,
-      },
-      {
-        id: 3,
-        score: 2.8,
-        feedback: 'Average performance, could improve active listening skills',
-        callTranscripts: {
-          id: 1003,
-          callDateTime: '2024-01-13T09:15:00Z',
-          callTranscripts: [
-            {
-              id: 3,
-              sentiment: {
-                id: 3,
-                score: 0.45,
-                text: 'Neutral',
-                voice: 'customer',
-              },
-              text: 'Okay service',
-              speaker: 'customer',
-            },
-          ],
-          averageSentimentScore: 0.45,
-          callDate: new Date('2024-01-13'),
-        } as EnhancedCallRecord,
-      },
-      {
-        id: 4,
-        score: 4.2,
-        feedback: 'Strong technical knowledge, good problem resolution',
-        callTranscripts: {
-          id: 1004,
-          callDateTime: '2024-01-12T16:45:00Z',
-          callTranscripts: [
-            {
-              id: 4,
-              sentiment: {
-                id: 4,
-                score: 0.72,
-                text: 'Positive',
-                voice: 'customer',
-              },
-              text: 'Problem solved well',
-              speaker: 'customer',
-            },
-          ],
-          averageSentimentScore: 0.72,
-          callDate: new Date('2024-01-12'),
-        } as EnhancedCallRecord,
-      },
-      {
-        id: 5,
-        score: 4.9,
-        feedback: 'Outstanding call, exceeded customer expectations',
-        callTranscripts: {
-          id: 1005,
-          callDateTime: '2024-01-11T11:30:00Z',
-          callTranscripts: [
-            {
-              id: 5,
-              sentiment: {
-                id: 5,
-                score: 0.82,
-                text: 'Very Positive',
-                voice: 'customer',
-              },
-              text: 'Excellent experience',
-              speaker: 'customer',
-            },
-          ],
-          averageSentimentScore: 0.82,
-          callDate: new Date('2024-01-11'),
-        } as EnhancedCallRecord,
-      },
-    ];
+      error: (error) => {
+        console.error('=== ERROR LOADING DATA ===');
+        console.error('Error details:', error);
+        console.error('Error status:', error.status);
+        console.error('Error message:', error.message);
+        console.error('==========================');
+        this.chartsLoading = false;
+        // Keep data arrays empty - no fallback data
+        // The UI should handle empty state gracefully
+      }
+    });
+
+    this.subscription.add(dataSubscription);
+  }
+
+  getSentimentScoreForPerformance(performanceRecord: Performance): number {
+    if (!performanceRecord.callTranscripts?.id) {
+      console.log('No call transcript ID found for performance record:', performanceRecord);
+      return 0;
+    }
+    
+    // Find the sentiment point that matches this call
+    const sentimentPoint = this.sentimentPoints.find(sp => 
+      sp.call?.id === performanceRecord.callTranscripts?.id
+    );
+    
+    console.log(`Looking for sentiment point for call ID ${performanceRecord.callTranscripts.id}:`, sentimentPoint);
+    
+    const score = sentimentPoint?.sentimentScore || 0;
+    console.log(`Sentiment score for performance record ${performanceRecord.id}:`, score);
+    
+    return score;
   }
 
   getCallSentimentScore(callRecord: CallRecord | undefined): number {
@@ -288,6 +272,15 @@ export class AgentPerformanceComponent
     const enhancedRecord = callRecord as EnhancedCallRecord;
     if (enhancedRecord.averageSentimentScore !== undefined) {
       return enhancedRecord.averageSentimentScore;
+    }
+
+    // Find sentiment from sentiment points
+    const sentimentPoint = this.sentimentPoints.find(sp => 
+      sp.call?.id === callRecord.id
+    );
+    
+    if (sentimentPoint?.sentimentScore !== undefined) {
+      return sentimentPoint.sentimentScore;
     }
 
     // Calculate average sentiment from call transcripts
@@ -323,97 +316,139 @@ export class AgentPerformanceComponent
   }
 
   private calculateStatistics(): void {
-    if (this.filteredPerformanceRecords.length === 0) {
-      return;
+    console.log('=== CALCULATING STATISTICS ===');
+    console.log('Performance Records for calculation:', this.filteredPerformanceRecords);
+    console.log('Sentiment Points for calculation:', this.sentimentPoints);
+    
+    // Calculate Overall Performance Score (average from performance records)
+    let averageScore = 0;
+    if (this.filteredPerformanceRecords.length > 0) {
+      const totalScore = this.filteredPerformanceRecords.reduce(
+        (sum, record) => sum + (record.score || 0),
+        0
+      );
+      averageScore = totalScore / this.filteredPerformanceRecords.length;
     }
 
-    // Calculate overall stats
-    const totalScore = this.filteredPerformanceRecords.reduce(
-      (sum, record) => sum + (record.score || 0),
-      0
-    );
-    const totalSentiment = this.filteredPerformanceRecords.reduce(
-      (sum, record) => sum + this.getCallSentimentScore(record.callTranscripts),
-      0
-    );
+    // Calculate Average Sentiment Score (average from sentiment points)
+    let averageSentiment = 0;
+    if (this.sentimentPoints.length > 0) {
+      const totalSentiment = this.sentimentPoints.reduce(
+        (sum, sp) => sum + (sp.sentimentScore || 0),
+        0
+      );
+      averageSentiment = totalSentiment / this.sentimentPoints.length;
+    }
+
+    // Total Calls = number of sentiment points (each represents a call)
+    const totalCalls = this.sentimentPoints.length;
+
+    // Calculate growth and trend (using daily stats if available)
+    let callsGrowth = 0;
+    let performanceTrend = 0;
+    
+    if (this.dailyStats.length > 1) {
+      // Calculate growth (compare first vs last)
+      const firstDayCalls = this.dailyStats[0].callsCompleted || 0;
+      const lastDayCalls = this.dailyStats[this.dailyStats.length - 1].callsCompleted || 0;
+      if (firstDayCalls > 0) {
+        callsGrowth = ((lastDayCalls - firstDayCalls) / firstDayCalls) * 100;
+      }
+      
+      // Calculate performance trend
+      const firstDayScore = this.dailyStats[0].totalScore || 0;
+      const lastDayScore = this.dailyStats[this.dailyStats.length - 1].totalScore || 0;
+      if (firstDayScore > 0) {
+        performanceTrend = ((lastDayScore - firstDayScore) / firstDayScore) * 100;
+      }
+    }
 
     this.overallStats = {
-      averageScore: totalScore / this.filteredPerformanceRecords.length,
-      averageSentiment: totalSentiment / this.filteredPerformanceRecords.length,
-      totalCalls: this.filteredPerformanceRecords.length,
-      callsGrowth: Math.random() * 10 + 5, // Mock growth data
-      performanceTrend: (Math.random() - 0.5) * 10, // Mock trend data
+      averageScore: averageScore,
+      averageSentiment: averageSentiment,
+      totalCalls: totalCalls,
+      callsGrowth: callsGrowth,
+      performanceTrend: performanceTrend,
     };
 
-    // Calculate score distribution for 0-5 scale
-    const total = this.filteredPerformanceRecords.length;
-    const excellent = this.filteredPerformanceRecords.filter(
-      (r) => (r.score || 0) >= 4.5
-    ).length;
-    const good = this.filteredPerformanceRecords.filter(
-      (r) => (r.score || 0) >= 3.5 && (r.score || 0) < 4.5
-    ).length;
-    const average = this.filteredPerformanceRecords.filter(
-      (r) => (r.score || 0) >= 2.5 && (r.score || 0) < 3.5
-    ).length;
-    const needsImprovement = this.filteredPerformanceRecords.filter(
-      (r) => (r.score || 0) < 2.5
-    ).length;
+    console.log('Calculated Overall Stats:', this.overallStats);
 
-    this.scoreDistribution = {
-      excellent: (excellent / total) * 100,
-      good: (good / total) * 100,
-      average: (average / total) * 100,
-      needsImprovement: (needsImprovement / total) * 100,
-    };
+    // Calculate score distribution from performance records (1-5 scale)
+    if (this.filteredPerformanceRecords.length > 0) {
+      const total = this.filteredPerformanceRecords.length;
+      const excellent = this.filteredPerformanceRecords.filter(
+        (r) => (r.score || 0) >= 4.5
+      ).length;
+      const good = this.filteredPerformanceRecords.filter(
+        (r) => (r.score || 0) >= 3.5 && (r.score || 0) < 4.5
+      ).length;
+      const average = this.filteredPerformanceRecords.filter(
+        (r) => (r.score || 0) >= 2.5 && (r.score || 0) < 3.5
+      ).length;
+      const needsImprovement = this.filteredPerformanceRecords.filter(
+        (r) => (r.score || 0) < 2.5
+      ).length;
 
-    // Calculate sentiment stats
-    const positive = this.filteredPerformanceRecords.filter(
-      (r) => this.getCallSentimentScore(r.callTranscripts) >= 0.5
-    ).length;
-    const neutral = this.filteredPerformanceRecords.filter((r) => {
-      const sentiment = this.getCallSentimentScore(r.callTranscripts);
-      return sentiment >= 0 && sentiment < 0.5;
-    }).length;
-    const negative = this.filteredPerformanceRecords.filter(
-      (r) => this.getCallSentimentScore(r.callTranscripts) < 0
-    ).length;
+      this.scoreDistribution = {
+        excellent: (excellent / total) * 100,
+        good: (good / total) * 100,
+        average: (average / total) * 100,
+        needsImprovement: (needsImprovement / total) * 100,
+      };
+    } else {
+      this.scoreDistribution = {
+        excellent: 0,
+        good: 0,
+        average: 0,
+        needsImprovement: 0,
+      };
+    }
 
-    this.sentimentStats = {
-      positive: (positive / total) * 100,
-      neutral: (neutral / total) * 100,
-      negative: (negative / total) * 100,
-    };
+    // Calculate sentiment stats from sentiment points (0-1 scale)
+    if (this.sentimentPoints.length > 0) {
+      const total = this.sentimentPoints.length;
+      const positive = this.sentimentPoints.filter(
+        (sp) => (sp.sentimentScore || 0) >= 0.6
+      ).length;
+      const neutral = this.sentimentPoints.filter((sp) => {
+        const sentiment = sp.sentimentScore || 0;
+        return sentiment >= 0.4 && sentiment < 0.6;
+      }).length;
+      const negative = this.sentimentPoints.filter(
+        (sp) => (sp.sentimentScore || 0) < 0.4
+      ).length;
+
+      this.sentimentStats = {
+        positive: (positive / total) * 100,
+        neutral: (neutral / total) * 100,
+        negative: (negative / total) * 100,
+      };
+    } else {
+      this.sentimentStats = {
+        positive: 0,
+        neutral: 0,
+        negative: 0,
+      };
+    }
+
+    console.log('Score Distribution:', this.scoreDistribution);
+    console.log('Sentiment Stats:', this.sentimentStats);
+    console.log('=== STATISTICS CALCULATION COMPLETE ===');
   }
 
   private generateCoachingTips(): void {
-    this.coachingTips = [
-      {
-        title: 'Active Listening',
-        description:
-          'Focus on understanding customer needs before providing solutions.',
-        category: 'communication',
-        priority: 'high',
-      },
-      {
-        title: 'Closing Techniques',
-        description:
-          'Practice effective call closing to ensure customer satisfaction.',
-        category: 'sales',
-        priority: 'medium',
-      },
-      {
-        title: 'Sentiment Management',
-        description:
-          'Use positive language to improve customer sentiment during calls.',
-        category: 'emotion',
-        priority: 'high',
-      },
-    ];
+    // Remove static mock tips - these should come from a service or be generated based on performance data
+    this.coachingTips = [];
   }
 
   private initializeCharts(): void {
     console.log('Initializing charts...');
+    
+    // Prevent multiple initializations
+    if (this.performanceChartInstance || this.sentimentChartInstance) {
+      console.log('Charts already initialized, skipping...');
+      return;
+    }
 
     if (typeof window !== 'undefined') {
       // Import Chart.js dynamically
@@ -497,7 +532,7 @@ export class AgentPerformanceComponent
             },
             {
               label: 'Average Score',
-              data: Array(30).fill(this.overallStats.averageScore),
+              data: Array(last30Days.length).fill(this.overallStats.averageScore),
               borderColor: 'rgb(255, 99, 132)',
               backgroundColor: 'transparent',
               borderDash: [5, 5],
@@ -532,13 +567,14 @@ export class AgentPerformanceComponent
           scales: {
             y: {
               beginAtZero: true,
+              min: 0,
               max: 5,
               title: {
                 display: true,
-                text: 'Performance Score (0-5)',
+                text: 'Performance Score (1-5)',
               },
               ticks: {
-                stepSize: 1,
+                stepSize: 0.5,
                 callback: function (value: number) {
                   return value.toFixed(1);
                 },
@@ -660,35 +696,44 @@ export class AgentPerformanceComponent
   }
 
   private generateLast30DaysData(): any[] {
-    const data = [];
-    const today = new Date();
-
-    for (let i = 29; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-
-      // Generate realistic sample data in 0-5 range
-      const basePerformance = 3.5 + Math.random() * 1.5; // 3.5-5 range
-      const trend = Math.sin(i * 0.1) * 0.3; // Small sine wave for trend
-      const performance = Math.max(0, Math.min(5, basePerformance + trend));
-
-      // Generate sentiment percentages that add up to 100
-      const positive = 40 + Math.random() * 30; // 40-70%
-      const negative = 10 + Math.random() * 20; // 10-30%
-      const neutral = 100 - positive - negative;
-
-      data.push({
-        date: date.toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-        }),
-        performance: Math.round(performance * 100) / 100,
-        positive: Math.round(positive * 10) / 10,
-        neutral: Math.round(neutral * 10) / 10,
-        negative: Math.round(negative * 10) / 10,
+    const data: any[] = [];
+    console.log('Generating chart data from dailyStats:', this.dailyStats);
+    
+    if (this.dailyStats.length > 0) {
+      // Use real daily stats data
+      this.dailyStats.forEach(stat => {
+        if (stat.date) {
+          const date = new Date(stat.date);
+          // Fix: Use totalScore directly as it should already be in 1-5 scale
+          // If totalScore represents sum of all scores, we need to average it
+          const performance = stat.totalScore || 0; // Assuming totalScore is already averaged
+          const sentiment = stat.averageSentiment || 0;
+          
+          console.log(`Date: ${date.toDateString()}, Performance: ${performance}, Sentiment: ${sentiment}`);
+          
+          // Convert sentiment score to percentages (assuming sentiment is 0-1 scale)
+          const positive = sentiment >= 0.6 ? 60 + (sentiment - 0.6) * 100 : sentiment * 100;
+          const negative = sentiment <= 0.4 ? (0.4 - sentiment) * 50 : 0;
+          const neutral = 100 - positive - negative;
+          
+          data.push({
+            date: date.toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+            }),
+            performance: Math.round(performance * 100) / 100,
+            positive: Math.round(positive * 10) / 10,
+            neutral: Math.round(neutral * 10) / 10,
+            negative: Math.round(negative * 10) / 10,
+          });
+        }
       });
+    } else {
+      // No data available - return empty array instead of mock data
+      console.log('No daily stats available, returning empty data');
     }
 
+    console.log('Generated chart data:', data);
     return data;
   }
 
@@ -703,10 +748,11 @@ export class AgentPerformanceComponent
     // Update charts with new filtered data
     if (this.performanceChartInstance) {
       const newData = this.generateLast30DaysData();
+      this.performanceChartInstance.data.labels = newData.map((d) => d.date);
       this.performanceChartInstance.data.datasets[0].data = newData.map(
         (d) => d.performance
       );
-      this.performanceChartInstance.data.datasets[1].data = Array(30).fill(
+      this.performanceChartInstance.data.datasets[1].data = Array(newData.length).fill(
         this.overallStats.averageScore
       );
       this.performanceChartInstance.update();
@@ -714,6 +760,7 @@ export class AgentPerformanceComponent
 
     if (this.sentimentChartInstance) {
       const newData = this.generateLast30DaysData();
+      this.sentimentChartInstance.data.labels = newData.map((d) => d.date);
       this.sentimentChartInstance.data.datasets[0].data = newData.map(
         (d) => d.positive
       );
@@ -733,14 +780,14 @@ export class AgentPerformanceComponent
     // Apply sentiment filter
     if (this.selectedSentimentRange !== 'all') {
       filtered = filtered.filter((record) => {
-        const sentiment = this.getCallSentimentScore(record.callTranscripts);
+        const sentiment = this.getSentimentScoreForPerformance(record);
         switch (this.selectedSentimentRange) {
           case 'positive':
-            return sentiment >= 0.5;
+            return sentiment >= 0.6; // Positive sentiment threshold
           case 'neutral':
-            return sentiment >= 0 && sentiment < 0.5;
+            return sentiment >= 0.4 && sentiment < 0.6; // Neutral range
           case 'negative':
-            return sentiment < 0;
+            return sentiment < 0.4; // Negative sentiment threshold
           default:
             return true;
         }
@@ -753,13 +800,13 @@ export class AgentPerformanceComponent
         const score = record.score || 0;
         switch (this.selectedPerformanceRange) {
           case 'excellent':
-            return score >= 90;
+            return score >= 4.5; // 4.5-5 range
           case 'good':
-            return score >= 75 && score < 90;
+            return score >= 3.5 && score < 4.5; // 3.5-4.49 range
           case 'average':
-            return score >= 60 && score < 75;
+            return score >= 2.5 && score < 3.5; // 2.5-3.49 range
           case 'needs-improvement':
-            return score < 60;
+            return score < 2.5; // < 2.5 range
           default:
             return true;
         }
@@ -799,11 +846,8 @@ export class AgentPerformanceComponent
 
   // UI interaction methods
   refreshData(): void {
-    this.loadMockData();
-    this.calculateStatistics();
-    this.filterPerformanceRecords();
-    // Reinitialize charts
-    this.initializeCharts();
+    console.log('Manual refresh data triggered');
+    this.loadRealData();
   }
 
   refreshCharts(): void {
@@ -1009,33 +1053,33 @@ export class AgentPerformanceComponent
   // Styling helper methods
   getPerformanceScoreClass(score: number | undefined): string {
     if (score === undefined || score === null) return 'text-muted';
-    if (score >= 4.5) return 'text-success';
-    if (score >= 3.5) return 'text-info';
-    if (score >= 2.5) return 'text-warning';
+    if (score >= 4) return 'text-success';
+    if (score >= 3) return 'text-info';
+    if (score >= 2) return 'text-warning';
     return 'text-danger';
   }
 
   getPerformanceProgressClass(score: number | undefined): string {
     if (score === undefined || score === null) return 'bg-secondary';
-    if (score >= 4.5) return 'bg-success';
-    if (score >= 3.5) return 'bg-info';
-    if (score >= 2.5) return 'bg-warning';
+    if (score >= 4) return 'bg-success';
+    if (score >= 3) return 'bg-info';
+    if (score >= 2) return 'bg-warning';
     return 'bg-danger';
   }
 
   getPerformanceBadgeClass(score: number | undefined): string {
     if (score === undefined || score === null) return 'bg-label-secondary';
-    if (score >= 4.5) return 'bg-label-success';
-    if (score >= 3.5) return 'bg-label-info';
-    if (score >= 2.5) return 'bg-label-warning';
+    if (score >= 4) return 'bg-label-success';
+    if (score >= 3) return 'bg-label-info';
+    if (score >= 2) return 'bg-label-warning';
     return 'bg-label-danger';
   }
 
   getPerformanceLabel(score: number | undefined): string {
     if (score === undefined || score === null) return 'N/A';
-    if (score >= 4.5) return 'Excellent';
-    if (score >= 3.5) return 'Good';
-    if (score >= 2.5) return 'Average';
+    if (score >= 4) return 'Excellent';
+    if (score >= 3) return 'Good';
+    if (score >= 2) return 'Average';
     return 'Needs Improvement';
   }
 

@@ -1,5 +1,6 @@
 package tn.ooredoo.backendspringboot.sentiment;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import tn.ooredoo.backendspringboot.call_transcript.CallRecord;
@@ -17,8 +18,9 @@ public class SentimentPoint implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "sentimentPoint")
     @JoinColumn(name = "callId")
+    @JsonIgnore
     private CallRecord call;
 
     private Double sentimentScore;

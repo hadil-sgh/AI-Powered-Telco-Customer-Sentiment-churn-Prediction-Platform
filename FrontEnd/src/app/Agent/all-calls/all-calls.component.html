@@ -36,21 +36,6 @@
       </div>
     </div>
     <div class="col-xl-3 col-lg-6 col-md-6">
-      <div class="card bg-warning text-white">
-        <div class="card-body">
-          <div class="d-flex justify-content-between">
-            <div>
-              <h5 class="card-title text-white">Pending</h5>
-              <h3 class="text-white">{{ callStats.pendingCalls }}</h3>
-            </div>
-            <div class="card-icon">
-              <i class="bx bx-time bx-lg"></i>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-xl-3 col-lg-6 col-md-6">
       <div class="card bg-info text-white">
         <div class="card-body">
           <div class="d-flex justify-content-between">
@@ -97,9 +82,9 @@
           >
             <option value="">All Outcomes</option>
             <option value="SUCCESSFUL">Successful</option>
-            <option value="PENDING">Pending</option>
-            <option value="FAILED">Failed</option>
-            <option value="ESCALATED">Escalated</option>
+            <option value="NO_ANSWER">No Answer</option>
+            <option value="DROPPED">Dropped</option>
+            <option value="RESOLVED">Resolved</option>
           </select>
         </div>
         <div class="col-md-2">

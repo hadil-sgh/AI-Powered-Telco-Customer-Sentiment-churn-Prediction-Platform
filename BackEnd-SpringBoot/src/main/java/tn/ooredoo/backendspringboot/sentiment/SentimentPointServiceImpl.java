@@ -11,6 +11,8 @@ import tn.ooredoo.backendspringboot.user.User;
 import tn.ooredoo.backendspringboot.user.UserService;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -68,6 +70,21 @@ public class SentimentPointServiceImpl implements SentimentPointService {
         Double avg = sentimentPointRepository.findAverageSentimentByDate(date);
         return avg != null ? avg : 0.0;
     }
+
+    @Override
+    public List<SentimentPoint> getSentimentPointsForAgent(String userEmail) {
+        User agent = userService.findByEmail(userEmail);
+        List<SentimentPoint> sentimentPoints = sentimentPointRepository.findAll();
+        List<SentimentPoint> agentSentimentPoints = new ArrayList<>(); // New list for results
+
+        for (SentimentPoint sentiment : sentimentPoints) {
+            if (sentiment.getCall().getAgent().equals(agent)) {
+                agentSentimentPoints.add(sentiment); // Add to the new list
+            }
+        }
+        return agentSentimentPoints;
+    }
+
 
 
     private double mapEmotionToScore(String emotion) {

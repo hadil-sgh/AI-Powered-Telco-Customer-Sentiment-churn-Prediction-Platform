@@ -10,6 +10,7 @@ import tn.ooredoo.backendspringboot.user.UserRepository;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @RestController
 @RequestMapping("/dailystats")
@@ -36,6 +37,11 @@ public class DailyStatsController {
         CallRecord callRecord = callRecordServices.getCallRecordById(recordId.intValue());
         DailyStats updatedStats = dailyStatsService.updateDailyStatusPostCall(email, callRecord, score);
         return ResponseEntity.ok(updatedStats);
+    }
+
+    @GetMapping("/getDailyStatusByAgent")
+    public List<DailyStats> getDailyStatusByAgent(@RequestParam String userEmail) {
+        return dailyStatsService.getDailyStatsByAgent(userEmail);
     }
 }
 

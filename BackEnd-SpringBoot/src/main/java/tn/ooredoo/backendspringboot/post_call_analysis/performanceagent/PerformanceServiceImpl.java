@@ -7,7 +7,10 @@ import tn.ooredoo.backendspringboot.call_transcript.CallRecord;
 import tn.ooredoo.backendspringboot.call_transcript.CallRecordServices;
 import tn.ooredoo.backendspringboot.post_call_analysis.complaintscustomer.Complaint;
 import tn.ooredoo.backendspringboot.post_call_analysis.complaintscustomer.ComplaintRepository;
+import tn.ooredoo.backendspringboot.user.User;
+import tn.ooredoo.backendspringboot.user.UserService;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,6 +22,7 @@ public class PerformanceServiceImpl implements PerformanceService {
      private final  PerformanceRepository performanceRepository;
      private final  ComplaintRepository complaintRepository;
      private final CallRecordServices callRecordServices;
+     private final UserService userService;
 
 
     @Override
@@ -42,6 +46,21 @@ public class PerformanceServiceImpl implements PerformanceService {
     public List<Performance> getAllPerformances() {
         return performanceRepository.findAll();
     }
+
+    @Override
+    public List<Performance> getAllPerformancesByAgentEmail(String email) {
+        User agent = userService.findByEmail(email);
+        List<Performance> performances = getAllPerformances();
+        List<Performance> agentPerformances = new ArrayList<>(); // New list for results
+
+        for (Performance performance : performances) {
+            if (performance.getCallTranscripts().getAgent().equals(agent)) {
+                agentPerformances.add(performance); // Add to the new list
+            }
+        }
+        return agentPerformances;
+    }
+
 
     @Override
     public Optional<Performance> getPerformanceById(Long id) {

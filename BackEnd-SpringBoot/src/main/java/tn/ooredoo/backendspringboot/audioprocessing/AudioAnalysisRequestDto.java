@@ -2,10 +2,7 @@ package tn.ooredoo.backendspringboot.audioprocessing;
 
 import lombok.*;
 
-/**
- * DTO for receiving audio analysis data from Angular frontend
- * Matches the structure of data received from Python audio pipeline
- */
+
 @Getter
 @Setter
 @Builder

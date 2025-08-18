@@ -19,7 +19,7 @@ public class MockCall implements Serializable {
     private Long id;
     @ManyToOne
     private Customer customer;
-    @OneToOne
+    @ManyToOne
     private User agent;
 
 

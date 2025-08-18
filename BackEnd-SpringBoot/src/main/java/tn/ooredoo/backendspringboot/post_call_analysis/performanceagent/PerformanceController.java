@@ -33,6 +33,10 @@ public class PerformanceController {
     public ResponseEntity<List<Performance>> getAllPerformances() {
         return ResponseEntity.ok(performanceService.getAllPerformances());
     }
+    @GetMapping("/getAllByAgent")
+    public ResponseEntity<List<Performance>> getAllPerformancesByAgent(@RequestParam String email) {
+        return ResponseEntity.ok(performanceService.getAllPerformancesByAgentEmail(email));
+    }
 
     @GetMapping("/getOne/{id}")
     public ResponseEntity<Performance> getPerformanceById(@PathVariable Long id) {

@@ -35,13 +35,16 @@ public class CallRecord implements Serializable {
     private Customer customer;
 
 
-    @OneToMany(mappedBy = "callRecord")
+    @OneToMany(mappedBy = "callRecord", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     @JsonManagedReference
     private List<AudioAnalysisResponse> callTranscripts;
 
     private Long callDuration;
 
-    @OneToOne
+
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+
+    @JoinColumn(name = "sentiment_point_id")
     private SentimentPoint sentimentPoint;
 
     @Enumerated(EnumType.STRING)

@@ -11,15 +11,11 @@ export class CallRecordService {
 
   constructor(private http: HttpClient) {}
 
-  /**
-   * Delete a call record by ID
-   */
-  deleteCallRecord(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${id}`);
-  }
-
   getAverageCallDuration(): Observable<number> {
     return this.http.get<number>(`${this.baseUrl}/calls/average-duration`);
+  }
+  deleteCallRecord(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
 
   saveCallRecord(

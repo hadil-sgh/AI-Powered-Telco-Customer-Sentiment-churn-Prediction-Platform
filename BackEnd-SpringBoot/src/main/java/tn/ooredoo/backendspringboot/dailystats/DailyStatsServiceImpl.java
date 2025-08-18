@@ -10,6 +10,8 @@ import tn.ooredoo.backendspringboot.user.UserService;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -71,6 +73,21 @@ public class DailyStatsServiceImpl implements DailyStatsService {
         System.out.println("New average score: " + averageScore);
 
         return dailyStatsRepository.save(dailyStats);
+    }
+
+    @Override
+    public List<DailyStats> getDailyStatsByAgent(String email) {
+        User agent = userService.findByEmail(email);
+        List<DailyStats> allDailyStats = dailyStatsRepository.findAll();
+        List<DailyStats> result = new ArrayList<>();
+
+        for (DailyStats dailyStats : allDailyStats) {
+            if (dailyStats.getUser().equals(agent)) {
+                result.add(dailyStats);
+            }
+        }
+
+        return result;
     }
 
 

@@ -11,11 +11,11 @@ import { CallRecordService } from '../../services/call-record.service';
 import { TokenService } from '../../services/token.service';
 import { CallRecord } from '../../models/call-record';
 import { AudioAnalysisResponse } from '../../models/audio-analysis-response';
+import Swal from 'sweetalert2';
 
 interface CallStats {
   totalCalls: number;
   successfulCalls: number;
-  pendingCalls: number;
   avgDuration: string;
 }
 
@@ -60,7 +60,6 @@ export class AllCallsComponent implements OnInit, OnDestroy {
   callStats: CallStats = {
     totalCalls: 0,
     successfulCalls: 0,
-    pendingCalls: 0,
     avgDuration: '0:00',
   };
 
@@ -115,9 +114,6 @@ export class AllCallsComponent implements OnInit, OnDestroy {
     this.callStats.totalCalls = this.calls.length;
     this.callStats.successfulCalls = this.calls.filter(
       (call) => call.callOutcome === 'SUCCESSFUL'
-    ).length;
-    this.callStats.pendingCalls = this.calls.filter(
-      (call) => call.callOutcome === 'NO_ANSWER'
     ).length;
 
     // Fetch average duration from backend
@@ -284,11 +280,40 @@ export class AllCallsComponent implements OnInit, OnDestroy {
   }
 
   deleteCall(call: CallRecord): void {
-    if (confirm('Are you sure you want to delete this call record?')) {
-      this.calls = this.calls.filter((c) => c.id !== call.id);
-      this.applyFilters();
-      this.calculateStats();
-    }
+    Swal.fire({
+      title: 'Delete Call?',
+      text: 'Are you sure you want to delete this call? This action cannot be undone.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'Cancel',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.callRecordService.deleteCallRecord(call.id!).subscribe({
+          next: () => {
+            this.applyFilters();
+            Swal.fire({
+              title: 'Deleted!',
+              text: 'The call has been deleted successfully.',
+              icon: 'success',
+              timer: 2000,
+              showConfirmButton: false,
+            });
+          },
+          error: (error) => {
+            console.error('Error deleting note:', error);
+            Swal.fire({
+              title: 'Error!',
+              text: 'Failed to delete call. Please try again.',
+              icon: 'error',
+              confirmButtonColor: '#3085d6',
+            });
+          },
+        });
+      }
+    });
   }
 
   openNewCallModal(): void {

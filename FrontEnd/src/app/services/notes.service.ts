@@ -11,9 +11,7 @@ export class NotesService {
 
   constructor(private http: HttpClient) {}
 
-  /**
-   * Create a new note
-   */
+
   createNote(callId: number, description: string): Observable<Note> {
     const params = new HttpParams()
       .set('callId', callId.toString())
@@ -21,9 +19,7 @@ export class NotesService {
     return this.http.post<Note>(`${this.baseUrl}/save`, null, { params });
   }
 
-  /**
-   * Update a note
-   */
+
   updateNote(callId: number, description: string): Observable<Note> {
     const params = new HttpParams()
       .set('callId', callId.toString())
@@ -31,16 +27,12 @@ export class NotesService {
     return this.http.put<Note>(`${this.baseUrl}/update`, null, { params });
   }
 
-  /**
-   * Delete a note
-   */
+
   deleteNote(id: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
 
-  /**
-   * Get notes by customer (using call ID)
-   */
+
   getNotesByCustomer(callId: number): Observable<Note[]> {
     const params = new HttpParams().set('callId', callId.toString());
     return this.http.get<Note[]>(`${this.baseUrl}/getALLbyCustomer`, {
@@ -48,9 +40,6 @@ export class NotesService {
     });
   }
 
-  /**
-   * Get notes by agent email (session-based)
-   */
   getNotesByAgent(email: string): Observable<Note[]> {
     const params = new HttpParams().set('email', email);
     return this.http.get<Note[]>(`${this.baseUrl}/getALLbyAgent`, { params });
