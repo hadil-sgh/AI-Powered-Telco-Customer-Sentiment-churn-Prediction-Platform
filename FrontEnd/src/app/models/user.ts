@@ -2,6 +2,8 @@
 /* eslint-disable */
 import { GrantedAuthority } from './granted-authority';
 import { Role } from './role';
+import { Team } from './team';
+
 export interface User {
   accountLocked?: boolean;
   accountNonExpired?: boolean;
@@ -17,8 +19,11 @@ export interface User {
   id?: number;
   lastname?: string;
   name?: string;
+  online?: boolean;
   password?: string;
   roles?: Array<Role>;
+  team?: Team;
+  teamId?: number;
   updatedAt?: string;
   username?: string;
 }

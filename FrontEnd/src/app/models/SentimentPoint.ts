@@ -7,4 +7,5 @@ export interface SentimentPoint {
   call?: CallRecord;
   sentimentScore?: number;
   context?: string;
+  callId?: number; // Added to match backend @JsonProperty("callId")
 }

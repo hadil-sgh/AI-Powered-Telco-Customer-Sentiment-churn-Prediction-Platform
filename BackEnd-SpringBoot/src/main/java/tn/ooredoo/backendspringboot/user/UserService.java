@@ -17,4 +17,5 @@ public interface UserService {
     List<User> findOnlineAgents();
     void agentIsOnline(User user);
     void agentIsOffLine(User user);
+    User assignTeamToUser(Long userId, Long teamId);
 }

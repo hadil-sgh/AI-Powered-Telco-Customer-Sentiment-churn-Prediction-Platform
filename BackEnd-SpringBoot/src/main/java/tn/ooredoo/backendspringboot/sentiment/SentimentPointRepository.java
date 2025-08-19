@@ -6,6 +6,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Repository
 public interface SentimentPointRepository extends JpaRepository<SentimentPoint, Long> {
@@ -20,6 +21,14 @@ public interface SentimentPointRepository extends JpaRepository<SentimentPoint, 
     @Query("SELECT AVG(s.sentimentScore) FROM SentimentPoint s " +
             "WHERE DATE(s.call.callDateTime) = :date")
     Double findAverageSentimentByDate(@Param("date") LocalDate date);
+    // In your SentimentPointRepository interface
+    @Query("SELECT sp FROM SentimentPoint sp " +
+            "JOIN sp.call c " +
+            "JOIN c.agent a " +
+            "WHERE a.email = :userEmail")
+    List<SentimentPoint> findByAgentEmail(@Param("userEmail") String userEmail);
+
+
 
 }
 

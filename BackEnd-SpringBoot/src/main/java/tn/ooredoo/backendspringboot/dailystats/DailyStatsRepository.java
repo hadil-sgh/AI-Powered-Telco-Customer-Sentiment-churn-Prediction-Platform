@@ -13,6 +13,8 @@ public interface DailyStatsRepository extends JpaRepository<DailyStats, Long> {
     Optional<DailyStats> findByUserAndDate(User user, LocalDateTime date);
     Optional<DailyStats> findByUserAndDateBetween(User user, LocalDateTime start, LocalDateTime end);
     List<DailyStats> findAllByUser(User user);
+    List<DailyStats> findAllByUserAndDateBetween(User user, LocalDateTime start, LocalDateTime end);
+
 
 
 }

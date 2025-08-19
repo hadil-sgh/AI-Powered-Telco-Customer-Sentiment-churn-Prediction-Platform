@@ -220,8 +220,16 @@ export class AgentPerformanceComponent
             data.performances[0].callTranscripts?.id
           );
           console.log(
-            'First sentiment point call ID:',
+            'First sentiment point call ID (from call relation):',
             data.sentimentPoints[0].call?.id
+          );
+          console.log(
+            'First sentiment point callId (from @JsonProperty):',
+            data.sentimentPoints[0].callId
+          );
+          console.log(
+            'First sentiment point score:',
+            data.sentimentPoints[0].sentimentScore
           );
         }
         console.log('=======================');
@@ -265,37 +273,50 @@ export class AgentPerformanceComponent
 
     // First try to find sentiment point by call ID from performance record
     if (performanceRecord.callTranscripts?.id) {
-      const sentimentPoint = this.sentimentPoints.find(
-        (sp) => sp.call?.id === performanceRecord.callTranscripts?.id
+      const callId = performanceRecord.callTranscripts.id;
+
+      // Try to find by callId property (from backend @JsonProperty)
+      const sentimentPointByCallId = this.sentimentPoints.find(
+        (sp) => sp.callId === callId
       );
 
-      if (sentimentPoint?.sentimentScore !== undefined) {
+      if (
+        sentimentPointByCallId?.sentimentScore !== undefined &&
+        sentimentPointByCallId.sentimentScore !== null
+      ) {
         console.log(
-          `Found sentiment point for call ID ${performanceRecord.callTranscripts.id}:`,
-          sentimentPoint.sentimentScore
+          `Found sentiment point by callId ${callId}:`,
+          sentimentPointByCallId.sentimentScore
         );
-        return sentimentPoint.sentimentScore;
+        return sentimentPointByCallId.sentimentScore;
       }
-    }
 
-    // Fallback: try to find by performance record ID if available
-    const sentimentPointByPerformance = this.sentimentPoints.find(
-      (sp) => sp.id === performanceRecord.id
-    );
-
-    if (sentimentPointByPerformance?.sentimentScore !== undefined) {
-      console.log(
-        `Found sentiment point by performance ID ${performanceRecord.id}:`,
-        sentimentPointByPerformance.sentimentScore
+      // Fallback: try to find by call.id relationship
+      const sentimentPointByCallRelation = this.sentimentPoints.find(
+        (sp) => sp.call?.id === callId
       );
-      return sentimentPointByPerformance.sentimentScore;
+
+      if (
+        sentimentPointByCallRelation?.sentimentScore !== undefined &&
+        sentimentPointByCallRelation.sentimentScore !== null
+      ) {
+        console.log(
+          `Found sentiment point by call.id ${callId}:`,
+          sentimentPointByCallRelation.sentimentScore
+        );
+        return sentimentPointByCallRelation.sentimentScore;
+      }
     }
 
     // Fallback: calculate from call transcripts if available
     if (performanceRecord.callTranscripts?.callTranscripts) {
       const callTranscripts = performanceRecord.callTranscripts.callTranscripts;
       const validSentiments = callTranscripts
-        .filter((transcript) => transcript.sentiment?.score !== undefined)
+        .filter(
+          (transcript) =>
+            transcript.sentiment?.score !== undefined &&
+            transcript.sentiment.score !== null
+        )
         .map((transcript) => transcript.sentiment!.score!);
 
       if (validSentiments.length > 0) {
@@ -320,22 +341,43 @@ export class AgentPerformanceComponent
     if (!callRecord) return 0;
 
     // First check if the call has a direct sentimentPoint property
-    if (callRecord.sentimentPoint?.sentimentScore !== undefined) {
+    if (
+      callRecord.sentimentPoint?.sentimentScore !== undefined &&
+      callRecord.sentimentPoint.sentimentScore !== null
+    ) {
       return callRecord.sentimentPoint.sentimentScore;
     }
 
     const enhancedRecord = callRecord as EnhancedCallRecord;
-    if (enhancedRecord.averageSentimentScore !== undefined) {
+    if (
+      enhancedRecord.averageSentimentScore !== undefined &&
+      enhancedRecord.averageSentimentScore !== null
+    ) {
       return enhancedRecord.averageSentimentScore;
     }
 
-    // Find sentiment from sentiment points
-    const sentimentPoint = this.sentimentPoints.find(
+    // Find sentiment from sentiment points using callId first
+    const sentimentByCallId = this.sentimentPoints.find(
+      (sp) => sp.callId === callRecord.id
+    );
+
+    if (
+      sentimentByCallId?.sentimentScore !== undefined &&
+      sentimentByCallId.sentimentScore !== null
+    ) {
+      return sentimentByCallId.sentimentScore;
+    }
+
+    // Fallback: Find sentiment from sentiment points using call.id relationship
+    const sentimentByCallRelation = this.sentimentPoints.find(
       (sp) => sp.call?.id === callRecord.id
     );
 
-    if (sentimentPoint?.sentimentScore !== undefined) {
-      return sentimentPoint.sentimentScore;
+    if (
+      sentimentByCallRelation?.sentimentScore !== undefined &&
+      sentimentByCallRelation.sentimentScore !== null
+    ) {
+      return sentimentByCallRelation.sentimentScore;
     }
 
     // Calculate average sentiment from call transcripts
@@ -1188,6 +1230,13 @@ export class AgentPerformanceComponent
     return 'Negative';
   }
 
+  formatSentimentScore(sentiment: number | undefined): string {
+    if (sentiment === undefined || sentiment === null || sentiment === 0) {
+      return 'N/A';
+    }
+    return sentiment.toFixed(2);
+  }
+
   // Star rating methods for performance scores
   getStarArray(score: number | undefined): number[] {
     if (score === undefined || score === null) return [0, 0, 0, 0, 0];
@@ -1195,7 +1244,7 @@ export class AgentPerformanceComponent
     const fullStars = Math.floor(score);
     const hasHalfStar = score % 1 >= 0.5;
     const stars = [];
-    
+
     for (let i = 0; i < 5; i++) {
       if (i < fullStars) {
         stars.push(1); // full star

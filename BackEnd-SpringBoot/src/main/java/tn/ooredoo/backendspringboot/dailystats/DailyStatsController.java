@@ -57,6 +57,12 @@ public class DailyStatsController {
         }
         return ResponseEntity.ok(stats);
     }
+    @GetMapping("/week/{email}")
+    public ResponseEntity<List<DailyStats>> getWeeklyStatsByAgent(@PathVariable String email) {
+        List<DailyStats> stats = dailyStatsService.getDailyStatsByAgentForTheCurrentWeek(email);
+        return ResponseEntity.ok(stats);
+    }
+
 
 
 }

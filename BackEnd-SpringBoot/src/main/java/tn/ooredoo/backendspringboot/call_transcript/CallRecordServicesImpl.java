@@ -15,6 +15,7 @@ import tn.ooredoo.backendspringboot.post_call_analysis.performanceagent.Performa
 import tn.ooredoo.backendspringboot.user.User;
 import tn.ooredoo.backendspringboot.user.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,7 +40,7 @@ public class CallRecordServicesImpl implements CallRecordServices {
         callRecord.setAgent(agent);
         callRecord.setCustomer(customer);
         callRecord.setCallDuration(duration);
-
+        callRecord.setCallDateTime(LocalDateTime.now());
         callRecord = callRecordRepository.save(callRecord);
 
         for (AudioAnalysisResponse transcript : transcripts) {

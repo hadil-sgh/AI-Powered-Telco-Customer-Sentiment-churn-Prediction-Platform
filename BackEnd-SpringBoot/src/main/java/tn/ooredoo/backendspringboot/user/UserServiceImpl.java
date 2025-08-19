@@ -7,6 +7,8 @@ import tn.ooredoo.backendspringboot.email.EmailService;
 import tn.ooredoo.backendspringboot.email.EmailTemplateName;
 import tn.ooredoo.backendspringboot.role.Role;
 import tn.ooredoo.backendspringboot.role.RoleRepository;
+import tn.ooredoo.backendspringboot.team.TeamRepository;
+import tn.ooredoo.backendspringboot.team.TeamService;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,6 +21,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final EmailService emailService;
     private final RoleRepository roleRepository;
+    private final TeamService teamService;
 
     @Override
     public User findByEmail(String email) {
@@ -115,5 +118,16 @@ public class UserServiceImpl implements UserService {
     public void agentIsOffLine(User user) {
         user.setOnline(false);
 
+    }
+
+    @Override
+    public User assignTeamToUser(Long userId, Long teamId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+
+        var team = teamService.getTeamById(teamId);
+
+        user.setTeam(team);
+        return userRepository.save(user);
     }
 }

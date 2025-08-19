@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { DailyStats } from '../models/daily-stats';
+import { AgentRankingDTO } from '../models/agent-ranking-dto';
 
 @Injectable({
   providedIn: 'root',
@@ -12,7 +13,21 @@ export class DailyStatsService {
   constructor(private http: HttpClient) {}
 
   getDailyStatsByAgent(userEmail: string): Observable<DailyStats[]> {
-    const url = `${this.baseUrl}/getDailyStatusByAgent?userEmail=${userEmail}`;
-    return this.http.get<DailyStats[]>(url);
+    return this.http.get<DailyStats[]>(
+      `${this.baseUrl}/getDailyStatusByAgent`,
+      {
+        params: { userEmail: userEmail },
+      }
+    );
+  }
+
+  getWeeklyStatsByAgent(email: string): Observable<DailyStats[]> {
+    return this.http.get<DailyStats[]>(`${this.baseUrl}/week/${email}`);
+  }
+
+  getTeamRanking(userEmail: string): Observable<AgentRankingDTO[]> {
+    return this.http.get<AgentRankingDTO[]>(`${this.baseUrl}/getTeamRanking`, {
+      params: { userEmail: userEmail },
+    });
   }
 }

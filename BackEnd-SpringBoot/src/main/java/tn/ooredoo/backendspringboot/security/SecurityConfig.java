@@ -31,7 +31,6 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/auth/**",
                                 "/audio-analysis/**",
-                                "/customer/**",
                                 "/user/**",
                                 "/swagger-resources",
                                 "/swagger-resources/**",

@@ -8,6 +8,7 @@ import tn.ooredoo.backendspringboot.user.User;
 import tn.ooredoo.backendspringboot.user.UserRepository;
 import tn.ooredoo.backendspringboot.user.UserService;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -48,17 +49,21 @@ public class DailyStatsServiceImpl implements DailyStatsService {
 
     @Override
     public DailyStats updateDailyStatusPostCall(String email, CallRecord callRecord, Integer score) {
-        LocalDate today = LocalDate.now();
         User currentUser = userService.findByEmail(email);
 
-        DailyStats dailyStats = dailyStatsRepository.findByUserAndDate(currentUser, today.atStartOfDay())
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfDay = today.atStartOfDay();
+        LocalDateTime endOfDay = today.plusDays(1).atStartOfDay().minusNanos(1);
+
+        DailyStats dailyStats = dailyStatsRepository.findByUserAndDateBetween(currentUser, startOfDay, endOfDay)
                 .orElseGet(() -> DailyStats.builder()
                         .user(currentUser)
-                        .date(today.atStartOfDay())
+                        .date(startOfDay)
                         .callsCompleted(0)
                         .totalScore(0)
                         .averageSentiment(0.0)
                         .build());
+
 
 
         dailyStats.setCallsCompleted(dailyStats.getCallsCompleted() + 1);
@@ -97,6 +102,21 @@ public class DailyStatsServiceImpl implements DailyStatsService {
     }
 
     @Override
+    public List<DailyStats> getDailyStatsByAgentForTheCurrentWeek(String email) {
+        User agent = userService.findByEmail(email);
+
+        LocalDate today = LocalDate.now();
+        LocalDate startOfWeek = today.with(DayOfWeek.MONDAY);
+        LocalDate endOfWeek = today.with(DayOfWeek.SUNDAY);
+
+        LocalDateTime startDateTime = startOfWeek.atStartOfDay();
+        LocalDateTime endDateTime = endOfWeek.atTime(LocalTime.MAX);
+
+        return dailyStatsRepository.findAllByUserAndDateBetween(agent, startDateTime, endDateTime);
+    }
+
+
+    @Override
     public DailyStats getDailyStatsForToday(String email) {
         User user = userService.findByEmail(email);
         LocalDate today = LocalDate.now();
@@ -110,15 +130,12 @@ public class DailyStatsServiceImpl implements DailyStatsService {
 
     @Override
     public List<AgentRankingDTO> getTeamRankingOverall(String email) {
-        // Find requesting user
         User currentUser = userService.findByEmail(email);
         if (currentUser.getTeam() == null) {
             return new ArrayList<>();
         }
 
-        // Get all teammates in the same team
         List<User> teammates = userRepository.findByTeam(currentUser.getTeam());
-
         List<AgentRankingDTO> ranking = new ArrayList<>();
 
         for (User teammate : teammates) {
@@ -143,7 +160,8 @@ public class DailyStatsServiceImpl implements DailyStatsService {
                         teammate.getFullName(),
                         totalScore,
                         totalCalls,
-                        avgSentiment
+                        avgSentiment,
+                        0 // placeholder for rank
                 ));
             }
         }
@@ -154,10 +172,16 @@ public class DailyStatsServiceImpl implements DailyStatsService {
                 .thenComparing(AgentRankingDTO::getCallsCompleted, Comparator.reverseOrder())
                 .thenComparing(AgentRankingDTO::getAverageSentiment, Comparator.reverseOrder()));
 
+        // Assign rank
+        for (int i = 0; i < ranking.size(); i++) {
+            ranking.get(i).setRank(i + 1); // 1-based ranking
+        }
+
         return ranking;
     }
-
-
-
 }
+
+
+
+
 

@@ -4,6 +4,8 @@ import {
   ViewChild,
   ElementRef,
   AfterViewInit,
+  OnDestroy,
+  HostListener,
 } from '@angular/core';
 import {
   Chart,
@@ -18,6 +20,13 @@ import { CoachingTip } from '../../models/coaching-tip';
 import { Router } from '@angular/router';
 import { CustomerService } from '../../services/customer.service';
 import { Customer } from '../../models/customer';
+import { UserService } from '../../services/user.service';
+import { DailyStatsService } from '../../services/daily-stats.service';
+import { MockCallsService } from '../../services/mock-calls.service';
+import { User } from '../../models/user';
+import { DailyStats } from '../../models/daily-stats';
+import { MockCall } from '../../models/mock-call';
+import { AgentRankingDTO } from '../../models/agent-ranking-dto';
 
 // Register Chart.js components
 Chart.register(...registerables);
@@ -27,7 +36,9 @@ Chart.register(...registerables);
   templateUrl: './agent-dashboard.component.html',
   styleUrls: ['./agent-dashboard.component.scss'],
 })
-export class AgentDashboardComponent implements OnInit, AfterViewInit {
+export class AgentDashboardComponent
+  implements OnInit, AfterViewInit, OnDestroy
+{
   @ViewChild('performanceChart', { static: false })
   performanceChart!: ElementRef;
 
@@ -48,82 +59,84 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
   customerSearchText: string = '';
   isLoadingCustomers: boolean = false;
 
-  // Agent data
+  // Agent data - will be populated from API
   agentData = {
-    name: 'Sarah',
-    id: 'A001',
-    todayTarget: 12,
-    completedCalls: 5,
+    name: '',
+    id: '',
+    todayTarget: 0,
+    completedCalls: 0,
     sentimentTarget: 80,
-    currentSentiment: 86,
+    currentSentiment: 0,
   };
 
-  // Performance data for the week
+  // Performance data for the week - will be populated from API
   weeklyPerformance = {
     days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-    calls: [10, 12, 8, 14, 5],
-    sentimentScores: [85, 89, 78, 92, 86],
+    calls: [0, 0, 0, 0, 0],
+    sentimentScores: [0, 0, 0, 0, 0],
   };
 
-  // Incoming calls data
-  incomingCalls = [
+  // Incoming calls data - will be populated from API
+  incomingCalls: MockCall[] = [];
+  callWaitTimes: Map<number, string> = new Map(); // Store wait times by call ID
+  callDisplayData: Map<
+    number,
     {
-      customerName: 'Ali Hassan',
-      phone: '+216 98 123 456',
-      type: 'Billing',
-      waitTime: '2:35',
-      priority: 'Medium',
-    },
-    {
-      customerName: 'Maryam Ben Ali',
-      phone: '+216 97 234 567',
-      type: 'Support',
-      waitTime: '1:22',
-      priority: 'High',
-    },
-    {
-      customerName: 'Karim Mejri',
-      phone: '+216 99 345 678',
-      type: 'Sales',
-      waitTime: '0:45',
-      priority: 'Low',
-    },
-  ];
+      customerName: string;
+      phone: string;
+      type: string;
+      priority: string;
+    }
+  > = new Map(); // Cache display data
 
-  // Team leaderboard
-  teamLeaderboard = [
-    { rank: 1, name: 'Ahmed M.', score: 94 },
-    { rank: 2, name: 'Fatima K.', score: 91 },
-    { rank: 3, name: 'Sarah (You)', score: 89 },
-    { rank: 4, name: 'Omar S.', score: 85 },
-  ];
+  // Team leaderboard - will be populated from API
+  teamLeaderboard: AgentRankingDTO[] = [];
+
+  // Real user data
+  currentUser: User | null = null;
+  weeklyStats: DailyStats[] = [];
+  onlineAgents: User[] = [];
+  onlineAgentsCount: number = 0;
+  currentUserRank: number = 0;
 
   constructor(
     private tipsService: TipsService,
     private tokenService: TokenService,
     private route: Router,
-    private customerService: CustomerService
+    private customerService: CustomerService,
+    private userService: UserService,
+    private dailyStatsService: DailyStatsService,
+    private mockCallsService: MockCallsService
   ) {
     // Chart.js will be initialized after view init
   }
 
   ngOnInit(): void {
-    // Get current user email from token (the sub field contains email, not numeric ID)
-    const userEmailFromToken = this.tokenService.getUserIdFromToken();
+    // Get current user email from token
+    const userEmailFromToken = this.tokenService.getEmailFromToken();
     const userFullName = this.tokenService.getFullNameFromToken();
 
     if (userEmailFromToken) {
       this.currentUserEmail = userEmailFromToken;
       console.log('Current user email from token:', this.currentUserEmail);
 
-      // Update agent data with real user information
-      if (userFullName) {
-        this.agentData.name = userFullName.split(' ')[0]; // Use first name
-        console.log('Agent name updated to:', this.agentData.name);
-      }
+      // Load user data and mark as online
+      this.loadUserData();
 
       // Load coaching tips using email
       this.loadCoachingTips();
+
+      // Load performance data
+      this.loadWeeklyPerformanceData();
+
+      // Load team ranking
+      this.loadTeamRanking();
+
+      // Load incoming calls
+      this.loadIncomingCalls();
+
+      // Load online agents count
+      this.loadOnlineAgents();
     } else {
       console.error('No user email found in token');
       // Handle case where no token or invalid token
@@ -137,6 +150,25 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
   ngAfterViewInit(): void {
     // Initialize the Chart.js chart after view is ready
     this.initializeChart();
+  }
+
+  ngOnDestroy(): void {
+    // Mark agent as offline when component is destroyed
+    if (this.currentUserEmail) {
+      this.userService.agentIsOffline(this.currentUserEmail).subscribe({
+        next: () => console.log('Agent marked as offline'),
+        error: (error) =>
+          console.error('Error marking agent as offline:', error),
+      });
+    }
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  beforeUnloadHandler(event: any) {
+    // Mark agent as offline when browser is closed or refreshed
+    if (this.currentUserEmail) {
+      this.userService.agentIsOffline(this.currentUserEmail).subscribe();
+    }
   }
 
   private initializeChart(): void {
@@ -237,7 +269,7 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
           type: 'linear',
           display: true,
           position: 'left',
-          min: 70,
+          min: 0,
           max: 100,
           grid: {
             color: 'rgba(165, 163, 174, 0.1)',
@@ -299,11 +331,259 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
   }
 
   updateDashboardData(): void {
-    // Simulate real-time data updates
+    // Update current time and refresh data periodically
     setInterval(() => {
-      // Update current time and refresh data periodically
-      this.agentData.currentSentiment = Math.floor(Math.random() * 10) + 82; // Random sentiment between 82-91%
+      // Refresh real-time data every 30 seconds
+      this.loadIncomingCalls();
+      this.loadOnlineAgents();
     }, 30000); // Update every 30 seconds
+  }
+
+  startDay(): void {
+    console.log('Starting day for agent');
+    if (this.currentUserEmail) {
+      this.userService.agentIsOnline(this.currentUserEmail).subscribe({
+        next: () => {
+          console.log('Agent marked as online for day start');
+          this.loadOnlineAgents(); // Refresh online agents count
+        },
+        error: (error) =>
+          console.error('Error marking agent as online:', error),
+      });
+    }
+  }
+
+  loadUserData(): void {
+    // Load current user data
+    this.userService.getUserByEmail(this.currentUserEmail).subscribe({
+      next: (user) => {
+        this.currentUser = user;
+        console.log('Current user loaded:', user);
+
+        // Update agent data with real user information
+        this.agentData.name =
+          user.firstname || user.fullName?.split(' ')[0] || 'Agent';
+        this.agentData.id =
+          `A${user.id?.toString().padStart(3, '0')}` || 'A001';
+
+        // Mark agent as online
+        this.userService.agentIsOnline(this.currentUserEmail).subscribe({
+          next: () => console.log('Agent marked as online'),
+          error: (error) =>
+            console.error('Error marking agent as online:', error),
+        });
+      },
+      error: (error) => {
+        console.error('Error loading user data:', error);
+      },
+    });
+  }
+
+  loadWeeklyPerformanceData(): void {
+    this.dailyStatsService
+      .getWeeklyStatsByAgent(this.currentUserEmail)
+      .subscribe({
+        next: (stats) => {
+          this.weeklyStats = stats;
+          console.log('Weekly stats loaded:', stats);
+
+          // Process the stats to update the charts
+          this.processWeeklyStats(stats);
+        },
+        error: (error) => {
+          console.error('Error loading weekly performance data:', error);
+
+          // For testing: create mock data if no data is available
+          const mockStats: DailyStats[] = [
+            {
+              date: '2025-08-19',
+              averageSentiment: 0.8,
+              callsCompleted: 2,
+              callsTarget: 12,
+            },
+            {
+              date: '2025-08-20',
+              averageSentiment: 0.85,
+              callsCompleted: 3,
+              callsTarget: 12,
+            },
+            {
+              date: '2025-08-21',
+              averageSentiment: 0.4,
+              callsCompleted: 1,
+              callsTarget: 12,
+            },
+            {
+              date: '2025-08-22',
+              averageSentiment: 0.6,
+              callsCompleted: 2,
+              callsTarget: 12,
+            },
+            {
+              date: '2025-08-23',
+              averageSentiment: 0.9,
+              callsCompleted: 3,
+              callsTarget: 12,
+            },
+          ];
+          this.processWeeklyStats(mockStats);
+        },
+      });
+  }
+
+  processWeeklyStats(stats: DailyStats[]): void {
+    // Reset arrays
+    this.weeklyPerformance.calls = [0, 0, 0, 0, 0];
+    this.weeklyPerformance.sentimentScores = [0, 0, 0, 0, 0];
+
+    // Map stats to days (assuming Monday = 0, Friday = 4)
+    stats.forEach((stat) => {
+      if (stat.date) {
+        const date = new Date(stat.date);
+        const dayOfWeek = (date.getDay() + 6) % 7; // Convert Sunday=0 to Monday=0
+
+        if (dayOfWeek < 5) {
+          // Only weekdays
+          this.weeklyPerformance.calls[dayOfWeek] = stat.callsCompleted || 0;
+          // Convert decimal sentiment to percentage (0.8 -> 80)
+          this.weeklyPerformance.sentimentScores[dayOfWeek] = Math.round(
+            (stat.averageSentiment || 0) * 100
+          );
+        }
+      }
+    });
+
+    // Update current stats from today's data
+    const todayStats = stats.find((stat) => {
+      if (stat.date) {
+        const statDate = new Date(stat.date);
+        const today = new Date();
+        return statDate.toDateString() === today.toDateString();
+      }
+      return false;
+    });
+
+    if (todayStats) {
+      this.agentData.completedCalls = todayStats.callsCompleted || 0;
+      this.agentData.todayTarget = todayStats.callsTarget || 12;
+      // Convert decimal sentiment to percentage for display (0.8 -> 80)
+      this.agentData.currentSentiment = Math.round(
+        (todayStats.averageSentiment || 0) * 100
+      );
+    } else {
+      // If no data for today, set default values
+      this.agentData.completedCalls = 0;
+      this.agentData.todayTarget = 12;
+      this.agentData.currentSentiment = 0;
+    }
+
+    // Update chart if it exists
+    this.updateChartData();
+  }
+
+  loadTeamRanking(): void {
+    this.dailyStatsService.getTeamRanking(this.currentUserEmail).subscribe({
+      next: (ranking) => {
+        this.teamLeaderboard = ranking;
+        console.log('Team ranking loaded:', ranking);
+
+        // Find current user's rank
+        const currentUserRanking = ranking.find(
+          (r) => r.userEmail === this.currentUserEmail
+        );
+        this.currentUserRank = currentUserRanking ? currentUserRanking.rank : 0;
+      },
+      error: (error) => {
+        console.error('Error loading team ranking:', error);
+      },
+    });
+  }
+
+  getCurrentUserScore(): number {
+    const currentUserRanking = this.teamLeaderboard.find(
+      (r) => r.userEmail === this.currentUserEmail
+    );
+    return currentUserRanking ? currentUserRanking.score : 0;
+  }
+
+  loadOnlineAgents(): void {
+    this.userService.getOnlineAgents().subscribe({
+      next: (agents) => {
+        this.onlineAgents = agents;
+        this.onlineAgentsCount = agents.length;
+        console.log('Online agents loaded:', agents);
+      },
+      error: (error) => {
+        console.error('Error loading online agents:', error);
+      },
+    });
+  }
+
+  loadIncomingCalls(): void {
+    this.mockCallsService.getMockCalls().subscribe({
+      next: (calls) => {
+        this.incomingCalls = calls;
+
+        // Generate wait times and cache display data for new calls only
+        calls.forEach((call) => {
+          if (call.id && !this.callWaitTimes.has(call.id)) {
+            // Generate wait time
+            const minutes = Math.floor(Math.random() * 5);
+            const seconds = Math.floor(Math.random() * 60);
+            this.callWaitTimes.set(
+              call.id,
+              `${minutes}:${seconds.toString().padStart(2, '0')}`
+            );
+
+            // Cache display data
+            const customerName = call.customer
+              ? `${call.customer.firstName || ''} ${
+                  call.customer.lastName || ''
+                }`.trim() || `Customer #${call.customer.customerID}`
+              : 'Unknown Customer';
+
+            const phone = call.customer?.phone || 'No phone';
+
+            // Derive type from customer service information
+            let type = 'Billing';
+            if (
+              call.customer?.PhoneService === 'Yes' &&
+              call.customer?.InternetService !== 'No'
+            ) {
+              type = 'Support';
+            } else if (call.customer?.PhoneService === 'No') {
+              type = 'Sales';
+            }
+
+            // Derive priority from customer data
+            let priority = 'Low';
+            if (
+              call.customer?.MonthlyCharges &&
+              call.customer.MonthlyCharges > 80
+            ) {
+              priority = 'High';
+            } else if (
+              call.customer?.MonthlyCharges &&
+              call.customer.MonthlyCharges > 50
+            ) {
+              priority = 'Medium';
+            }
+
+            this.callDisplayData.set(call.id, {
+              customerName,
+              phone,
+              type,
+              priority,
+            });
+          }
+        });
+
+        console.log('Incoming calls loaded:', calls);
+      },
+      error: (error) => {
+        console.error('Error loading incoming calls:', error);
+      },
+    });
   }
 
   loadCoachingTips(): void {
@@ -350,22 +630,6 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
     });
   }
 
-  takeCall(customerName: string): void {
-    // Handle taking a call
-    console.log(`Taking call from ${customerName}`);
-
-    // Remove the call from the queue
-    this.incomingCalls = this.incomingCalls.filter(
-      (call) => call.customerName !== customerName
-    );
-
-    // Increment completed calls
-    this.agentData.completedCalls++;
-
-    // Show notification or redirect to call interface
-    // You can add notification service here
-  }
-
   getCurrentTime(): string {
     return new Date().toLocaleTimeString('en-US', {
       hour: '2-digit',
@@ -388,6 +652,8 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
   }
 
   getPriorityColor(priority: string): string {
+    if (!priority) return 'secondary';
+
     switch (priority.toLowerCase()) {
       case 'high':
         return 'danger';
@@ -396,11 +662,13 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
       case 'low':
         return 'success';
       default:
-        return 'secondary';
+        return 'warning'; // Default to medium/warning
     }
   }
 
   getTypeColor(type: string): string {
+    if (!type) return 'secondary';
+
     switch (type.toLowerCase()) {
       case 'billing':
         return 'info';
@@ -408,6 +676,9 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
         return 'success';
       case 'sales':
         return 'primary';
+      case 'default':
+      case 'general':
+        return 'secondary';
       default:
         return 'secondary';
     }
@@ -415,20 +686,37 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
 
   // Performance calculation methods
   getCallCompletionPercentage(): number {
+    if (this.agentData.todayTarget === 0) return 0;
     return Math.round(
       (this.agentData.completedCalls / this.agentData.todayTarget) * 100
     );
   }
 
   getWeeklyAverage(): number {
-    return Math.round(
-      this.weeklyPerformance.sentimentScores.reduce((a, b) => a + b, 0) /
-        this.weeklyPerformance.sentimentScores.length
+    // Calculate average from actual weekly stats data
+    if (!this.weeklyStats || this.weeklyStats.length === 0) return 0;
+
+    const validStats = this.weeklyStats.filter(
+      (stat) => stat.averageSentiment && stat.averageSentiment > 0
     );
+    if (validStats.length === 0) return 0;
+
+    const totalSentiment = validStats.reduce(
+      (sum, stat) => sum + (stat.averageSentiment || 0),
+      0
+    );
+    // Convert decimal to percentage (0.58 -> 58%)
+    return Math.round((totalSentiment / validStats.length) * 100);
   }
 
   getTotalWeeklyCalls(): number {
-    return this.weeklyPerformance.calls.reduce((a, b) => a + b, 0);
+    // Calculate total from actual weekly stats data
+    if (!this.weeklyStats || this.weeklyStats.length === 0) return 0;
+
+    return this.weeklyStats.reduce(
+      (total, stat) => total + (stat.callsCompleted || 0),
+      0
+    );
   }
 
   // Action methods
@@ -633,10 +921,66 @@ export class AgentDashboardComponent implements OnInit, AfterViewInit {
     }
   }
 
+  // Helper methods for MockCall display
+  getCallCustomerName(call: MockCall): string {
+    if (call.id && this.callDisplayData.has(call.id)) {
+      return this.callDisplayData.get(call.id)!.customerName;
+    }
+    return 'Unknown Customer';
+  }
+
+  getCallPhone(call: MockCall): string {
+    if (call.id && this.callDisplayData.has(call.id)) {
+      return this.callDisplayData.get(call.id)!.phone;
+    }
+    return 'No phone';
+  }
+
+  getCallType(call: MockCall): string {
+    if (call.id && this.callDisplayData.has(call.id)) {
+      return this.callDisplayData.get(call.id)!.type;
+    }
+    return 'General';
+  }
+
+  getCallPriority(call: MockCall): string {
+    if (call.id && this.callDisplayData.has(call.id)) {
+      return this.callDisplayData.get(call.id)!.priority;
+    }
+    return 'Medium';
+  }
+
+  getCallWaitTime(call: MockCall): string {
+    // Return stored wait time or default
+    if (call.id && this.callWaitTimes.has(call.id)) {
+      return this.callWaitTimes.get(call.id)!;
+    }
+    return '0:00';
+  }
+
   refreshQueue(): void {
     console.log('Refreshing call queue');
-    // Implement queue refresh logic
-    // You can add API call here to refresh the incoming calls
+    this.loadIncomingCalls();
+  }
+
+  takeCall(call: MockCall): void {
+    const customerName = this.getCallCustomerName(call);
+    console.log(`Taking call from ${customerName}`);
+
+    // Remove the call from the queue
+    this.incomingCalls = this.incomingCalls.filter((c) => c.id !== call.id);
+
+    // Clean up cached data
+    if (call.id) {
+      this.callWaitTimes.delete(call.id);
+      this.callDisplayData.delete(call.id);
+    }
+
+    // Increment completed calls
+    this.agentData.completedCalls++;
+
+    // Show notification or redirect to call interface
+    // You can add notification service here
   }
 
   updateChartData(): void {

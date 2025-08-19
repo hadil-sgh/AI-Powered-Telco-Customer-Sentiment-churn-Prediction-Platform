@@ -15,16 +15,19 @@
           - springboot-network
       restart: unless-stopped
 
+
     PostCallAnalytics:
       container_name: post-call-analytics
-      image: hadil03/post-call-inteligence-api
+      image: hadil03/post-call-inteligence-api:latest
       ports:
         - 5001:5001
       networks:
         - springboot-network
       depends_on:
-        - postgres
+       - postgres
       restart: unless-stopped
+
+
 
     ChurnPrediction:
       container_name: churn-prediction

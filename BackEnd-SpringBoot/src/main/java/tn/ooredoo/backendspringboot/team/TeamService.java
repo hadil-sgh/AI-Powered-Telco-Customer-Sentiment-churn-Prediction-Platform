@@ -8,4 +8,5 @@ public interface TeamService {
     void deleteTeam(Long id);
     Team getTeamById(Long id);
     List<Team> getAllTeams();
+
 }

@@ -2,6 +2,7 @@ package tn.ooredoo.backendspringboot.user;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,7 +31,7 @@ public class UserController {
     }
 
     @PostMapping("/save")
-    public void addEmployee(String email, String firstName, String lastName, Integer role) {
+    public void addEmployee(@RequestParam String email, @RequestParam String firstName, @RequestParam String lastName, @RequestParam Integer role) {
         userService.addEmployeeToDB(email, firstName, lastName, role);
     }
 
@@ -56,6 +57,14 @@ public class UserController {
     public void agentIsOffline(@RequestParam String email) {
         User user = getUserByEmail(email);
         userService.agentIsOffLine(user);
+    }
+    @PutMapping("/assign-team")
+    public ResponseEntity<User> assignTeamToUser(
+            @RequestParam Long userId,
+            @RequestParam Long teamId) {
+
+        User updatedUser = userService.assignTeamToUser(userId, teamId);
+        return ResponseEntity.ok(updatedUser);
     }
 
 }

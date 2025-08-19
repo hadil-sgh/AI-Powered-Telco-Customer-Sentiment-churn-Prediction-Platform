@@ -191,13 +191,21 @@
                 class="badge"
                 [ngClass]="{
                   'bg-label-success': getSentimentScore(call) >= 0.85,
-                  'bg-label-primary': getSentimentScore(call) >= 0.7 && getSentimentScore(call) < 0.85,
-                  'bg-label-info': getSentimentScore(call) >= 0.5 && getSentimentScore(call) < 0.7,
-                  'bg-label-warning': getSentimentScore(call) >= 0.3 && getSentimentScore(call) < 0.5,
+                  'bg-label-primary':
+                    getSentimentScore(call) >= 0.7 &&
+                    getSentimentScore(call) < 0.85,
+                  'bg-label-info':
+                    getSentimentScore(call) >= 0.5 &&
+                    getSentimentScore(call) < 0.7,
+                  'bg-label-warning':
+                    getSentimentScore(call) >= 0.3 &&
+                    getSentimentScore(call) < 0.5,
                   'bg-label-danger': getSentimentScore(call) < 0.3
                 }"
               >
-                {{ getSentimentLabel(call) }} ({{ getSentimentScore(call) | number : "1.2-2" }})
+                {{ getSentimentLabel(call) }} ({{
+                  getSentimentScore(call) | number : "1.2-2"
+                }})
               </span>
             </td>
             <td>

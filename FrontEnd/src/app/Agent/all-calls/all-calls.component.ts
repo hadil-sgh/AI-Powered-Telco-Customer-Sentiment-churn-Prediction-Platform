@@ -114,12 +114,16 @@ export class AllCallsComponent implements OnInit, OnDestroy {
                 ? { seconds: call.callDuration }
                 : call.callDuration,
           }));
-          console.log('Processed calls with sentiment:', this.calls.map(call => ({
-            id: call.id,
-            customer: call.customer?.firstName + ' ' + call.customer?.lastName,
-            sentimentPoint: call.sentimentPoint,
-            sentimentScore: call.sentimentPoint?.sentimentScore
-          })));
+          console.log(
+            'Processed calls with sentiment:',
+            this.calls.map((call) => ({
+              id: call.id,
+              customer:
+                call.customer?.firstName + ' ' + call.customer?.lastName,
+              sentimentPoint: call.sentimentPoint,
+              sentimentScore: call.sentimentPoint?.sentimentScore,
+            }))
+          );
           this.applyFilters();
           this.calculateStats();
         },
@@ -412,7 +416,10 @@ export class AllCallsComponent implements OnInit, OnDestroy {
   getSentimentScore(call: CallRecord): number {
     // First check if the call has a direct sentimentPoint property
     if (call.sentimentPoint?.sentimentScore !== undefined) {
-      console.log(`Found sentiment score for call ${call.id}:`, call.sentimentPoint.sentimentScore);
+      console.log(
+        `Found sentiment score for call ${call.id}:`,
+        call.sentimentPoint.sentimentScore
+      );
       return call.sentimentPoint.sentimentScore;
     }
 
@@ -422,7 +429,10 @@ export class AllCallsComponent implements OnInit, OnDestroy {
     );
 
     if (sentimentPoint && sentimentPoint.sentimentScore !== undefined) {
-      console.log(`Found sentiment score from service for call ${call.id}:`, sentimentPoint.sentimentScore);
+      console.log(
+        `Found sentiment score from service for call ${call.id}:`,
+        sentimentPoint.sentimentScore
+      );
       return sentimentPoint.sentimentScore;
     }
 
@@ -436,7 +446,10 @@ export class AllCallsComponent implements OnInit, OnDestroy {
         const avgSentiment =
           validSentiments.reduce((sum, score) => sum + score, 0) /
           validSentiments.length;
-        console.log(`Calculated sentiment from transcripts for call ${call.id}:`, avgSentiment);
+        console.log(
+          `Calculated sentiment from transcripts for call ${call.id}:`,
+          avgSentiment
+        );
         return avgSentiment;
       }
     }

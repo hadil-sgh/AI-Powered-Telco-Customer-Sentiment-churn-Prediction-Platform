@@ -118,7 +118,7 @@
                     class="bx"
                     [ngClass]="getStarClass(star)"
                     [class]="getStarColor(star)"
-                    style="font-size: 1.2rem;"
+                    style="font-size: 1.2rem"
                   ></i>
                 </div>
                 <span class="text-muted small">
@@ -533,8 +533,9 @@
                         "
                       >
                         {{
-                          getSentimentScoreForPerformance(record)
-                            | number : "1.2-2"
+                          formatSentimentScore(
+                            getSentimentScoreForPerformance(record)
+                          )
                         }}
                       </span>
                       <span
@@ -545,7 +546,11 @@
                           )
                         "
                       >
-                        {{ getSentimentLabel(getSentimentScoreForPerformance(record)) }}
+                        {{
+                          getSentimentLabel(
+                            getSentimentScoreForPerformance(record)
+                          )
+                        }}
                       </span>
                       <i
                         class="bx"
@@ -630,8 +635,9 @@
                           "
                         >
                           {{
-                            getSentimentScoreForPerformance(record)
-                              | number : "1.2-2"
+                            formatSentimentScore(
+                              getSentimentScoreForPerformance(record)
+                            )
                           }}
                           <i
                             class="bx ms-1"
@@ -650,7 +656,11 @@
                             )
                           "
                         >
-                          {{ getSentimentLabel(getSentimentScoreForPerformance(record)) }}
+                          {{
+                            getSentimentLabel(
+                              getSentimentScoreForPerformance(record)
+                            )
+                          }}
                         </span>
                       </div>
                     </div>
@@ -687,16 +697,26 @@
           </div>
 
           <!-- Pagination -->
-          <div class="d-flex justify-content-between align-items-center mt-3" *ngIf="filteredPerformanceRecords.length > 0">
+          <div
+            class="d-flex justify-content-between align-items-center mt-3"
+            *ngIf="filteredPerformanceRecords.length > 0"
+          >
             <div>
               Showing {{ (currentPage - 1) * pageSize + 1 }} to
-              {{ Math.min(currentPage * pageSize, filteredPerformanceRecords.length) }} of
-              {{ filteredPerformanceRecords.length }} entries
+              {{
+                Math.min(
+                  currentPage * pageSize,
+                  filteredPerformanceRecords.length
+                )
+              }}
+              of {{ filteredPerformanceRecords.length }} entries
             </div>
             <nav *ngIf="totalPages > 1">
               <ul class="pagination pagination-sm mb-0">
                 <li class="page-item" [class.disabled]="currentPage === 1">
-                  <a class="page-link" (click)="goToPage(currentPage - 1)">Previous</a>
+                  <a class="page-link" (click)="goToPage(currentPage - 1)"
+                    >Previous</a
+                  >
                 </li>
                 <li
                   class="page-item"
@@ -705,8 +725,13 @@
                 >
                   <a class="page-link" (click)="goToPage(page)">{{ page }}</a>
                 </li>
-                <li class="page-item" [class.disabled]="currentPage === totalPages">
-                  <a class="page-link" (click)="goToPage(currentPage + 1)">Next</a>
+                <li
+                  class="page-item"
+                  [class.disabled]="currentPage === totalPages"
+                >
+                  <a class="page-link" (click)="goToPage(currentPage + 1)"
+                    >Next</a
+                  >
                 </li>
               </ul>
             </nav>
@@ -717,7 +742,6 @@
   </div>
 
   <!-- Coaching Tips Section -->
-
 </div>
 
 <!-- Call Details Modal -->
@@ -811,7 +835,9 @@
                 "
               >
                 {{
-                  getCallSentimentScore(selectedCallRecord) | number : "1.2-2"
+                  formatSentimentScore(
+                    getCallSentimentScore(selectedCallRecord)
+                  )
                 }}
               </span>
               <span
@@ -822,7 +848,9 @@
                   )
                 "
               >
-                {{ getSentimentLabel(getCallSentimentScore(selectedCallRecord)) }}
+                {{
+                  getSentimentLabel(getCallSentimentScore(selectedCallRecord))
+                }}
               </span>
             </div>
           </div>
@@ -1046,22 +1074,29 @@
                   <div class="mb-2">
                     <div class="star-rating mb-2">
                       <i
-                        *ngFor="let star of getStarArray(selectedPerformanceRecord.score)"
+                        *ngFor="
+                          let star of getStarArray(
+                            selectedPerformanceRecord.score
+                          )
+                        "
                         class="bx"
                         [ngClass]="getStarClass(star)"
                         [class]="getStarColor(star)"
-                        style="font-size: 1.5rem;"
+                        style="font-size: 1.5rem"
                       ></i>
                     </div>
                     <small class="text-muted">
-                      {{ selectedPerformanceRecord.score | number : "1.1-1" }} / 5
+                      {{ selectedPerformanceRecord.score | number : "1.1-1" }} /
+                      5
                     </small>
                   </div>
                   <p class="card-text text-muted">Overall Performance</p>
                   <div class="progress" style="height: 8px">
                     <div
                       class="progress-bar"
-                      [style.width.%]="((selectedPerformanceRecord.score || 0) / 5) * 100"
+                      [style.width.%]="
+                        ((selectedPerformanceRecord.score || 0) / 5) * 100
+                      "
                       [ngClass]="
                         getPerformanceProgressClass(
                           selectedPerformanceRecord.score
@@ -1079,23 +1114,34 @@
                     class="card-title"
                     [ngClass]="
                       getSentimentScoreClass(
-                        getSentimentScoreForPerformance(selectedPerformanceRecord)
+                        getSentimentScoreForPerformance(
+                          selectedPerformanceRecord
+                        )
                       )
                     "
                   >
                     {{
-                      getSentimentScoreForPerformance(selectedPerformanceRecord) | number : "1.2-2"
+                      getSentimentScoreForPerformance(selectedPerformanceRecord)
+                        | number : "1.2-2"
                     }}
                   </h5>
                   <span
                     class="badge mb-2"
                     [ngClass]="
                       getSentimentAvatarClass(
-                        getSentimentScoreForPerformance(selectedPerformanceRecord)
+                        getSentimentScoreForPerformance(
+                          selectedPerformanceRecord
+                        )
                       )
                     "
                   >
-                    {{ getSentimentLabel(getSentimentScoreForPerformance(selectedPerformanceRecord)) }}
+                    {{
+                      getSentimentLabel(
+                        getSentimentScoreForPerformance(
+                          selectedPerformanceRecord
+                        )
+                      )
+                    }}
                   </span>
                   <p class="card-text text-muted">Customer Sentiment</p>
                   <div class="progress" style="height: 8px">
@@ -1103,12 +1149,16 @@
                       class="progress-bar"
                       [style.width.%]="
                         getSentimentProgressWidth(
-                          getSentimentScoreForPerformance(selectedPerformanceRecord)
+                          getSentimentScoreForPerformance(
+                            selectedPerformanceRecord
+                          )
                         )
                       "
                       [ngClass]="
                         getSentimentProgressClass(
-                          getSentimentScoreForPerformance(selectedPerformanceRecord)
+                          getSentimentScoreForPerformance(
+                            selectedPerformanceRecord
+                          )
                         )
                       "
                     ></div>

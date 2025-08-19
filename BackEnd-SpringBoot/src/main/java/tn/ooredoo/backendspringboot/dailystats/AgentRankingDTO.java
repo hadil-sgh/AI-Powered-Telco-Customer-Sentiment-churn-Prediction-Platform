@@ -9,4 +9,5 @@ public class AgentRankingDTO {
     private Integer totalScore;
     private Integer callsCompleted;
     private Double averageSentiment;
+    private Integer rank;
 }

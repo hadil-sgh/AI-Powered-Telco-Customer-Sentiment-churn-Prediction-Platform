@@ -1,5 +1,7 @@
 package tn.ooredoo.backendspringboot.user;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -51,9 +53,16 @@ public class User implements UserDetails, Principal, Serializable {
     private List<Role> roles = new ArrayList<>();
 
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.EAGER)
     private Team team;
 
+
+
+    @JsonProperty("teamId")
+    public Long getTeamId() {
+        return team != null ? team.getId() : null;
+    }
 
 
     @CreatedDate
