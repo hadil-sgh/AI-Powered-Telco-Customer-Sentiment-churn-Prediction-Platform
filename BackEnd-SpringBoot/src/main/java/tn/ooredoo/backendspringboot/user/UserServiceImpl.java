@@ -105,4 +105,15 @@ public class UserServiceImpl implements UserService {
                 )
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public void agentIsOnline(User user) {
+        user.setOnline(true);
+    }
+
+    @Override
+    public void agentIsOffLine(User user) {
+        user.setOnline(false);
+
+    }
 }

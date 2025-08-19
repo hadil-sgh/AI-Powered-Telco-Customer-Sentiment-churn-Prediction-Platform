@@ -9,6 +9,8 @@ public interface DailyStatsService {
     void updateCallsCompletedForToday(User user, int callsCompleted);
     DailyStats updateDailyStatusPostCall(String email,CallRecord callRecord,Integer score);
     List<DailyStats> getDailyStatsByAgent(String agent);
+    DailyStats getDailyStatsForToday(String email);
+    List<AgentRankingDTO> getTeamRankingOverall(String email);
 
 
 }

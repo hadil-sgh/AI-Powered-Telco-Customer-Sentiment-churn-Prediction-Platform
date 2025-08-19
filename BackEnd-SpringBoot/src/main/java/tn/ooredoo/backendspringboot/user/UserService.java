@@ -15,4 +15,6 @@ public interface UserService {
 
     List<User> findAll();
     List<User> findOnlineAgents();
+    void agentIsOnline(User user);
+    void agentIsOffLine(User user);
 }

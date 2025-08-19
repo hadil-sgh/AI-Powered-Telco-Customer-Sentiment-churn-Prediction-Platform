@@ -43,5 +43,21 @@ public class DailyStatsController {
     public List<DailyStats> getDailyStatusByAgent(@RequestParam String userEmail) {
         return dailyStatsService.getDailyStatsByAgent(userEmail);
     }
+
+    @GetMapping("/getTeamRanking")
+    public List<AgentRankingDTO> getTeamRanking(@RequestParam String userEmail) {
+        return dailyStatsService.getTeamRankingOverall(userEmail);
+    }
+
+    @GetMapping("/today/{email}")
+    public ResponseEntity<DailyStats> getTodayStats(@PathVariable String email) {
+        DailyStats stats = dailyStatsService.getDailyStatsForToday(email);
+        if (stats == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(stats);
+    }
+
+
 }
 

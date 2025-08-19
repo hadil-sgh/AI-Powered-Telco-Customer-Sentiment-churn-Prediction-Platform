@@ -5,10 +5,15 @@ import org.springframework.stereotype.Repository;
 import tn.ooredoo.backendspringboot.user.User;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface DailyStatsRepository extends JpaRepository<DailyStats, Long> {
     Optional<DailyStats> findByUserAndDate(User user, LocalDateTime date);
+    Optional<DailyStats> findByUserAndDateBetween(User user, LocalDateTime start, LocalDateTime end);
+    List<DailyStats> findAllByUser(User user);
+
+
 }
 

@@ -5,12 +5,14 @@ import org.springframework.stereotype.Service;
 import tn.ooredoo.backendspringboot.call_transcript.CallRecord;
 import tn.ooredoo.backendspringboot.sentiment.SentimentPointService;
 import tn.ooredoo.backendspringboot.user.User;
+import tn.ooredoo.backendspringboot.user.UserRepository;
 import tn.ooredoo.backendspringboot.user.UserService;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,6 +21,7 @@ import java.util.Optional;
 public class DailyStatsServiceImpl implements DailyStatsService {
     private final DailyStatsRepository dailyStatsRepository;
     private final UserService userService;
+    private final UserRepository userRepository;
     private final SentimentPointService sentimentPointService;
 
 
@@ -60,15 +63,18 @@ public class DailyStatsServiceImpl implements DailyStatsService {
 
         dailyStats.setCallsCompleted(dailyStats.getCallsCompleted() + 1);
 
-
         Double sentimentPoints = sentimentPointService.getAverageSentimentPerCall(callRecord.getId());
-        dailyStats.setAverageSentiment(sentimentPoints);
+        double oldAvg = dailyStats.getAverageSentiment();
+        int completed = dailyStats.getCallsCompleted();
 
+        double newAvg = ((oldAvg * (completed - 1)) + sentimentPoints) / completed;
+        dailyStats.setAverageSentiment(newAvg);
 
         int newTotalScore = dailyStats.getTotalScore() + score;
         dailyStats.setTotalScore(newTotalScore);
 
         double averageScore = (double) newTotalScore / dailyStats.getCallsCompleted();
+
 
         System.out.println("New average score: " + averageScore);
 
@@ -88,6 +94,67 @@ public class DailyStatsServiceImpl implements DailyStatsService {
         }
 
         return result;
+    }
+
+    @Override
+    public DailyStats getDailyStatsForToday(String email) {
+        User user = userService.findByEmail(email);
+        LocalDate today = LocalDate.now();
+
+        LocalDateTime startOfDay = today.atStartOfDay();
+        LocalDateTime endOfDay = today.atTime(LocalTime.MAX);
+
+        return dailyStatsRepository.findByUserAndDateBetween(user, startOfDay, endOfDay)
+                .orElse(null);
+    }
+
+    @Override
+    public List<AgentRankingDTO> getTeamRankingOverall(String email) {
+        // Find requesting user
+        User currentUser = userService.findByEmail(email);
+        if (currentUser.getTeam() == null) {
+            return new ArrayList<>();
+        }
+
+        // Get all teammates in the same team
+        List<User> teammates = userRepository.findByTeam(currentUser.getTeam());
+
+        List<AgentRankingDTO> ranking = new ArrayList<>();
+
+        for (User teammate : teammates) {
+            List<DailyStats> allStats = dailyStatsRepository.findAllByUser(teammate);
+
+            if (!allStats.isEmpty()) {
+                int totalCalls = allStats.stream()
+                        .mapToInt(ds -> ds.getCallsCompleted() == null ? 0 : ds.getCallsCompleted())
+                        .sum();
+
+                int totalScore = allStats.stream()
+                        .mapToInt(ds -> ds.getTotalScore() == null ? 0 : ds.getTotalScore())
+                        .sum();
+
+                double avgSentiment = allStats.stream()
+                        .filter(ds -> ds.getAverageSentiment() != null)
+                        .mapToDouble(DailyStats::getAverageSentiment)
+                        .average()
+                        .orElse(0.0);
+
+                ranking.add(new AgentRankingDTO(
+                        teammate.getFullName(),
+                        totalScore,
+                        totalCalls,
+                        avgSentiment
+                ));
+            }
+        }
+
+        // Sort: score DESC → calls DESC → sentiment DESC
+        ranking.sort(Comparator
+                .comparing(AgentRankingDTO::getTotalScore, Comparator.reverseOrder())
+                .thenComparing(AgentRankingDTO::getCallsCompleted, Comparator.reverseOrder())
+                .thenComparing(AgentRankingDTO::getAverageSentiment, Comparator.reverseOrder()));
+
+        return ranking;
     }
 
 

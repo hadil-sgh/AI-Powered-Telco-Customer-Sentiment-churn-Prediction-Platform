@@ -45,7 +45,17 @@ public class UserController {
     }
     @GetMapping("/getOnlineAgents")
     public List<User> getOnlineAgents() {
+
         return userService.findOnlineAgents();
+    }
+    @GetMapping("/agentIsOnline")
+    public void agentIsOnline(@RequestParam String email) {
+        User user = getUserByEmail(email);
+         userService.agentIsOnline(user);
+    }@GetMapping("/agentIsOffline")
+    public void agentIsOffline(@RequestParam String email) {
+        User user = getUserByEmail(email);
+        userService.agentIsOffLine(user);
     }
 
 }
