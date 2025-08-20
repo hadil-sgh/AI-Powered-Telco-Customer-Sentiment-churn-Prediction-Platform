@@ -11,7 +11,6 @@ import tn.ooredoo.backendspringboot.user.User;
 import tn.ooredoo.backendspringboot.user.UserService;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -75,7 +74,6 @@ public class SentimentPointServiceImpl implements SentimentPointService {
     public List<SentimentPoint> getSentimentPointsForAgent(String userEmail) {
         return sentimentPointRepository.findByAgentEmail(userEmail);
     }
-
 
 
     private double mapEmotionToScore(String emotion) {

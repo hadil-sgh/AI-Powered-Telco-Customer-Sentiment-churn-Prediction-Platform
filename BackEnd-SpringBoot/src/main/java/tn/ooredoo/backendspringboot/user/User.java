@@ -41,6 +41,7 @@ public class User implements UserDetails, Principal, Serializable {
     private String firstname;
     private String lastname;
     private LocalDate dateOfBirth;
+    private Long phoneNumber;
     @Column(unique = true)
     private String email;
     private String password;

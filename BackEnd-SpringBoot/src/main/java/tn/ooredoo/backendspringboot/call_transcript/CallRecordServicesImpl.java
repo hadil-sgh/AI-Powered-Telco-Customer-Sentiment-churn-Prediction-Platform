@@ -12,6 +12,8 @@ import tn.ooredoo.backendspringboot.post_call_analysis.complaintscustomer.Compla
 import tn.ooredoo.backendspringboot.post_call_analysis.complaintscustomer.ComplaintRepository;
 import tn.ooredoo.backendspringboot.post_call_analysis.performanceagent.Performance;
 import tn.ooredoo.backendspringboot.post_call_analysis.performanceagent.PerformanceRepository;
+import tn.ooredoo.backendspringboot.sentiment.SentimentPoint;
+import tn.ooredoo.backendspringboot.sentiment.SentimentPointRepository;
 import tn.ooredoo.backendspringboot.user.User;
 import tn.ooredoo.backendspringboot.user.UserRepository;
 
@@ -30,6 +32,7 @@ public class CallRecordServicesImpl implements CallRecordServices {
     private final @Lazy ComplaintRepository complaintRepository;
     private final @Lazy PerformanceRepository performanceRepository;
     private final @Lazy NoteRepository noteRepository;
+    private final @Lazy SentimentPointRepository sentimentPointRepository;
 
 
     @Override
@@ -82,7 +85,11 @@ public class CallRecordServicesImpl implements CallRecordServices {
         if (!notes.isEmpty()) {
             noteRepository.deleteAll(notes);
         }
-
+        //Delete SentimentPoints
+        List<SentimentPoint> sentimentPoints=sentimentPointRepository.findByCall_Id(id);
+        if (!sentimentPoints.isEmpty()) {
+            sentimentPointRepository.deleteAll(sentimentPoints);
+        }
         // Finally delete the call record itself
         callRecordRepository.delete(callRecord);
     }

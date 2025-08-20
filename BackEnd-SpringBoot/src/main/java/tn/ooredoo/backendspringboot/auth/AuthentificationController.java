@@ -39,6 +39,16 @@ public class AuthentificationController {
         authentificationService.activateAccount(token);
     }
 
+    @PostMapping("/change-password")
+    public ResponseEntity<String> changePassword(@RequestBody ChangePasswordRequest request) {
+        try {
+            authentificationService.changePassword(request.email, request.oldPassword, request.newPassword);
+            return ResponseEntity.ok("Password changed successfully");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
 
 
 }

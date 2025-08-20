@@ -10,6 +10,7 @@ import tn.ooredoo.backendspringboot.user.UserRepository;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -33,9 +34,10 @@ public class DailyStatsController {
     public ResponseEntity<DailyStats> updateDailyStatsPerAgentCall(
             @RequestParam String email,
             @PathVariable Long recordId,
-            @RequestParam Integer score) {
+            @RequestParam Double score,
+            @RequestParam Double averageSentiment ) {
         CallRecord callRecord = callRecordServices.getCallRecordById(recordId.intValue());
-        DailyStats updatedStats = dailyStatsService.updateDailyStatusPostCall(email, callRecord, score);
+        DailyStats updatedStats = dailyStatsService.updateDailyStatusPostCall(email, callRecord, score,averageSentiment);
         return ResponseEntity.ok(updatedStats);
     }
 

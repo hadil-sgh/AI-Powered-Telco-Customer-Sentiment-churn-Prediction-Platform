@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface DailyStatsService {
     void updateCallsCompletedForToday(User user, int callsCompleted);
-    DailyStats updateDailyStatusPostCall(String email,CallRecord callRecord,Integer score);
+    DailyStats updateDailyStatusPostCall(String email,CallRecord callRecord,Double score,Double AverageSentiment);
     List<DailyStats> getDailyStatsByAgent(String agent);
     List<DailyStats> getDailyStatsByAgentForTheCurrentWeek(String agent);
     DailyStats getDailyStatsForToday(String email);

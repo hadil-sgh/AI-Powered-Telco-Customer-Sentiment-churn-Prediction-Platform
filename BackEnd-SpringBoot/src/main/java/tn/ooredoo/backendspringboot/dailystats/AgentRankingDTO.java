@@ -6,7 +6,7 @@ import lombok.Data;
 @AllArgsConstructor
 public class AgentRankingDTO {
     private String agentName;
-    private Integer totalScore;
+    private Double totalScore;
     private Integer callsCompleted;
     private Double averageSentiment;
     private Integer rank;

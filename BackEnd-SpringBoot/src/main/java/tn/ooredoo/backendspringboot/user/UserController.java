@@ -36,7 +36,7 @@ public class UserController {
     }
 
     @PutMapping("/update")
-    public User updateUser(User user) {
+    public User updateUser(@RequestParam User user) {
         return userService.update(user);
     }
 

@@ -1,13 +1,14 @@
 package tn.ooredoo.backendspringboot.user;
 
 import jakarta.mail.MessagingException;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import tn.ooredoo.backendspringboot.email.EmailService;
 import tn.ooredoo.backendspringboot.email.EmailTemplateName;
 import tn.ooredoo.backendspringboot.role.Role;
 import tn.ooredoo.backendspringboot.role.RoleRepository;
-import tn.ooredoo.backendspringboot.team.TeamRepository;
 import tn.ooredoo.backendspringboot.team.TeamService;
 
 import java.util.List;
@@ -22,6 +23,7 @@ public class UserServiceImpl implements UserService {
     private final EmailService emailService;
     private final RoleRepository roleRepository;
     private final TeamService teamService;
+    private final @Lazy  TokenRepository tokenRepository;
 
     @Override
     public User findByEmail(String email) {
@@ -80,11 +82,13 @@ public class UserServiceImpl implements UserService {
         return userRepository.save(user);
     }
 
+    @Transactional
     @Override
     public void deleteById(Long id) {
+        tokenRepository.deleteAllByUser(findById(id));
         userRepository.deleteById(id);
-
     }
+
 
     @Override
     public User findById(Long id) {
@@ -104,19 +108,22 @@ public class UserServiceImpl implements UserService {
                 .filter(
                         user -> user.getRoles()
                                 .stream()
-                                .anyMatch(role -> role.getName().equals("ROLE_AGENT"))
+                                .anyMatch(role -> "ROLE_USER".equals(role.getRoleName()))
                 )
                 .collect(Collectors.toList());
     }
 
+
     @Override
     public void agentIsOnline(User user) {
         user.setOnline(true);
+        userRepository.save(user);
     }
 
     @Override
     public void agentIsOffLine(User user) {
         user.setOnline(false);
+        userRepository.save(user);
 
     }
 

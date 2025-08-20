@@ -30,5 +30,5 @@ public class DailyStats implements Serializable {
     private Integer escalations;
     private Integer coachingTipsUsed;
     private Integer helpfulTips;
-    private Integer totalScore;
+    private Double totalScore;
 }

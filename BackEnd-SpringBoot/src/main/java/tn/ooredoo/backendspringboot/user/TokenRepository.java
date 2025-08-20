@@ -9,4 +9,5 @@ public interface TokenRepository extends JpaRepository<Token, Integer> {
      // ! Optional is a wrapper to avoid NullPointerException
      Optional<Token> findByToken(String token);
 
+    void deleteAllByUser(User user);
 }

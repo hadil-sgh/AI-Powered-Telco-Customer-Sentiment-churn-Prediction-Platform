@@ -48,7 +48,7 @@ public class DailyStatsServiceImpl implements DailyStatsService {
     }
 
     @Override
-    public DailyStats updateDailyStatusPostCall(String email, CallRecord callRecord, Integer score) {
+    public DailyStats updateDailyStatusPostCall(String email, CallRecord callRecord, Double score, Double newSentimentPoint) {
         User currentUser = userService.findByEmail(email);
 
         LocalDate today = LocalDate.now();
@@ -60,31 +60,34 @@ public class DailyStatsServiceImpl implements DailyStatsService {
                         .user(currentUser)
                         .date(startOfDay)
                         .callsCompleted(0)
-                        .totalScore(0)
+                        .totalScore(0.0)
                         .averageSentiment(0.0)
                         .build());
 
+        // Increment calls completed
+        int completed = dailyStats.getCallsCompleted() + 1;
+        dailyStats.setCallsCompleted(completed);
 
+        // Convert new sentiment point to 0–1 scale
+        double sentimentPointsNormalized = newSentimentPoint / 100.0;
 
-        dailyStats.setCallsCompleted(dailyStats.getCallsCompleted() + 1);
-
-        Double sentimentPoints = sentimentPointService.getAverageSentimentPerCall(callRecord.getId());
+        // Recalculate average sentiment
         double oldAvg = dailyStats.getAverageSentiment();
-        int completed = dailyStats.getCallsCompleted();
-
-        double newAvg = ((oldAvg * (completed - 1)) + sentimentPoints) / completed;
+        double newAvg = ((oldAvg * (completed - 1)) + sentimentPointsNormalized) / completed;
         dailyStats.setAverageSentiment(newAvg);
 
-        int newTotalScore = dailyStats.getTotalScore() + score;
+        // Update total score
+        Double newTotalScore = dailyStats.getTotalScore() + score;
         dailyStats.setTotalScore(newTotalScore);
 
-        double averageScore = (double) newTotalScore / dailyStats.getCallsCompleted();
-
-
+        // Optionally calculate average score for logging
+        Double averageScore = newTotalScore / completed;
         System.out.println("New average score: " + averageScore);
 
         return dailyStatsRepository.save(dailyStats);
     }
+
+
 
     @Override
     public List<DailyStats> getDailyStatsByAgent(String email) {
@@ -146,8 +149,8 @@ public class DailyStatsServiceImpl implements DailyStatsService {
                         .mapToInt(ds -> ds.getCallsCompleted() == null ? 0 : ds.getCallsCompleted())
                         .sum();
 
-                int totalScore = allStats.stream()
-                        .mapToInt(ds -> ds.getTotalScore() == null ? 0 : ds.getTotalScore())
+                double totalScore = allStats.stream()
+                        .mapToDouble(ds -> ds.getTotalScore() == null ? 0.0 : ds.getTotalScore())
                         .sum();
 
                 double avgSentiment = allStats.stream()
@@ -158,10 +161,10 @@ public class DailyStatsServiceImpl implements DailyStatsService {
 
                 ranking.add(new AgentRankingDTO(
                         teammate.getFullName(),
-                        totalScore,
+                        totalScore,     // now Double
                         totalCalls,
                         avgSentiment,
-                        0 // placeholder for rank
+                        0               // placeholder for rank
                 ));
             }
         }

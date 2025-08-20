@@ -29,7 +29,7 @@ public interface SentimentPointRepository extends JpaRepository<SentimentPoint, 
     List<SentimentPoint> findByAgentEmail(@Param("userEmail") String userEmail);
 
 
-
+    List<SentimentPoint> findByCall_Id(Integer callId);
 }
 
 
