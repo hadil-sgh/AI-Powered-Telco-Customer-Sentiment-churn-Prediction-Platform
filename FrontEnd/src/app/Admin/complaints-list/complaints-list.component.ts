@@ -117,28 +117,28 @@ export class ComplaintsListComponent implements OnInit, AfterViewInit {
           {
             data: filteredStats.map((stat) => stat.percentage),
             backgroundColor: [
-              'rgba(255, 99, 132, 0.2)',   // Light red/pink
-              'rgba(54, 162, 235, 0.2)',   // Light blue
-              'rgba(255, 206, 86, 0.2)',   // Light yellow
-              'rgba(75, 192, 192, 0.2)',   // Light teal
-              'rgba(153, 102, 255, 0.2)',  // Light purple
-              'rgba(255, 159, 64, 0.2)',   // Light orange
-              'rgba(199, 199, 199, 0.2)',  // Light gray
-              'rgba(83, 102, 255, 0.2)',   // Light indigo
-              'rgba(255, 99, 255, 0.2)',   // Light magenta
-              'rgba(99, 255, 132, 0.2)',   // Light green
+              'rgba(255, 99, 132, 0.2)', // Light red/pink
+              'rgba(54, 162, 235, 0.2)', // Light blue
+              'rgba(255, 206, 86, 0.2)', // Light yellow
+              'rgba(75, 192, 192, 0.2)', // Light teal
+              'rgba(153, 102, 255, 0.2)', // Light purple
+              'rgba(255, 159, 64, 0.2)', // Light orange
+              'rgba(199, 199, 199, 0.2)', // Light gray
+              'rgba(83, 102, 255, 0.2)', // Light indigo
+              'rgba(255, 99, 255, 0.2)', // Light magenta
+              'rgba(99, 255, 132, 0.2)', // Light green
             ],
             borderColor: [
-              'rgba(255, 99, 132, 1)',     // Solid red/pink border
-              'rgba(54, 162, 235, 1)',     // Solid blue border
-              'rgba(255, 206, 86, 1)',     // Solid yellow border
-              'rgba(75, 192, 192, 1)',     // Solid teal border
-              'rgba(153, 102, 255, 1)',    // Solid purple border
-              'rgba(255, 159, 64, 1)',     // Solid orange border
-              'rgba(199, 199, 199, 1)',    // Solid gray border
-              'rgba(83, 102, 255, 1)',     // Solid indigo border
-              'rgba(255, 99, 255, 1)',     // Solid magenta border
-              'rgba(99, 255, 132, 1)',     // Solid green border
+              'rgba(255, 99, 132, 1)', // Solid red/pink border
+              'rgba(54, 162, 235, 1)', // Solid blue border
+              'rgba(255, 206, 86, 1)', // Solid yellow border
+              'rgba(75, 192, 192, 1)', // Solid teal border
+              'rgba(153, 102, 255, 1)', // Solid purple border
+              'rgba(255, 159, 64, 1)', // Solid orange border
+              'rgba(199, 199, 199, 1)', // Solid gray border
+              'rgba(83, 102, 255, 1)', // Solid indigo border
+              'rgba(255, 99, 255, 1)', // Solid magenta border
+              'rgba(99, 255, 132, 1)', // Solid green border
             ],
             borderWidth: 2,
           },
@@ -155,8 +155,8 @@ export class ComplaintsListComponent implements OnInit, AfterViewInit {
               usePointStyle: true,
               boxWidth: 12,
               font: {
-                size: 12
-              }
+                size: 12,
+              },
             },
           },
           tooltip: {
@@ -173,9 +173,9 @@ export class ComplaintsListComponent implements OnInit, AfterViewInit {
             left: 10,
             right: 10,
             top: 10,
-            bottom: 10
-          }
-        }
+            bottom: 10,
+          },
+        },
       },
     };
 

@@ -48,12 +48,13 @@ export class PostCallService {
   updateDailyStats(
     recordId: number,
     email: string,
-    score: number
+    score: number,
+    averageSentiment: number
   ): Observable<any> {
     return this.http.post<any>(
       `${this.baseUrl}/dailystats/update/${recordId}?email=${encodeURIComponent(
         email
-      )}&score=${score}`,
+      )}&score=${score}&averageSentiment=${averageSentiment}`,
       {}
     );
   }

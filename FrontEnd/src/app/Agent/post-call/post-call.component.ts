@@ -284,50 +284,53 @@ export class PostCallComponent implements OnInit {
     const recordId = this.callRecord.id;
     const email = this.tokenService.getEmailFromToken();
     const score = this.postCallAnalysis.score || 0;
+    const averageSentiment = this.getAverageSentiment();
     const complaintType = this.postCallAnalysis.complaintType || '';
     const feedback = this.postCallAnalysis.feedback || '';
     const summary = this.postCallAnalysis.summary || '';
     const outcome = { outcome: this.selectedOutcome };
 
     // 1. Update daily stats
-    this.postCallService.updateDailyStats(recordId, email, score).subscribe({
-      next: () => {
-        // 2. Save performance
-        this.postCallService
-          .savePerformancePostCall(
-            complaintType,
-            feedback,
-            score,
-            recordId,
-            summary
-          )
-          .subscribe({
-            next: () => {
-              // 3. Optionally get average sentiment (not used here)
-              // this.postCallService.getAverageSentiment(recordId).subscribe();
-              Swal.fire({
-                title: 'Call Activities Completed!',
-                text: 'All post-call activities have been completed.',
-                icon: 'success',
-                timer: 2000,
-                showConfirmButton: false,
-                position: 'top-end',
-                toast: true,
-              }).then(() => {
+    this.postCallService
+      .updateDailyStats(recordId, email, score, averageSentiment)
+      .subscribe({
+        next: () => {
+          // 2. Save performance
+          this.postCallService
+            .savePerformancePostCall(
+              complaintType,
+              feedback,
+              score,
+              recordId,
+              summary
+            )
+            .subscribe({
+              next: () => {
+                // 3. Optionally get average sentiment (not used here)
+                // this.postCallService.getAverageSentiment(recordId).subscribe();
+                Swal.fire({
+                  title: 'Call Activities Completed!',
+                  text: 'All post-call activities have been completed.',
+                  icon: 'success',
+                  timer: 2000,
+                  showConfirmButton: false,
+                  position: 'top-end',
+                  toast: true,
+                }).then(() => {
+                  this.router.navigate(['/Agent/allCalls']);
+                });
+              },
+              error: (err: any) => {
+                console.error('Error saving performance:', err);
                 this.router.navigate(['/Agent/allCalls']);
-              });
-            },
-            error: (err: any) => {
-              console.error('Error saving performance:', err);
-              this.router.navigate(['/Agent/allCalls']);
-            },
-          });
-      },
-      error: (err: any) => {
-        console.error('Error updating daily stats:', err);
-        this.router.navigate(['/Agent/allCalls']);
-      },
-    });
+              },
+            });
+        },
+        error: (err: any) => {
+          console.error('Error updating daily stats:', err);
+          this.router.navigate(['/Agent/allCalls']);
+        },
+      });
   }
 
   startNewCall() {

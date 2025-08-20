@@ -20,7 +20,7 @@ import { AgentAllTemplateComponent } from './Agent/agent-all-template/agent-all-
 import { AgentSidebarComponent } from './Agent/agent-sidebar/agent-sidebar.component';
 import { AllCallsComponent } from './Agent/all-calls/all-calls.component';
 import { NotesComponent } from './Agent/notes/notes.component';
-import { JwtModule } from "@auth0/angular-jwt";
+import { JwtModule } from '@auth0/angular-jwt';
 import { ProfileManagementComponent } from './profile-management/profile-management.component';
 import { TeamManagementComponent } from './Admin/team-management/team-management.component';
 import { AgentsPerformancesComponent } from './Admin/agents-performances/agents-performances.component';
@@ -28,6 +28,7 @@ import { ComplaintsListComponent } from './Admin/complaints-list/complaints-list
 import { KnowlageBaseComponent } from './Admin/knowlage-base/knowlage-base.component';
 import { QuickTipsComponent } from './Admin/quick-tips/quick-tips.component';
 import { AdminDashboeardComponent } from './Admin/admin-dashboeard/admin-dashboeard.component';
+import { AgentCoachingTipsComponent } from './Agent/agent-coaching-tips/agent-coaching-tips.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -53,19 +54,19 @@ import { AdminDashboeardComponent } from './Admin/admin-dashboeard/admin-dashboe
     KnowlageBaseComponent,
     QuickTipsComponent,
     AdminDashboeardComponent,
+    AgentCoachingTipsComponent,
   ],
   imports: [
-    
     BrowserModule,
-        JwtModule.forRoot({
+    JwtModule.forRoot({
       config: {
         tokenGetter: () => {
-          return localStorage.getItem("token");
+          return localStorage.getItem('token');
         },
-        allowedDomains: ["localhost:8088"], 
+        allowedDomains: ['localhost:8088'],
         disallowedRoutes: [],
       },
-    }), 
+    }),
     CommonModule,
     AppRoutingModule,
     HttpClientModule,
