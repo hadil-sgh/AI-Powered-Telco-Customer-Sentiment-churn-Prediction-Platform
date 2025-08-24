@@ -12,6 +12,8 @@ public interface DailyStatsService {
     List<DailyStats> getDailyStatsByAgentForTheCurrentWeek(String agent);
     DailyStats getDailyStatsForToday(String email);
     List<AgentRankingDTO> getTeamRankingOverall(String email);
+    DailyStats getDailyStatsForYesterday(String email);
+
 
 
 }

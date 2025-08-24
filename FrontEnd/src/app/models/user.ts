@@ -21,6 +21,7 @@ export interface User {
   name?: string;
   online?: boolean;
   password?: string;
+  phoneNumber?: number;
   roles?: Array<Role>;
   team?: Team;
   teamId?: number;

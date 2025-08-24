@@ -1,5 +1,6 @@
 package tn.ooredoo.backendspringboot.user;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface UserService {
@@ -7,7 +8,7 @@ public interface UserService {
 
     void addEmployeeToDB(String mail, String firstName, String lastName, Integer role);
 
-    User update(User user);
+    User update(String currentEmail,String newEmail, Long phone, LocalDate dateOfBirth);
 
     void deleteById(Long id);
 

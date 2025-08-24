@@ -182,7 +182,20 @@ public class DailyStatsServiceImpl implements DailyStatsService {
 
         return ranking;
     }
+
+    @Override
+    public DailyStats getDailyStatsForYesterday(String email) {
+        User user = userService.findByEmail(email);
+
+        LocalDate yesterday = LocalDate.now().minusDays(1);
+        LocalDateTime startOfDay = yesterday.atStartOfDay();
+        LocalDateTime endOfDay = yesterday.atTime(LocalTime.MAX);
+
+        return dailyStatsRepository.findByUserAndDateBetween(user, startOfDay, endOfDay)
+                .orElse(null);
+    }
 }
+
 
 
 

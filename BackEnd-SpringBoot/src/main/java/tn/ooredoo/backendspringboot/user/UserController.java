@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -36,8 +37,12 @@ public class UserController {
     }
 
     @PutMapping("/update")
-    public User updateUser(@RequestParam User user) {
-        return userService.update(user);
+    public User updateUser(@RequestParam String currentEmail,
+                           @RequestParam String newEmail,
+                           @RequestParam Long phone,
+                           @RequestParam LocalDate dateOfBirth) {
+
+        return userService.update(currentEmail, newEmail, phone, dateOfBirth);
     }
 
     @DeleteMapping("/delete/{id}")

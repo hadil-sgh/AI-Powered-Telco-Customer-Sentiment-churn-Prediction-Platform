@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
 import { User } from '../models/user';
+import { TokenService } from './token.service';
 
 @Injectable({
   providedIn: 'root',
@@ -9,7 +10,7 @@ import { User } from '../models/user';
 export class UserService {
   private baseUrl = 'http://localhost:8088/api/v1/user';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private tokenService: TokenService) {}
 
   getAllUsers(): Observable<User[]> {
     return this.http.get<User[]>(`${this.baseUrl}/getAll`);
@@ -43,8 +44,28 @@ export class UserService {
     });
   }
 
-  updateUser(user: User): Observable<User> {
-    return this.http.put<User>(`${this.baseUrl}/update`, user);
+  updateUser(newEmail: string, phone: number, dateOfBirth: string): Observable<User> {
+    const currentEmail = this.tokenService.getEmailFromToken();
+    return this.http.put<User>(`${this.baseUrl}/update`, null, {
+      params: {
+        currentEmail: currentEmail,
+        newEmail: newEmail,
+        phone: phone.toString(),
+        dateOfBirth: dateOfBirth
+      }
+    });
+  }
+
+  // Admin method for updating user details
+  // TODO: Implement proper admin endpoint in backend that supports updating firstname/lastname
+  updateUserAdmin(user: User): Observable<User> {
+    // Temporarily return an error since the current backend endpoint 
+    // doesn't support updating firstname/lastname fields
+    return throwError(() => ({
+      error: {
+        message: 'Admin user update not yet implemented. Please create a proper admin endpoint in the backend that supports updating firstname and lastname fields.'
+      }
+    }));
   }
 
   deleteUserById(id: number): Observable<void> {

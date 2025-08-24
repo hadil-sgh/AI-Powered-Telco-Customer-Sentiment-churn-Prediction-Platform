@@ -11,6 +11,7 @@ import tn.ooredoo.backendspringboot.role.Role;
 import tn.ooredoo.backendspringboot.role.RoleRepository;
 import tn.ooredoo.backendspringboot.team.TeamService;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -78,7 +79,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User update(User user) {
+    public User update(String currentEmail,String newEmail, Long phone, LocalDate dateOfBirth) {
+        User user=findByEmail(currentEmail);
+        user.setPhoneNumber(phone);
+        user.setDateOfBirth(dateOfBirth);
+        user.setEmail(newEmail);
         return userRepository.save(user);
     }
 

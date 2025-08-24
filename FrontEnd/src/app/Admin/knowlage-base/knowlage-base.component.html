@@ -1,1 +1,546 @@
-<p>knowlage-base works!</p>
+<!-- Knowledge Base Management -->
+<div class="container-xxl flex-grow-1 container-p-y">
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col-md-8">
+      <h4 class="py-3 mb-2">
+        <span class="text-muted fw-light">Admin / </span>Knowledge Base
+        Management
+      </h4>
+      <p class="text-muted">
+        Manage and organize customer policies, procedures, and important
+        information
+      </p>
+    </div>
+    <div class="col-md-4 text-end">
+      <button
+        type="button"
+        class="btn btn-primary waves-effect waves-light"
+        (click)="openCreateModal()"
+      >
+        <i class="ti ti-plus me-1"></i>Add New Article
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters Card -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5 class="card-title mb-0">
+        <i class="ti ti-filter me-2"></i>Filters & Search
+      </h5>
+    </div>
+    <div class="card-body">
+      <form [formGroup]="filterForm" (ngSubmit)="onFilter()">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label">Search</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="ti ti-search"></i></span>
+              <input
+                type="text"
+                class="form-control"
+                placeholder="Search title or content..."
+                formControlName="search"
+              />
+            </div>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Status</label>
+            <select class="form-select" formControlName="status">
+              <option value="">All Status</option>
+              <option value="DRAFT">Draft</option>
+              <option value="PUBLISHED">Published</option>
+              <option value="ARCHIVED">Archived</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Priority</label>
+            <select class="form-select" formControlName="priority">
+              <option value="">All Priority</option>
+              <option value="LOW">Low</option>
+              <option value="MEDIUM">Medium</option>
+              <option value="HIGH">High</option>
+              <option value="URGENT">Urgent</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Category</label>
+            <select class="form-select" formControlName="category">
+              <option value="">All Categories</option>
+              <option *ngFor="let category of categories" [value]="category">
+                {{ category }}
+              </option>
+            </select>
+          </div>
+          <div class="col-md-2 d-flex align-items-end">
+            <button type="submit" class="btn btn-outline-primary w-100">
+              <i class="ti ti-search me-1"></i>Filter
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Knowledge Base List -->
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="card-title mb-0">
+        <i class="ti ti-books me-2"></i>Knowledge Base Articles
+        <span class="badge bg-label-primary ms-2"
+          >{{ totalElements }} total</span
+        >
+      </h5>
+      <div class="d-flex gap-2">
+        <div class="dropdown">
+          <button
+            class="btn btn-outline-secondary btn-sm dropdown-toggle"
+            type="button"
+            data-bs-toggle="dropdown"
+          >
+            <i class="ti ti-sort-ascending me-1"></i>Sort
+          </button>
+          <ul class="dropdown-menu">
+            <li>
+              <a
+                class="dropdown-item"
+                href="javascript:void(0)"
+                (click)="onSort('createdAt'); $event.stopPropagation()"
+                >Date Created</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item"
+                href="javascript:void(0)"
+                (click)="onSort('title'); $event.stopPropagation()"
+                >Title</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item"
+                href="javascript:void(0)"
+                (click)="onSort('viewCount'); $event.stopPropagation()"
+                >View Count</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item"
+                href="javascript:void(0)"
+                (click)="onSort('priority'); $event.stopPropagation()"
+                >Priority</a
+              >
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body p-0">
+      <!-- Loading State -->
+      <div *ngIf="loading" class="text-center p-4">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2 text-muted">Loading knowledge base articles...</p>
+      </div>
+
+      <!-- Empty State -->
+      <div
+        *ngIf="!loading && knowledgeBases.length === 0"
+        class="text-center p-5"
+      >
+        <i class="ti ti-book-off display-1 text-muted"></i>
+        <h5 class="mt-3">No articles found</h5>
+        <p class="text-muted">
+          Create your first knowledge base article to get started.
+        </p>
+        <button class="btn btn-primary" (click)="openCreateModal()">
+          <i class="ti ti-plus me-1"></i>Create Article
+        </button>
+      </div>
+
+      <!-- Knowledge Base Table -->
+      <div
+        *ngIf="!loading && knowledgeBases.length > 0"
+        class="table-responsive"
+      >
+        <table class="table table-hover">
+          <thead class="table-light">
+            <tr>
+              <th class="cursor-pointer" (click)="onSort('title')">
+                <i class="ti ti-article me-1"></i>Title
+                <i
+                  class="ti ti-chevron-up ms-1"
+                  *ngIf="sortBy === 'title' && sortDir === 'asc'"
+                ></i>
+                <i
+                  class="ti ti-chevron-down ms-1"
+                  *ngIf="sortBy === 'title' && sortDir === 'desc'"
+                ></i>
+              </th>
+              <th>Category</th>
+              <th class="cursor-pointer" (click)="onSort('priority')">
+                Priority
+                <i
+                  class="ti ti-chevron-up ms-1"
+                  *ngIf="sortBy === 'priority' && sortDir === 'asc'"
+                ></i>
+                <i
+                  class="ti ti-chevron-down ms-1"
+                  *ngIf="sortBy === 'priority' && sortDir === 'desc'"
+                ></i>
+              </th>
+              <th>Status</th>
+              <th class="cursor-pointer" (click)="onSort('viewCount')">
+                Views
+                <i
+                  class="ti ti-chevron-up ms-1"
+                  *ngIf="sortBy === 'viewCount' && sortDir === 'asc'"
+                ></i>
+                <i
+                  class="ti ti-chevron-down ms-1"
+                  *ngIf="sortBy === 'viewCount' && sortDir === 'desc'"
+                ></i>
+              </th>
+
+              <th class="cursor-pointer" (click)="onSort('createdAt')">
+                Created
+                <i
+                  class="ti ti-chevron-up ms-1"
+                  *ngIf="sortBy === 'createdAt' && sortDir === 'asc'"
+                ></i>
+                <i
+                  class="ti ti-chevron-down ms-1"
+                  *ngIf="sortBy === 'createdAt' && sortDir === 'desc'"
+                ></i>
+              </th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let article of knowledgeBases" class="align-middle">
+              <td>
+                <div>
+                  <h6 class="mb-1">{{ article.title }}</h6>
+                  <small class="text-muted">
+                    {{
+                      article.content.length > 100
+                        ? (article.content | slice : 0 : 100) + "..."
+                        : article.content
+                    }}
+                  </small>
+                </div>
+              </td>
+              <td>
+                <span
+                  class="badge"
+                  [ngClass]="getCategoryClass(article.category)"
+                  >{{ article.category }}</span
+                >
+              </td>
+              <td>
+                <span
+                  class="badge"
+                  [ngClass]="getPriorityClass(article.priority)"
+                >
+                  <i class="ti ti-flag me-1"></i>{{ article.priority }}
+                </span>
+              </td>
+              <td>
+                <div class="dropdown">
+                  <span
+                    class="badge dropdown-toggle cursor-pointer"
+                    [ngClass]="getStatusClass(article.status)"
+                    data-bs-toggle="dropdown"
+                  >
+                    {{ article.status }}
+                  </span>
+                  <ul class="dropdown-menu">
+                    <li *ngIf="article.status !== KnowledgeStatus.DRAFT">
+                      <a
+                        class="dropdown-item"
+                        href="javascript:void(0)"
+                        (click)="
+                          updateStatus(article.id, KnowledgeStatus.DRAFT);
+                          $event.stopPropagation()
+                        "
+                      >
+                        <i class="ti ti-edit me-2"></i>Set as Draft
+                      </a>
+                    </li>
+                    <li *ngIf="article.status !== KnowledgeStatus.PUBLISHED">
+                      <a
+                        class="dropdown-item"
+                        href="javascript:void(0)"
+                        (click)="
+                          updateStatus(article.id, KnowledgeStatus.PUBLISHED);
+                          $event.stopPropagation()
+                        "
+                      >
+                        <i class="ti ti-check me-2"></i>Publish
+                      </a>
+                    </li>
+                    <li *ngIf="article.status !== KnowledgeStatus.ARCHIVED">
+                      <a
+                        class="dropdown-item"
+                        href="javascript:void(0)"
+                        (click)="
+                          updateStatus(article.id, KnowledgeStatus.ARCHIVED);
+                          $event.stopPropagation()
+                        "
+                      >
+                        <i class="ti ti-archive me-2"></i>Archive
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </td>
+              <td>
+                <span class="badge bg-label-primary">
+                  <i class="ti ti-eye me-1"></i>{{ article.viewCount }}
+                </span>
+              </td>
+              <td>
+                <small class="text-muted">{{
+                  article.createdAt | date : "short"
+                }}</small>
+                <div *ngIf="article.updatedAt" class="text-muted smaller">
+                  Updated: {{ article.updatedAt | date : "short" }}
+                </div>
+              </td>
+              <td>
+                <div class="dropdown">
+                  <button
+                    class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                    data-bs-toggle="dropdown"
+                  >
+                    <i class="ti ti-dots-vertical"></i>
+                  </button>
+                  <ul class="dropdown-menu">
+                    <li>
+                      <a
+                        class="dropdown-item"
+                        href="javascript:void(0)"
+                        (click)="openEditModal(article)"
+                      >
+                        <i class="ti ti-edit me-2"></i>Edit
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        class="dropdown-item text-danger"
+                        href="javascript:void(0)"
+                        (click)="deleteKnowledgeBase(article.id)"
+                      >
+                        <i class="ti ti-trash me-2"></i>Delete
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div *ngIf="!loading && knowledgeBases.length > 0" class="card-footer">
+        <div class="row align-items-center">
+          <div class="col-md-6">
+            <p class="text-muted mb-0">
+              Showing {{ currentPage * pageSize + 1 }} to
+              {{ Math.min((currentPage + 1) * pageSize, totalElements) }} of
+              {{ totalElements }} entries
+            </p>
+          </div>
+          <div class="col-md-6">
+            <nav>
+              <ul class="pagination pagination-sm justify-content-end mb-0">
+                <li class="page-item" [class.disabled]="currentPage === 0">
+                  <a
+                    class="page-link"
+                    href="javascript:void(0)"
+                    (click)="onPageChange(currentPage - 1)"
+                  >
+                    <i class="ti ti-chevron-left"></i>
+                  </a>
+                </li>
+                <li
+                  class="page-item"
+                  *ngFor="let page of getPages()"
+                  [class.active]="page === currentPage"
+                >
+                  <a
+                    class="page-link"
+                    href="javascript:void(0)"
+                    (click)="onPageChange(page)"
+                    >{{ page + 1 }}</a
+                  >
+                </li>
+                <li
+                  class="page-item"
+                  [class.disabled]="currentPage === totalPages - 1"
+                >
+                  <a
+                    class="page-link"
+                    href="javascript:void(0)"
+                    (click)="onPageChange(currentPage + 1)"
+                  >
+                    <i class="ti ti-chevron-right"></i>
+                  </a>
+                </li>
+              </ul>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create/Edit Modal -->
+<div
+  class="modal fade"
+  [class.show]="showModal"
+  [style.display]="showModal ? 'block' : 'none'"
+  tabindex="-1"
+>
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="ti ti-{{ isEditMode ? 'edit' : 'plus' }} me-2"></i>
+          {{ isEditMode ? "Edit" : "Create" }} Knowledge Base Article
+        </h5>
+        <button type="button" class="btn-close" (click)="closeModal()"></button>
+      </div>
+      <form [formGroup]="knowledgeBaseForm" (ngSubmit)="onSubmit()">
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label"
+                >Title <span class="text-danger">*</span></label
+              >
+              <input
+                type="text"
+                class="form-control"
+                formControlName="title"
+                placeholder="Enter article title..."
+                [class.is-invalid]="
+                  knowledgeBaseForm.get('title')?.invalid &&
+                  knowledgeBaseForm.get('title')?.touched
+                "
+              />
+              <div class="invalid-feedback">
+                Title is required (max 200 characters)
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label"
+                >Category <span class="text-danger">*</span></label
+              >
+              <input
+                type="text"
+                class="form-control"
+                formControlName="category"
+                placeholder="e.g., Customer Service, Billing, Technical..."
+                list="categoryList"
+                [class.is-invalid]="
+                  knowledgeBaseForm.get('category')?.invalid &&
+                  knowledgeBaseForm.get('category')?.touched
+                "
+              />
+              <datalist id="categoryList">
+                <option
+                  *ngFor="let category of categories"
+                  [value]="category"
+                ></option>
+              </datalist>
+
+              <div class="invalid-feedback">Category is required</div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label"
+                >Priority <span class="text-danger">*</span></label
+              >
+              <select class="form-select" formControlName="priority">
+                <option value="LOW">Low</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="HIGH">High</option>
+                <option value="URGENT">Urgent</option>
+              </select>
+            </div>
+
+            <div class="col-12" *ngIf="isEditMode">
+              <label class="form-label">Status</label>
+              <select class="form-select" formControlName="status">
+                <option value="DRAFT">Draft</option>
+                <option value="PUBLISHED">Published</option>
+                <option value="ARCHIVED">Archived</option>
+              </select>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label"
+                >Content <span class="text-danger">*</span></label
+              >
+              <textarea
+                class="form-control"
+                formControlName="content"
+                rows="8"
+                placeholder="Enter the detailed content of the knowledge base article..."
+                [class.is-invalid]="
+                  knowledgeBaseForm.get('content')?.invalid &&
+                  knowledgeBaseForm.get('content')?.touched
+                "
+              >
+              </textarea>
+              <div class="invalid-feedback">Content is required</div>
+              <div class="form-text">
+                You can use rich text formatting, include procedures, policies,
+                and helpful information.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-outline-secondary"
+            (click)="closeModal()"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="knowledgeBaseForm.invalid || loading"
+          >
+            <span
+              *ngIf="loading"
+              class="spinner-border spinner-border-sm me-2"
+            ></span>
+            <i
+              class="ti ti-{{ isEditMode ? 'check' : 'plus' }} me-1"
+              *ngIf="!loading"
+            ></i>
+            {{ isEditMode ? "Update" : "Create" }} Article
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Backdrop -->
+<div
+  class="modal-backdrop fade"
+  [class.show]="showModal"
+  *ngIf="showModal"
+></div>

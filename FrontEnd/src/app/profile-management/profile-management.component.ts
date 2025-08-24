@@ -5,6 +5,12 @@ import {
   Validators,
   AbstractControl,
 } from '@angular/forms';
+import { AuthService } from '../services/auth.service';
+import { TokenService } from '../services/token.service';
+import { UserService } from '../services/user.service';
+import { ChangePasswordRequest } from '../models/change-password-request';
+import { UpdateUserRequest } from '../models/update-user-request';
+import { User } from '../models/user';
 
 @Component({
   selector: 'app-profile-management',
@@ -14,11 +20,22 @@ import {
 export class ProfileManagementComponent implements OnInit {
   activeTab: string = 'profile';
   profileForm!: FormGroup;
-  preferencesForm!: FormGroup;
   securityForm!: FormGroup;
   twoFactorEnabled: boolean = false;
+  isChangingPassword: boolean = false;
+  changePasswordError: string = '';
+  changePasswordSuccess: string = '';
+  isUpdatingProfile: boolean = false;
+  updateProfileError: string = '';
+  updateProfileSuccess: string = '';
+  currentUser: User | null = null;
 
-  constructor(private formBuilder: FormBuilder) {}
+  constructor(
+    private formBuilder: FormBuilder,
+    private authService: AuthService,
+    private tokenService: TokenService,
+    private userService: UserService
+  ) {}
 
   ngOnInit(): void {
     this.initializeForms();
@@ -28,23 +45,12 @@ export class ProfileManagementComponent implements OnInit {
   initializeForms(): void {
     // Profile Form
     this.profileForm = this.formBuilder.group({
-      firstName: ['', [Validators.required, Validators.minLength(2)]],
-      lastName: ['', [Validators.required, Validators.minLength(2)]],
+      firstName: [{ value: '', disabled: true }], // Read-only as backend doesn't support updating
+      lastName: [{ value: '', disabled: true }], // Read-only as backend doesn't support updating
       email: ['', [Validators.required, Validators.email]],
-      phoneNumber: [''],
-      department: [''],
-      role: [''],
-    });
-
-    // Preferences Form
-    this.preferencesForm = this.formBuilder.group({
-      language: ['en'],
-      timezone: ['UTC-5'],
-      dateFormat: ['MM/DD/YYYY'],
-      theme: ['light'],
-      emailNotifications: [true],
-      pushNotifications: [false],
-      weeklyReports: [true],
+      dateOfBirth: [''],
+      phoneNumber: ['', [Validators.pattern(/^\d+$/)]], // Only digits allowed
+      role: [{ value: '', disabled: true }], // Role cannot be updated according to requirement
     });
 
     // Security Form
@@ -76,17 +82,66 @@ export class ProfileManagementComponent implements OnInit {
   }
 
   loadUserData(): void {
-    // Simulate loading user data
-    const userData = {
-      firstName: 'John',
-      lastName: 'Doe',
-      email: 'john.doe@company.com',
-      phoneNumber: '+1 (555) 123-4567',
-      department: 'analytics',
-      role: 'Senior Analyst',
-    };
+    // Get email from token
+    const userEmail = this.tokenService.getEmailFromToken();
 
-    this.profileForm.patchValue(userData);
+    if (userEmail) {
+      // Fetch user details from backend
+      this.userService.getUserByEmail(userEmail).subscribe({
+        next: (user: User) => {
+          this.currentUser = user;
+
+          // Format date of birth for input field
+          let formattedDateOfBirth = '';
+          if (user.dateOfBirth) {
+            // Convert date to YYYY-MM-DD format for input type="date"
+            const date = new Date(user.dateOfBirth);
+            formattedDateOfBirth = date.toISOString().split('T')[0];
+          }
+
+          const userData = {
+            firstName: user.firstname || '',
+            lastName: user.lastname || '',
+            email: user.email || '',
+            dateOfBirth: formattedDateOfBirth,
+            phoneNumber: user.phoneNumber || '',
+            role: user.roles && user.roles.length > 0 ? user.roles[0].name : '',
+          };
+
+          this.profileForm.patchValue(userData);
+          
+          // Enable only the fields that can be updated
+          this.profileForm.get('firstName')?.disable();
+          this.profileForm.get('lastName')?.disable();
+          this.profileForm.get('role')?.disable();
+        },
+        error: (error) => {
+          console.error('Error loading user data:', error);
+          // Fallback to token data
+          const fullName = this.tokenService.getFullNameFromToken();
+          const nameParts = fullName ? fullName.split(' ') : ['', ''];
+          const firstName = nameParts[0] || '';
+          const lastName =
+            nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+
+          const userData = {
+            firstName: firstName,
+            lastName: lastName,
+            email: userEmail,
+            dateOfBirth: '',
+            phoneNumber: '',
+            role: '',
+          };
+
+          this.profileForm.patchValue(userData);
+          
+          // Enable only the fields that can be updated
+          this.profileForm.get('firstName')?.disable();
+          this.profileForm.get('lastName')?.disable();
+          this.profileForm.get('role')?.disable();
+        },
+      });
+    }
   }
 
   setActiveTab(tab: string): void {
@@ -94,25 +149,65 @@ export class ProfileManagementComponent implements OnInit {
   }
 
   onSaveProfile(): void {
-    if (this.profileForm.valid) {
-      console.log('Profile updated:', this.profileForm.value);
-      // Implement save profile logic
-      this.showSuccessMessage('Profile updated successfully!');
-    }
-  }
+    if (this.profileForm.valid && this.currentUser) {
+      this.isUpdatingProfile = true;
+      this.updateProfileError = '';
+      this.updateProfileSuccess = '';
 
-  onSavePreferences(): void {
-    console.log('Preferences updated:', this.preferencesForm.value);
-    // Implement save preferences logic
-    this.showSuccessMessage('Preferences updated successfully!');
+      // Get form values
+      const newEmail = this.profileForm.get('email')?.value;
+      const phoneNumber = this.profileForm.get('phoneNumber')?.value || 0; // Default to 0 if not provided
+      const dateOfBirth = this.profileForm.get('dateOfBirth')?.value || '';
+
+      this.userService.updateUser(newEmail, phoneNumber, dateOfBirth).subscribe({
+        next: (updatedUser: User) => {
+          this.isUpdatingProfile = false;
+          this.updateProfileSuccess = 'Profile updated successfully!';
+          this.currentUser = updatedUser;
+
+          // Update the form with the returned user data
+          this.loadUserData();
+
+          // Clear success message after 5 seconds
+          setTimeout(() => {
+            this.updateProfileSuccess = '';
+          }, 5000);
+        },
+        error: (error) => {
+          this.isUpdatingProfile = false;
+          this.updateProfileError =
+            error.error?.message ||
+            'Failed to update profile. Please try again.';
+        },
+      });
+    }
   }
 
   onChangePassword(): void {
     if (this.securityForm.valid) {
-      console.log('Password change requested');
-      // Implement password change logic
-      this.showSuccessMessage('Password changed successfully!');
-      this.securityForm.reset();
+      this.isChangingPassword = true;
+      this.changePasswordError = '';
+      this.changePasswordSuccess = '';
+
+      const email = this.tokenService.getEmailFromToken();
+      const changePasswordRequest: ChangePasswordRequest = {
+        email: email,
+        oldPassword: this.securityForm.get('currentPassword')?.value,
+        newPassword: this.securityForm.get('newPassword')?.value,
+      };
+
+      this.authService.changePassword(changePasswordRequest).subscribe({
+        next: (response) => {
+          this.isChangingPassword = false;
+          this.changePasswordSuccess = 'Password changed successfully!';
+          this.securityForm.reset();
+        },
+        error: (error) => {
+          this.isChangingPassword = false;
+          this.changePasswordError =
+            error.error || 'Failed to change password. Please try again.';
+        },
+      });
     }
   }
 
@@ -145,6 +240,10 @@ export class ProfileManagementComponent implements OnInit {
     // Reset forms to initial state
     this.loadUserData();
     this.securityForm.reset();
+    this.changePasswordError = '';
+    this.changePasswordSuccess = '';
+    this.updateProfileError = '';
+    this.updateProfileSuccess = '';
   }
 
   private showSuccessMessage(message: string): void {

@@ -345,7 +345,7 @@ export class TeamManagementComponent implements OnInit {
         lastname: formData.lastname,
       };
 
-      this.userService.updateUser(updatedUser).subscribe({
+      this.userService.updateUserAdmin(updatedUser).subscribe({
         next: () => {
           this.loadUsers();
           this.userForm.reset();

@@ -27,6 +27,14 @@ import { User } from '../../models/user';
 import { DailyStats } from '../../models/daily-stats';
 import { MockCall } from '../../models/mock-call';
 import { AgentRankingDTO } from '../../models/agent-ranking-dto';
+import { KnowledgeBaseService } from '../../services/knowledge-base.service';
+import {
+  KnowledgeBase,
+  KnowledgeBaseFilter,
+  KnowledgeStatus,
+  Priority,
+  PageResponse,
+} from '../../models/knowledge-base';
 
 // Register Chart.js components
 Chart.register(...registerables);
@@ -89,6 +97,22 @@ export class AgentDashboardComponent
     }
   > = new Map(); // Cache display data
 
+  // Knowledge Base properties
+  showKnowledgeBaseModal = false;
+  showArticleModal = false;
+  knowledgeBases: KnowledgeBase[] = [];
+  filteredKnowledgeBases: KnowledgeBase[] = [];
+  kbCategories: string[] = [];
+  selectedArticle: KnowledgeBase | null = null;
+  kbLoading = false;
+  kbSearchTerm = '';
+  selectedCategory = '';
+  selectedPriority = '';
+  kbCurrentPage = 0;
+  kbPageSize = 9; // 3x3 grid
+  kbTotalPages = 0;
+  kbTotalElements = 0;
+
   // Team leaderboard - will be populated from API
   teamLeaderboard: AgentRankingDTO[] = [];
 
@@ -106,7 +130,8 @@ export class AgentDashboardComponent
     private customerService: CustomerService,
     private userService: UserService,
     private dailyStatsService: DailyStatsService,
-    private mockCallsService: MockCallsService
+    private mockCallsService: MockCallsService,
+    private knowledgeBaseService: KnowledgeBaseService
   ) {
     // Chart.js will be initialized after view init
   }
@@ -994,5 +1019,170 @@ export class AgentDashboardComponent
   exportLeaderboard(): void {
     console.log('Exporting leaderboard data');
     // Implement export functionality
+  }
+
+  // Knowledge Base Methods
+  openKnowledgeBaseModal(): void {
+    this.showKnowledgeBaseModal = true;
+    this.loadKnowledgeBase();
+    this.loadKnowledgeBaseCategories();
+  }
+
+  closeKnowledgeBaseModal(): void {
+    this.showKnowledgeBaseModal = false;
+    this.resetKnowledgeBaseFilters();
+  }
+
+  loadKnowledgeBase(): void {
+    this.kbLoading = true;
+    const filter = {
+      category: this.selectedCategory || undefined,
+      priority: (this.selectedPriority as Priority) || undefined,
+      search: this.kbSearchTerm || undefined,
+    };
+
+    this.knowledgeBaseService
+      .getAllKnowledgeBases(
+        filter,
+        this.kbCurrentPage,
+        this.kbPageSize,
+        'createdAt',
+        'desc'
+      )
+      .subscribe({
+        next: (response: PageResponse<KnowledgeBase>) => {
+          this.knowledgeBases = response.content;
+          this.filteredKnowledgeBases = response.content;
+          this.kbTotalElements = response.totalElements;
+          this.kbTotalPages = response.totalPages;
+          this.kbLoading = false;
+        },
+        error: (error) => {
+          console.error('Error loading knowledge base:', error);
+          this.kbLoading = false;
+        },
+      });
+  }
+
+  loadKnowledgeBaseCategories(): void {
+    this.knowledgeBaseService.getAllCategories().subscribe({
+      next: (categories) => {
+        this.kbCategories = categories;
+      },
+      error: (error) => {
+        console.error('Error loading categories:', error);
+      },
+    });
+  }
+
+  searchKnowledgeBase(): void {
+    this.kbCurrentPage = 0;
+    this.loadKnowledgeBase();
+  }
+
+  filterByCategory(): void {
+    this.kbCurrentPage = 0;
+    this.loadKnowledgeBase();
+  }
+
+  filterByPriority(): void {
+    this.kbCurrentPage = 0;
+    this.loadKnowledgeBase();
+  }
+
+  changeKbPage(page: number): void {
+    if (page >= 0 && page < this.kbTotalPages) {
+      this.kbCurrentPage = page;
+      this.loadKnowledgeBase();
+    }
+  }
+
+  getKbPages(): number[] {
+    const pages: number[] = [];
+    const startPage = Math.max(0, this.kbCurrentPage - 2);
+    const endPage = Math.min(this.kbTotalPages - 1, this.kbCurrentPage + 2);
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }
+
+  viewKnowledgeBaseArticle(article: KnowledgeBase): void {
+    this.selectedArticle = article;
+    this.showArticleModal = true;
+    // Increment view count
+    this.knowledgeBaseService.getKnowledgeBaseById(article.id).subscribe();
+  }
+
+  closeArticleModal(): void {
+    this.showArticleModal = false;
+    this.selectedArticle = null;
+  }
+
+  markAsHelpful(): void {
+    console.log('Article marked as helpful');
+    // Implement helpful marking functionality
+  }
+
+  resetKnowledgeBaseFilters(): void {
+    this.kbSearchTerm = '';
+    this.selectedCategory = '';
+    this.selectedPriority = '';
+    this.kbCurrentPage = 0;
+  }
+
+  getKbCategoryClass(category: string): string {
+    // Generate consistent colors based on category name
+    const categoryColors: { [key: string]: string } = {
+      'Customer Service': 'bg-label-primary',
+      Billing: 'bg-label-success',
+      Technical: 'bg-label-warning',
+      Sales: 'bg-label-info',
+      Support: 'bg-label-secondary',
+      Policy: 'bg-label-danger',
+    };
+
+    if (categoryColors[category]) {
+      return categoryColors[category];
+    }
+
+    // Generate color based on string hash for consistent coloring
+    const hash = this.hashString(category);
+    const colors = [
+      'bg-label-primary',
+      'bg-label-success',
+      'bg-label-warning',
+      'bg-label-info',
+      'bg-label-secondary',
+      'bg-label-danger',
+    ];
+
+    return colors[hash % colors.length];
+  }
+
+  getKbPriorityClass(priority: Priority): string {
+    switch (priority) {
+      case Priority.LOW:
+        return 'bg-label-success';
+      case Priority.MEDIUM:
+        return 'bg-label-primary';
+      case Priority.HIGH:
+        return 'bg-label-warning';
+      case Priority.URGENT:
+        return 'bg-label-danger';
+      default:
+        return 'bg-label-secondary';
+    }
+  }
+
+  private hashString(str: string): number {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return Math.abs(hash);
   }
 }
