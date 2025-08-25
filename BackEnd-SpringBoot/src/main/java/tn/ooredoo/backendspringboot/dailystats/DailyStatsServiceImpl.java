@@ -88,7 +88,6 @@ public class DailyStatsServiceImpl implements DailyStatsService {
     }
 
 
-
     @Override
     public List<DailyStats> getDailyStatsByAgent(String email) {
         User agent = userService.findByEmail(email);
@@ -188,10 +187,7 @@ public class DailyStatsServiceImpl implements DailyStatsService {
         User user = userService.findByEmail(email);
 
         LocalDate yesterday = LocalDate.now().minusDays(1);
-        LocalDateTime startOfDay = yesterday.atStartOfDay();
-        LocalDateTime endOfDay = yesterday.atTime(LocalTime.MAX);
-
-        return dailyStatsRepository.findByUserAndDateBetween(user, startOfDay, endOfDay)
+        return dailyStatsRepository.findByUserAndYesterday(user, yesterday)
                 .orElse(null);
     }
 }

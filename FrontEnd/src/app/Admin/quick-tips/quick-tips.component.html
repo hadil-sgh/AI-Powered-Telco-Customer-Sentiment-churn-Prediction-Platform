@@ -21,9 +21,6 @@
         >
           <i class="bx bx-refresh me-1"></i>Refresh
         </button>
-        <button class="btn btn-primary" (click)="openCreateForm()">
-          <i class="bx bx-plus me-1"></i>Create Tip
-        </button>
         <button class="btn btn-success" (click)="openAssignForm()">
           <i class="bx bx-user-plus me-1"></i>Assign Tip
         </button>
@@ -49,90 +46,6 @@
       <i class="bx bx-check-circle me-2"></i>
       {{ success }}
       <button type="button" class="btn-close" (click)="success = ''"></button>
-    </div>
-
-    <!-- Create/Edit Tip Form -->
-    <div class="card mb-4" *ngIf="showCreateForm">
-      <div
-        class="card-header d-flex justify-content-between align-items-center"
-      >
-        <h5 class="mb-0">
-          <i class="bx bx-plus-circle me-2"></i>
-          {{ isEditing ? "Edit Coaching Tip" : "Create New Coaching Tip" }}
-        </h5>
-        <button type="button" class="btn-close" (click)="cancelForm()"></button>
-      </div>
-      <div class="card-body">
-        <form (ngSubmit)="submitTipForm()" #tipForm="ngForm">
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <label for="tipTitle" class="form-label"
-                >Title <span class="text-danger">*</span></label
-              >
-              <input
-                type="text"
-                class="form-control"
-                id="tipTitle"
-                [(ngModel)]="currentTip.title"
-                name="tipTitle"
-                required
-                placeholder="Enter tip title"
-              />
-            </div>
-            <div class="col-md-6 mb-3">
-              <label for="tipType" class="form-label"
-                >Type <span class="text-danger">*</span></label
-              >
-              <select
-                class="form-select"
-                id="tipType"
-                [(ngModel)]="currentTip.type"
-                name="tipType"
-                required
-              >
-                <option value="">Select tip type</option>
-                <option *ngFor="let type of tipTypes" [value]="type">
-                  {{ getTipTypeLabel(type) }}
-                </option>
-              </select>
-            </div>
-          </div>
-          <div class="mb-3">
-            <label for="tipMessage" class="form-label"
-              >Message <span class="text-danger">*</span></label
-            >
-            <textarea
-              class="form-control"
-              id="tipMessage"
-              rows="4"
-              [(ngModel)]="currentTip.message"
-              name="tipMessage"
-              required
-              placeholder="Enter coaching tip message"
-            ></textarea>
-          </div>
-          <div class="d-flex justify-content-end gap-2">
-            <button
-              type="button"
-              class="btn btn-outline-secondary"
-              (click)="cancelForm()"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              class="btn btn-primary"
-              [disabled]="loading || !tipForm.form.valid"
-            >
-              <span
-                *ngIf="loading"
-                class="spinner-border spinner-border-sm me-2"
-              ></span>
-              {{ isEditing ? "Update Tip" : "Create Tip" }}
-            </button>
-          </div>
-        </form>
-      </div>
     </div>
 
     <!-- Assign Tip Form -->
@@ -190,6 +103,7 @@
               id="assignUser"
               [(ngModel)]="selectedUserId"
               name="assignUser"
+              (ngModelChange)="onUserSelectionChange()"
               required
             >
               <option value="">Select a user</option>
@@ -197,6 +111,149 @@
                 {{ getUserFullName(user) }} - {{ user.email }}
               </option>
             </select>
+          </div>
+
+          <!-- Agent Performance Data -->
+          <div class="card border-primary mb-3" *ngIf="selectedAgentStats">
+            <div class="card-header bg-primary text-white py-2">
+              <h6 class="mb-0 d-flex align-items-center">
+                <i class="bx bx-stats me-2"></i>
+                Yesterday's Performance
+              </h6>
+            </div>
+            <div class="card-body py-3">
+              <div class="row g-2">
+                <!-- Calls Completed -->
+                <div class="col-md-4 col-sm-6">
+                  <div class="d-flex align-items-center p-2 rounded bg-light">
+                    <div class="flex-shrink-0">
+                      <div class="badge bg-primary rounded-circle p-2">
+                        <i class="bx bx-phone"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-2">
+                      <div class="small fw-semibold text-dark">Calls</div>
+                      <div class="d-flex align-items-center">
+                        <span class="badge bg-label-primary me-1">{{ selectedAgentStats.callsCompleted || 0 }}</span>
+                        <span class="text-muted small">/{{ selectedAgentStats.callsTarget || 0 }}</span>
+                        <span class="badge bg-label-{{ getCallsCompletionColor() }} ms-1 small">
+                          {{ getCallsCompletionPercentage() }}%
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Average Sentiment -->
+                <div class="col-md-4 col-sm-6">
+                  <div class="d-flex align-items-center p-2 rounded bg-light">
+                    <div class="flex-shrink-0">
+                      <div class="badge bg-success rounded-circle p-2">
+                        <i class="bx bx-heart"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-2">
+                      <div class="small fw-semibold text-dark">Sentiment</div>
+                      <div class="d-flex align-items-center">
+                        <span class="badge bg-label-success me-1">
+                          {{ selectedAgentStats.averageSentiment || 0 | number : "1.1-1" }}
+                        </span>
+                        <span class="text-muted small">{{ getSentimentLabel(selectedAgentStats.averageSentiment) }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Escalations -->
+                <div class="col-md-4 col-sm-6">
+                  <div class="d-flex align-items-center p-2 rounded bg-light">
+                    <div class="flex-shrink-0">
+                      <div class="badge bg-warning rounded-circle p-2">
+                        <i class="bx bx-error-circle"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-2">
+                      <div class="small fw-semibold text-dark">Escalations</div>
+                      <span class="badge bg-label-warning">{{ selectedAgentStats.escalations || 0 }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Coaching Tips Used -->
+                <div class="col-md-4 col-sm-6">
+                  <div class="d-flex align-items-center p-2 rounded bg-light">
+                    <div class="flex-shrink-0">
+                      <div class="badge bg-info rounded-circle p-2">
+                        <i class="bx bx-bulb"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-2">
+                      <div class="small fw-semibold text-dark">Tips Used</div>
+                      <span class="badge bg-label-info">{{ selectedAgentStats.coachingTipsUsed || 0 }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Helpful Tips -->
+                <div class="col-md-4 col-sm-6">
+                  <div class="d-flex align-items-center p-2 rounded bg-light">
+                    <div class="flex-shrink-0">
+                      <div class="badge bg-success rounded-circle p-2">
+                        <i class="bx bx-like"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-2">
+                      <div class="small fw-semibold text-dark">Helpful</div>
+                      <span class="badge bg-label-success">{{ selectedAgentStats.helpfulTips || 0 }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Total Score -->
+                <div class="col-md-4 col-sm-6">
+                  <div class="d-flex align-items-center p-2 rounded bg-light">
+                    <div class="flex-shrink-0">
+                      <div class="badge bg-warning rounded-circle p-2">
+                        <i class="bx bx-star"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-2">
+                      <div class="small fw-semibold text-dark">Score</div>
+                      <div class="d-flex align-items-center">
+                        <div class="me-1">
+                          <i
+                            *ngFor="let i of [1,2,3,4,5]; let idx = index"
+                            class="bx"
+                            [ngClass]="(selectedAgentStats.totalScore || 0) > idx ? 'bxs-star text-warning' : 'bx-star text-muted'"
+                            style="font-size: 14px;"
+                          ></i>
+                        </div>
+                        <span class="badge bg-label-warning small">
+                          {{ selectedAgentStats.totalScore || 0 | number : "1.1-1" }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- No Data Message -->
+          <div
+            class="alert alert-info"
+            *ngIf="selectedUserId && !selectedAgentStats && !loadingAgentStats"
+          >
+            <i class="bx bx-info-circle me-2"></i>
+            No performance data available for yesterday for this agent.
+          </div>
+
+          <!-- Loading Message -->
+          <div class="alert alert-secondary" *ngIf="loadingAgentStats">
+            <div class="d-flex align-items-center">
+              <div class="spinner-border spinner-border-sm me-2"></div>
+              Loading agent performance data...
+            </div>
           </div>
           <div class="mb-3">
             <label for="assignTipMessage" class="form-label"
@@ -338,7 +395,6 @@
                 <th>Title</th>
                 <th>Type</th>
                 <th>Assigned To</th>
-                <th>Manager</th>
                 <th>Status</th>
                 <th>Created</th>
                 <th>Actions</th>
@@ -371,17 +427,12 @@
                 </td>
                 <td>
                   <div *ngIf="tip.user">
-                    <strong>{{ getUserFullName(tip.user) }}</strong>
+                    {{ getUserFullName(tip.user) }}
                     <div class="text-muted small">{{ tip.user.email }}</div>
                   </div>
                   <span *ngIf="!tip.user" class="text-muted">Not assigned</span>
                 </td>
-                <td>
-                  <div *ngIf="tip.manager">
-                    <strong>{{ getUserFullName(tip.manager) }}</strong>
-                  </div>
-                  <span *ngIf="!tip.manager" class="text-muted">N/A</span>
-                </td>
+
                 <td>
                   <div class="d-flex flex-column gap-1">
                     <span
@@ -417,12 +468,6 @@
                       Actions
                     </button>
                     <ul class="dropdown-menu">
-                      <li>
-                        <button class="dropdown-item" (click)="editTip(tip)">
-                          <i class="bx bx-edit me-2"></i>Edit
-                        </button>
-                      </li>
-                      <li><hr class="dropdown-divider" /></li>
                       <li>
                         <button
                           class="dropdown-item text-danger"

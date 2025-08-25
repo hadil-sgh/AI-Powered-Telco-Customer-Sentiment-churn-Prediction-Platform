@@ -50,6 +50,33 @@
   padding: 0.35em 0.65em;
 }
 
+// Agent Performance Styles
+.sentiment-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 0.875rem;
+}
+
+.star-rating {
+  .bx {
+    font-size: 1.1rem;
+  }
+
+  .bxs-star {
+    color: #ffc107 !important;
+  }
+
+  .bx-star {
+    color: #dee2e6 !important;
+  }
+}
+
 .btn {
   border-radius: 0.375rem;
   font-weight: 500;

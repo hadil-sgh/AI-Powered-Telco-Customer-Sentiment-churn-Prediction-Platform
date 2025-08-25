@@ -1,8 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CoachingTipsService } from '../../services/coaching-tips.service';
 import { UserService } from '../../services/user.service';
+import { DailyStatsService } from '../../services/daily-stats.service';
 import { CoachingTip, TipType } from '../../models/coaching-tip';
 import { User } from '../../models/user';
+import { DailyStats } from '../../models/daily-stats';
 
 @Component({
   selector: 'app-quick-tips',
@@ -14,11 +16,10 @@ export class QuickTipsComponent implements OnInit {
   coachingTips: CoachingTip[] = [];
   users: User[] = [];
   filteredTips: CoachingTip[] = [];
+  selectedAgentStats: DailyStats | null = null;
 
   // Form properties
-  showCreateForm = false;
   showAssignForm = false;
-  isEditing = false;
   currentTip: CoachingTip = this.getEmptyTip();
   selectedUserId: number | null = null;
   currentManagerId: number | null = null;
@@ -32,6 +33,7 @@ export class QuickTipsComponent implements OnInit {
 
   // UI properties
   loading = false;
+  loadingAgentStats = false;
   error = '';
   success = '';
 
@@ -43,7 +45,8 @@ export class QuickTipsComponent implements OnInit {
 
   constructor(
     private coachingTipsService: CoachingTipsService,
-    private userService: UserService
+    private userService: UserService,
+    private dailyStatsService: DailyStatsService
   ) {}
 
   ngOnInit(): void {
@@ -136,66 +139,55 @@ export class QuickTipsComponent implements OnInit {
   }
 
   // Form methods
-  openCreateForm(): void {
-    this.showCreateForm = true;
-    this.showAssignForm = false;
-    this.isEditing = false;
-    this.currentTip = this.getEmptyTip();
-    this.clearMessages();
-  }
-
   openAssignForm(): void {
     this.showAssignForm = true;
-    this.showCreateForm = false;
-    this.isEditing = false;
     this.currentTip = this.getEmptyTip();
     this.selectedUserId = null;
-    this.clearMessages();
-  }
-
-  editTip(tip: CoachingTip): void {
-    this.isEditing = true;
-    this.showCreateForm = true;
-    this.showAssignForm = false;
-    this.currentTip = { ...tip };
+    this.selectedAgentStats = null;
     this.clearMessages();
   }
 
   cancelForm(): void {
-    this.showCreateForm = false;
     this.showAssignForm = false;
-    this.isEditing = false;
     this.currentTip = this.getEmptyTip();
     this.selectedUserId = null;
+    this.selectedAgentStats = null;
     this.clearMessages();
   }
 
-  // CRUD operations
-  submitTipForm(): void {
-    if (!this.validateTip()) return;
+  onUserSelectionChange(): void {
+    this.selectedAgentStats = null;
+    if (this.selectedUserId) {
+      this.loadAgentYesterdayStats();
+    }
+  }
 
-    this.loading = true;
-    const operation = this.isEditing
-      ? this.coachingTipsService.updateCoachingTip(this.currentTip)
-      : this.coachingTipsService.createCoachingTip(this.currentTip);
+  loadAgentYesterdayStats(): void {
+    if (!this.selectedUserId) return;
 
-    operation.subscribe({
-      next: (tip: CoachingTip) => {
-        this.success = this.isEditing
-          ? 'Tip updated successfully!'
-          : 'Tip created successfully!';
-        this.loadCoachingTips();
-        this.cancelForm();
-        this.loading = false;
+    // Convert selectedUserId to number for comparison since HTML select returns string
+    const userIdNumber = Number(this.selectedUserId);
+    const selectedUser = this.users.find((user) => user.id === userIdNumber);
+
+    if (!selectedUser || !selectedUser.email) {
+      return;
+    }
+
+    this.loadingAgentStats = true;
+    this.dailyStatsService.getYesterdayStats(selectedUser.email).subscribe({
+      next: (stats: DailyStats) => {
+        this.selectedAgentStats = stats;
+        this.loadingAgentStats = false;
       },
       error: (err: any) => {
-        this.error = 'Failed to save tip';
-        this.loading = false;
-        console.error(err);
+        console.error('Failed to load agent stats:', err);
+        this.selectedAgentStats = null;
+        this.loadingAgentStats = false;
       },
     });
   }
 
+  // CRUD operations
   submitAssignForm(): void {
     if (!this.validateAssignment()) return;
 
@@ -340,5 +332,50 @@ export class QuickTipsComponent implements OnInit {
   clearMessages(): void {
     this.error = '';
     this.success = '';
+  }
+
+  // Agent Stats Display Methods
+  getCallsCompletionPercentage(): number {
+    if (
+      !this.selectedAgentStats?.callsTarget ||
+      this.selectedAgentStats.callsTarget === 0
+    ) {
+      return 0;
+    }
+    return Math.round(
+      ((this.selectedAgentStats.callsCompleted || 0) /
+        this.selectedAgentStats.callsTarget) *
+        100
+    );
+  }
+
+  getCallsCompletionColor(): string {
+    const percentage = this.getCallsCompletionPercentage();
+    if (percentage >= 90) return 'success';
+    if (percentage >= 70) return 'warning';
+    return 'danger';
+  }
+
+  getSentimentColor(sentiment: number | undefined): string {
+    if (!sentiment) return '#6c757d';
+    if (sentiment >= 0.7) return '#28a745';
+    if (sentiment >= 0.4) return '#ffc107';
+    return '#dc3545';
+  }
+
+  getSentimentLabel(sentiment: number | undefined): string {
+    if (!sentiment) return 'Unknown';
+    if (sentiment >= 0.7) return 'Positive';
+    if (sentiment >= 0.4) return 'Neutral';
+    return 'Negative';
+  }
+
+  getStarArray(score: number | undefined): boolean[] {
+    const normalizedScore = Math.min(Math.max((score || 0) / 20, 0), 5); // Assuming score is out of 100, normalize to 5
+    const stars: boolean[] = [];
+    for (let i = 1; i <= 5; i++) {
+      stars.push(i <= normalizedScore);
+    }
+    return stars;
   }
 }

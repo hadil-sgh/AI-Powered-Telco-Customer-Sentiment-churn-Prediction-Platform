@@ -65,8 +65,8 @@ public class DailyStatsController {
         return ResponseEntity.ok(stats);
     }
 
-    @GetMapping("/yesterday")
-    public ResponseEntity<DailyStats> getYesterdayStats(@RequestParam String email) {
+    @GetMapping("/yesterday/{email}")
+    public ResponseEntity<DailyStats> getYesterdayStats(@PathVariable String email) {
         DailyStats stats = dailyStatsService.getDailyStatsForYesterday(email);
         if (stats == null) {
             return ResponseEntity.noContent().build();

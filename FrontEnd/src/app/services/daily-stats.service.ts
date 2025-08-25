@@ -30,4 +30,8 @@ export class DailyStatsService {
       params: { userEmail: userEmail },
     });
   }
+
+  getYesterdayStats(email: string): Observable<DailyStats> {
+    return this.http.get<DailyStats>(`${this.baseUrl}/yesterday/${email}`);
+  }
 }
