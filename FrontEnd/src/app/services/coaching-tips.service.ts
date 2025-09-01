@@ -145,4 +145,22 @@ export class CoachingTipsService {
       { params }
     );
   }
+
+  // Get acknowledged helpful tips today by user email
+  getAcknowledgedHelpfulTipsTodayByUserEmail(
+    email: string
+  ): Observable<CoachingTip[]> {
+    const params = new HttpParams().set('email', email);
+    return this.http.get<CoachingTip[]>(
+      `${this.baseUrl}/acknowledged-helpful-today`,
+      { params }
+    );
+  }
+
+  // Get acknowledged and helpful tips today by user email (new endpoint)
+  getAckAndHelpfulTipsToday(email: string): Observable<{acknowledged: CoachingTip[], helpful: CoachingTip[]}> {
+    return this.http.get<{acknowledged: CoachingTip[], helpful: CoachingTip[]}>(
+      `${this.baseUrl}/user/${email}/ack-and-helpful-today`
+    );
+  }
 }

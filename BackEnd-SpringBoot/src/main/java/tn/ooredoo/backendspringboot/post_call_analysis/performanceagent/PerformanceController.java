@@ -60,5 +60,15 @@ public class PerformanceController {
         performanceService.deletePerformance(id);
         return ResponseEntity.noContent().build();
     }
+    @GetMapping("/team")
+    public ResponseEntity<List<Performance>> getPerformanceByTeam(@RequestParam String managerEmail) {
+        List<Performance> performances = performanceService.getPerformanceByTeam(managerEmail);
+
+        if (performances.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+
+        return ResponseEntity.ok(performances);
+    }
 }
 

@@ -2,6 +2,8 @@ package tn.ooredoo.backendspringboot.team;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import tn.ooredoo.backendspringboot.user.User;
+import tn.ooredoo.backendspringboot.user.UserRepository;
 
 import java.util.List;
 
@@ -10,9 +12,13 @@ import java.util.List;
 public class TeamServiceImpl implements TeamService {
 
     private final TeamRepository teamRepository;
+    private final UserRepository userRepository;
 
     @Override
     public Team createTeam(Team team) {
+        User manager = team.getManager();
+        manager.setTeam(team);
+        userRepository.save(manager);
         return teamRepository.save(team);
     }
 

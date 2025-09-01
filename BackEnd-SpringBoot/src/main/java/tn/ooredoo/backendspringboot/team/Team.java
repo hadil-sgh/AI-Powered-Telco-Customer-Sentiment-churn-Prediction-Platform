@@ -19,6 +19,7 @@ public class Team implements Serializable {
     private Long id;
     @Enumerated(EnumType.STRING)
     private TeamType type;
+    private String name;
     @OneToOne
     private User manager;
     @OneToMany

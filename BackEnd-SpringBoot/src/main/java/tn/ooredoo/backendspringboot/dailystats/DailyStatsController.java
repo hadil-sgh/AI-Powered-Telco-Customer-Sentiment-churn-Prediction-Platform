@@ -74,6 +74,13 @@ public class DailyStatsController {
         return ResponseEntity.ok(stats);
     }
 
+    @GetMapping("/team/{teamId}/today-stats")
+    public ResponseEntity<TeamStatsDTO> getTeamStatsForToday(@PathVariable Long teamId) {
+        return ResponseEntity.ok(dailyStatsService.getTeamStatsForToday(teamId));
+    }
 
+    @GetMapping("/team/{teamId}/week-stats")
+    public ResponseEntity<List<WeeklyTeamStatsDTO>> getTeamWeeklyStats(@PathVariable Long teamId) {
+        return ResponseEntity.ok(dailyStatsService.getDailyStatsByTeamForTheCurrentWeek(teamId));
+    }
 }
-

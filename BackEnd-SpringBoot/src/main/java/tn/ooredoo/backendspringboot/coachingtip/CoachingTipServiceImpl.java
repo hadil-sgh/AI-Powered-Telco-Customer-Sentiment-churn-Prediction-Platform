@@ -7,7 +7,9 @@ import tn.ooredoo.backendspringboot.user.User;
 import tn.ooredoo.backendspringboot.user.UserService;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -154,5 +156,22 @@ public class CoachingTipServiceImpl implements CoachingTipService {
         return coachingTipRepository.findByUserEmailAndCreatedAtAfter(email, cutoffDate);
     }
 
-}
+    @Override
 
+    public Map<String, List<CoachingTip>> getAcknowledgedAndHelpfulTipsTodayByUserEmail(String email) {
+        LocalDateTime startOfDay = LocalDateTime.now().toLocalDate().atStartOfDay();
+        LocalDateTime endOfDay = startOfDay.plusDays(1).minusNanos(1);
+
+        Map<String, List<CoachingTip>> result = new HashMap<>();
+        result.put("acknowledged",
+                coachingTipRepository.findByUserEmailAndAcknowledgedTrueAndAcknowledgedAtBetween(
+                        email, startOfDay, endOfDay));
+
+        result.put("helpful",
+                coachingTipRepository.findByUserEmailAndHelpfulTrueAndAcknowledgedAtBetween(
+                        email, startOfDay, endOfDay));
+
+        return result;
+    }
+
+}

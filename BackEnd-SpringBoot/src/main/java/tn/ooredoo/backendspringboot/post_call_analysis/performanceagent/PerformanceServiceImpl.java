@@ -2,12 +2,16 @@ package tn.ooredoo.backendspringboot.post_call_analysis.performanceagent;
 
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import tn.ooredoo.backendspringboot.call_transcript.CallRecord;
+import tn.ooredoo.backendspringboot.call_transcript.CallRecordRepository;
 import tn.ooredoo.backendspringboot.call_transcript.CallRecordServices;
 import tn.ooredoo.backendspringboot.post_call_analysis.complaintscustomer.Complaint;
 import tn.ooredoo.backendspringboot.post_call_analysis.complaintscustomer.ComplaintRepository;
+import tn.ooredoo.backendspringboot.team.Team;
 import tn.ooredoo.backendspringboot.user.User;
+import tn.ooredoo.backendspringboot.user.UserRepository;
 import tn.ooredoo.backendspringboot.user.UserService;
 
 import java.util.ArrayList;
@@ -23,6 +27,8 @@ public class PerformanceServiceImpl implements PerformanceService {
      private final  ComplaintRepository complaintRepository;
      private final CallRecordServices callRecordServices;
      private final UserService userService;
+    private final @Lazy UserRepository userRepository;
+    private final @Lazy CallRecordRepository callRecordRepository;
 
 
     @Override
@@ -78,6 +84,24 @@ public class PerformanceServiceImpl implements PerformanceService {
     @Override
     public void deletePerformance(Long id) {
         performanceRepository.deleteById(id);
+    }
+    @Override
+    public List<Performance> getPerformanceByTeam(String managerEmail) {
+        // 1. Find the manager
+        User manager = userRepository.findByEmail(managerEmail).orElse(null);
+        if (manager == null || manager.getTeam() == null) {
+            return List.of(); // return empty if no manager or team
+        }
+
+        // 2. Get all users in the manager's team
+        Team team = manager.getTeam();
+        List<User> teamMembers = userRepository.findByTeam(team);
+
+        // 3. Get all call records for team members
+        List<CallRecord> teamCalls = callRecordRepository.findByAgentIn(teamMembers);
+
+        // 4. Get all performances for these call records
+        return performanceRepository.findByCallTranscriptsIn(teamCalls);
     }
 
 }

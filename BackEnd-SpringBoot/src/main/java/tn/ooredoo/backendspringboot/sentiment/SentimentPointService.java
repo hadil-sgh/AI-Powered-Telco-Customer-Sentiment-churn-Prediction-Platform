@@ -11,4 +11,5 @@ public interface SentimentPointService {
     Double getAverageSentimentPerCall(Integer callId);
     Double getDailyAverageSentiment(LocalDate date);
     List<SentimentPoint> getSentimentPointsForAgent(String userEmail);
+    List<SentimentPoint> getSentimentByTeam(String userEmail);
 }

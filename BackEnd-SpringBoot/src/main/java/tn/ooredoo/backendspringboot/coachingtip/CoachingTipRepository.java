@@ -22,7 +22,15 @@ public interface CoachingTipRepository extends JpaRepository<CoachingTip, Long> 
 
     List<CoachingTip> findByUserEmailAndCreatedAtAfter(String email, LocalDateTime date);
 
+    List<CoachingTip> findByUserEmailAndAcknowledgedTrueAndHelpfulTrueAndAcknowledgedAtBetween(
+            String email, LocalDateTime startOfDay, LocalDateTime endOfDay);
+    List<CoachingTip> findByManagerEmailAndAcknowledgedTrueAndHelpfulTrueAndAcknowledgedAtBetween(
+            String managerEmail, LocalDateTime startOfDay, LocalDateTime endOfDay);
+    // Acknowledged tips today
+    List<CoachingTip> findByUserEmailAndAcknowledgedTrueAndAcknowledgedAtBetween(
+            String email, LocalDateTime startOfDay, LocalDateTime endOfDay);
 
-
+    // Helpful tips today
+    List<CoachingTip> findByUserEmailAndHelpfulTrueAndAcknowledgedAtBetween(
+            String email, LocalDateTime startOfDay, LocalDateTime endOfDay);
 }
-

@@ -1,0 +1,324 @@
+// Admin Dashboard Styles - Mike's Command Center
+
+// Team Leaderboard Styles
+.agent-leaderboard-item {
+  transition: all 0.2s ease;
+  border-radius: 8px !important;
+
+  &:hover {
+    background-color: #f8f9fa !important;
+    transform: translateX(4px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// Agent Grid Styles
+.agent-card {
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border-width: 2px;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+
+  &.border-danger:hover {
+    box-shadow: 0 8px 25px rgba(255, 62, 29, 0.3);
+  }
+
+  &.border-success:hover {
+    box-shadow: 0 8px 25px rgba(113, 221, 55, 0.3);
+  }
+
+  &.border-warning:hover {
+    box-shadow: 0 8px 25px rgba(255, 171, 0, 0.3);
+  }
+}
+
+// Progress Bar Animations
+.progress-bar {
+  transition: width 0.8s ease-in-out;
+}
+
+// Card Hover Effects
+.card {
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// Button Hover Effects
+.btn {
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+}
+
+// Badge Animations
+.badge {
+  animation: pulse 2s infinite;
+
+  &.bg-danger {
+    animation: pulse-danger 1.5s infinite;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse-danger {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 62, 29, 0.7);
+  }
+  70% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(255, 62, 29, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 62, 29, 0);
+  }
+}
+
+// Avatar Enhancements
+.avatar-xl {
+  width: 3.5rem;
+  height: 3.5rem;
+
+  .avatar-initial {
+    font-size: 1.5rem;
+  }
+}
+
+// Chart Container Styles
+.chart-wrapper {
+  position: relative;
+
+  canvas {
+    max-height: 100%;
+  }
+}
+
+// Modal Enhancements
+.modal-content {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+  border-bottom: 1px solid #e7eaf3;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px 12px 0 0;
+
+  .modal-title {
+    color: white;
+  }
+
+  .btn-close {
+    filter: brightness(0) invert(1);
+  }
+}
+
+// Status Indicators
+.status-indicator {
+  position: relative;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  &.status-online::before {
+    background: #71dd37;
+    animation: pulse-green 2s infinite;
+  }
+
+  &.status-alert::before {
+    background: #ff3e1d;
+    animation: pulse-red 1s infinite;
+  }
+}
+
+@keyframes pulse-green {
+  0% {
+    box-shadow: 0 0 0 0 rgba(113, 221, 55, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(113, 221, 55, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(113, 221, 55, 0);
+  }
+}
+
+@keyframes pulse-red {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 62, 29, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(255, 62, 29, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 62, 29, 0);
+  }
+}
+
+// Quick Action Buttons
+.quick-action-btn {
+  transition: all 0.3s ease;
+  border-radius: 8px;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  }
+
+  i {
+    transition: transform 0.3s ease;
+  }
+
+  &:hover i {
+    transform: scale(1.2);
+  }
+}
+
+// Performance Metrics Cards
+.metric-card {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border: none;
+
+  &.metric-success {
+    background: linear-gradient(135deg, #d4edda 0%, #a3d9a4 100%);
+  }
+
+  &.metric-warning {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  }
+
+  &.metric-danger {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+  }
+}
+
+// Team Grid Layout
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+}
+
+// Loading States
+.loading-shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+// Alert Styles
+.alert-animated {
+  animation: slideInDown 0.5s ease-out;
+}
+
+@keyframes slideInDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+// Responsive Design
+@media (max-width: 1200px) {
+  .agent-card {
+    margin-bottom: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .card-body {
+    padding: 1rem;
+  }
+
+  .btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.775rem;
+  }
+
+  .agent-card .card-body {
+    padding: 0.75rem;
+  }
+}
+
+// Dark Mode Support
+@media (prefers-color-scheme: dark) {
+  .metric-card {
+    background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+    color: #e2e8f0;
+  }
+}
+
+// Custom Scrollbar
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #696cff #f8f9fa;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f8f9fa;
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #696cff;
+    border-radius: 3px;
+
+    &:hover {
+      background: #5a5fe7;
+    }
+  }
+}

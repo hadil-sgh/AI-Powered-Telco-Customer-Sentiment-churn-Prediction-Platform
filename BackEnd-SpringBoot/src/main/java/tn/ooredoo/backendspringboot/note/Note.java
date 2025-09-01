@@ -30,7 +30,7 @@ public class Note implements Serializable {
 
     @OneToOne
     @JoinColumn(name = "call_record_id")
-    private CallRecord call;;
+    private CallRecord call;
 
 
 

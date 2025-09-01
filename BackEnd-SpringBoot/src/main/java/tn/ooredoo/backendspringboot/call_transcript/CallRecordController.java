@@ -86,6 +86,14 @@ public class CallRecordController {
     public Double getAverageCallDuration() {
         return callRecordServices.getAverageCallDuration();
     }
+    @GetMapping("/team")
+    public ResponseEntity<List<CallRecord>> getCallRecordsByTeam(@RequestParam String managerEmail) {
+        List<CallRecord> callRecords = callRecordServices.getCallRecordByTeam(managerEmail);
+        if (callRecords.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(callRecords);
+    }
 
 
 }

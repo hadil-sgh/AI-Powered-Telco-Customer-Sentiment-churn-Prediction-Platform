@@ -3,4 +3,7 @@ export interface AgentRankingDTO {
   agentName: string;
   score: number;
   userEmail?: string;
+  totalScore?: number;
+  callsCompleted?: number;
+  averageSentiment?: number;
 }

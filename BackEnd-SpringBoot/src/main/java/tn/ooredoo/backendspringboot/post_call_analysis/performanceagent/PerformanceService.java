@@ -10,6 +10,7 @@ public interface PerformanceService {
     Optional<Performance> getPerformanceById(Long id);
     Performance updatePerformance( Performance performance);
     void deletePerformance(Long id);
+    public List<Performance> getPerformanceByTeam(String managerEmail);
 
 
 }

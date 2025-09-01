@@ -1,1 +1,1186 @@
-<p>admin-dashboeard works!</p>
+<!-- Admin Dashboard - Mike's Command Center -->
+<div class="container-xxl flex-grow-1 container-p-y">
+  <div class="row">
+    <!-- Welcome Banner -->
+    <div class="col-lg-8 mb-4 order-0">
+      <div class="card">
+        <div class="d-flex align-items-end row">
+          <div class="col-sm-7">
+            <div class="card-body">
+              <h5 class="card-title text-primary">
+                {{ getGreeting() }}, {{ adminData.name || "Admin" }}! 👨‍💼
+              </h5>
+              <p class="mb-4">
+                Team Status:
+                <span class="fw-bold text-success"
+                  >{{ onlineAgentsCount }} agents online</span
+                >,
+                <span class="fw-bold text-warning"
+                  >{{ agentsOnBreak }} on break</span
+                >,
+                <span class="fw-bold text-danger"
+                  >{{ alertsCount }} alerts</span
+                >
+                requiring attention. <br /><small class="text-muted"
+                  >{{ getCurrentTime() }} - Command Center Overview</small
+                >
+              </p>
+            </div>
+          </div>
+          <div class="col-sm-5 text-center text-sm-left">
+            <div class="card-body pb-0 px-0 px-md-4">
+              <img
+                src="assets/img/logoOoredoo.png"
+                height="80"
+                alt="Ooredoo Manager"
+                class="mb-3"
+              />
+              <div class="badge bg-label-primary">
+                Admin ID: {{ adminData.id }}
+              </div>
+              <div class="badge bg-label-secondary mt-1">
+                {{ adminData.role }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="col-lg-4 col-md-4 order-1">
+      <div class="row">
+        <div class="col-lg-6 col-md-12 col-6 mb-4">
+          <div class="card">
+            <div class="card-body">
+              <div
+                class="card-title d-flex align-items-start justify-content-between"
+              >
+                <div class="avatar flex-shrink-0">
+                  <span class="avatar-initial rounded bg-label-success">
+                    <i class="bx bx-trending-up"></i>
+                  </span>
+                </div>
+              </div>
+              <span class="fw-semibold d-block mb-1">Team Avg Sentiment</span>
+              <h3 class="card-title mb-2">{{ getTeamAverageSentiment() }}%</h3>
+              <small class="text-success fw-semibold">
+                <i class="bx bx-up-arrow-alt"></i> Target: 75%
+              </small>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6 col-md-12 col-6 mb-4">
+          <div class="card">
+            <div class="card-body">
+              <div
+                class="card-title d-flex align-items-start justify-content-between"
+              >
+                <div class="avatar flex-shrink-0">
+                  <span class="avatar-initial rounded bg-label-info">
+                    <i class="bx bx-user-voice"></i>
+                  </span>
+                </div>
+              </div>
+              <span>Active Calls</span>
+              <h3 class="card-title text-nowrap mb-1">{{ getActiveCalls() }}</h3>
+              <small class="text-info fw-semibold">
+                <i class="bx bx-phone"></i> Live now
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live Team Monitoring Grid -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div
+          class="card-header d-flex align-items-center justify-content-between"
+        >
+          <h5 class="m-0 me-2">Live Team Monitoring - Agent Grid</h5>
+          <div class="d-flex align-items-center">
+            <span class="badge bg-success me-2"
+              >{{ onlineAgentsCount }} Online</span
+            >
+            <span class="badge bg-warning me-2">{{ agentsOnBreak }} Break</span>
+            <span class="badge bg-danger me-2">{{ alertAgents }} Alerts</span>
+            <button
+              class="btn btn-sm btn-outline-primary ms-2"
+              (click)="refreshAgentGrid()"
+            >
+              <i class="bx bx-refresh"></i> Refresh
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div
+              class="col-xl-3 col-lg-4 col-md-6 mb-3"
+              *ngFor="let agent of agentGrid"
+            >
+              <div
+                class="card agent-card h-100"
+                [ngClass]="getAgentCardClass(agent.status)"
+                (click)="viewAgentDetails(agent)"
+              >
+                <div class="card-body text-center">
+                  <div class="avatar avatar-xl mx-auto mb-3">
+                    <span
+                      class="avatar-initial rounded-circle"
+                      [ngClass]="getAgentAvatarClass(agent.status)"
+                    >
+                      <i class="bx bx-user fs-4"></i>
+                    </span>
+                  </div>
+                  <h6 class="mb-1">{{ agent.name }}</h6>
+                  <div
+                    class="badge mb-2"
+                    [ngClass]="getAgentStatusBadge(agent.status)"
+                  >
+                    {{ getAgentStatusText(agent.status) }}
+                  </div>
+
+                  <div class="mt-2">
+                    <div
+                      *ngIf="
+                        agent.status === 'on-call' &&
+                        agent.sentiment !== undefined
+                      "
+                      class="text-center"
+                    >
+                      <small class="text-muted d-block">Sentiment Score</small>
+                      <div class="progress mt-1" style="height: 6px">
+                        <div
+                          class="progress-bar"
+                          [ngClass]="
+                            getSentimentProgressClass(agent.sentiment!)
+                          "
+                          [style.width.%]="agent.sentiment! * 100"
+                        ></div>
+                      </div>
+                      <small
+                        class="fw-semibold"
+                        [ngClass]="getSentimentTextClass(agent.sentiment!)"
+                      >
+                        {{ (agent.sentiment! * 100).toFixed(0) }}%
+                      </small>
+                    </div>
+
+                    <div *ngIf="agent.status === 'break'" class="text-center">
+                      <small class="text-muted">Available in</small>
+                      <div class="fw-semibold text-warning">
+                        {{ agent.breakTimeLeft }} min
+                      </div>
+                    </div>
+
+                    <div *ngIf="agent.status === 'alert'" class="text-center">
+                      <small class="text-danger fw-semibold">{{
+                        agent.alertType
+                      }}</small>
+                      <div class="btn-group-sm mt-1">
+                        <button
+                          class="btn btn-sm btn-outline-primary me-1"
+                          (click)="listenIn(agent); $event.stopPropagation()"
+                        >
+                          <i class="bx bx-headphone"></i>
+                        </button>
+                        <button
+                          class="btn btn-sm btn-outline-success me-1"
+                          (click)="
+                            sendCoachingMessage(agent); $event.stopPropagation()
+                          "
+                        >
+                          <i class="bx bx-message-dots"></i>
+                        </button>
+                        <button
+                          class="btn btn-sm btn-outline-danger"
+                          (click)="
+                            escalateCall(agent); $event.stopPropagation()
+                          "
+                        >
+                          <i class="bx bx-phone-call"></i>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div *ngIf="agent.status === 'offline'" class="text-center">
+                      <small class="text-muted">Last seen</small>
+                      <div class="text-muted">{{ agent.lastSeen }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Agent Feedback Summary Section -->
+  <div class="row mb-4">
+    <div class="col-md-6 col-lg-4 col-xl-4 order-0 mb-4">
+      <div class="card h-100">
+        <div class="card-header d-flex align-items-center justify-content-between pb-0">
+          <div class="card-title mb-0">
+            <h5 class="m-0 me-2">Agent Feedback Today</h5>
+            <small class="text-muted">Acknowledged & Helpful Tips</small>
+          </div>
+          <div class="dropdown">
+            <button class="btn p-0" type="button" id="feedbackMenu" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              <i class="bx bx-dots-vertical-rounded"></i>
+            </button>
+            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="feedbackMenu">
+              <a class="dropdown-item" href="javascript:void(0);">View All</a>
+              <a class="dropdown-item" href="javascript:void(0);">Export Report</a>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <!-- Summary Stats -->
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <div class="d-flex align-items-center">
+                <div class="avatar flex-shrink-0 me-2">
+                  <span class="avatar-initial rounded bg-label-info">
+                    <i class="bx bx-check-circle"></i>
+                  </span>
+                </div>
+                <div>
+                  <h4 class="mb-0">{{ getAcknowledgedTipsCount() }}</h4>
+                  <span class="text-info small fw-semibold">Acknowledged</span>
+                </div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="d-flex align-items-center">
+                <div class="avatar flex-shrink-0 me-2">
+                  <span class="avatar-initial rounded bg-label-success">
+                    <i class="bx bx-heart"></i>
+                  </span>
+                </div>
+                <div>
+                  <h4 class="mb-0">{{ getHelpfulTipsCount() }}</h4>
+                  <span class="text-success small fw-semibold">Helpful</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Total Feedback -->
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="d-flex align-items-center">
+              <div class="avatar flex-shrink-0">
+                <span class="avatar-initial rounded bg-label-primary">
+                  <i class="bx bx-message-square-dots"></i>
+                </span>
+              </div>
+              <div class="ms-3">
+                <h4 class="mb-0">{{ totalFeedbackToday }}</h4>
+                <span class="text-primary small fw-semibold">Total Interactions</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3" *ngIf="agentFeedbackList.length > 0">
+            <small class="text-muted d-block">Recent Feedback</small>
+            <div class="mt-2" *ngFor="let feedback of getRecentFeedback(3)">
+              <div class="d-flex align-items-start mb-2">
+                <div class="avatar avatar-xs flex-shrink-0 me-2">
+                  <span class="avatar-initial rounded-circle" 
+                        [ngClass]="feedback.helpful ? 'bg-label-success' : 'bg-label-info'">
+                    {{ feedback.user?.firstname?.charAt(0) || 'A' }}
+                  </span>
+                </div>
+                <div class="flex-grow-1">
+                  <h6 class="mb-0 small">{{ feedback.title }}</h6>
+                  <div class="d-flex align-items-center">
+                    <small class="text-muted">{{ feedback.user?.firstname || 'Agent' }} - {{ feedback.type }}</small>
+                    <span class="badge ms-2" 
+                          [ngClass]="feedback.helpful ? 'bg-label-success' : 'bg-label-info'">
+                      {{ feedback.helpful ? 'Helpful' : 'Acknowledged' }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3" *ngIf="agentFeedbackList.length === 0">
+            <div class="text-center text-muted">
+              <i class="bx bx-message-square-x display-6"></i>
+              <p class="mb-0 small">No feedback received today</p>
+            </div>
+          </div>
+
+          <!-- Feedback by Type -->
+          <div class="row g-2 mb-3" *ngIf="agentFeedbackList.length > 0">
+            <div class="col-6">
+              <div class="border rounded p-2 text-center">
+                <div class="h6 mb-0 text-info">{{ getFeedbackCountByType('TECHNIQUE_SUGGESTION') }}</div>
+                <small class="text-muted">Technique</small>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="border rounded p-2 text-center">
+                <div class="h6 mb-0 text-warning">{{ getFeedbackCountByType('SENTIMENT_ALERT') }}</div>
+                <small class="text-muted">Sentiment</small>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="border rounded p-2 text-center">
+                <div class="h6 mb-0 text-primary">{{ getFeedbackCountByType('ESCALATION_RISK') }}</div>
+                <small class="text-muted">Escalation</small>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="border rounded p-2 text-center">
+                <div class="h6 mb-0 text-secondary">{{ getFeedbackCountByType('COMPETITOR_MENTION') }}</div>
+                <small class="text-muted">Competitor</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-3" *ngIf="agentFeedbackList.length > 0">
+            <small class="text-success">
+              <i class="bx bx-trending-up"></i>
+              Most Active: {{ getMostActiveFeedbackAgent() }}
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Team Stats Summary -->
+    <div class="col-md-6 col-lg-4 col-xl-4 order-1 mb-4">
+      <div class="card h-100">
+        <div class="card-header">
+          <h5 class="card-title m-0">Team Performance Today</h5>
+          <small class="text-muted">Real-time statistics</small>
+        </div>
+        <div class="card-body">
+          <div class="row g-3" *ngIf="currentTeamStats">
+            <div class="col-12">
+              <div class="d-flex align-items-center">
+                <div class="avatar flex-shrink-0 me-3">
+                  <span class="avatar-initial rounded bg-label-primary">
+                    <i class="bx bx-trending-up"></i>
+                  </span>
+                </div>
+                <div>
+                  <h4 class="mb-0">{{ getAverageScore() }}</h4>
+                  <span class="text-muted small">Average Score</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-12">
+              <div class="d-flex align-items-center">
+                <div class="avatar flex-shrink-0 me-3">
+                  <span class="avatar-initial rounded bg-label-success">
+                    <i class="bx bx-phone"></i>
+                  </span>
+                </div>
+                <div>
+                  <h4 class="mb-0">{{ currentTeamStats.totalCalls }}</h4>
+                  <span class="text-muted small">Total Calls</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-12">
+              <div class="d-flex align-items-center">
+                <div class="avatar flex-shrink-0 me-3">
+                  <span class="avatar-initial rounded bg-label-info">
+                    <i class="bx bx-heart"></i>
+                  </span>
+                </div>
+                <div>
+                  <h4 class="mb-0">{{ (currentTeamStats.averageSentiment * 100) | number:'1.0-0' }}%</h4>
+                  <span class="text-muted small">Avg Sentiment</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="text-center text-muted" *ngIf="!currentTeamStats">
+            <i class="bx bx-loader-alt bx-spin display-6"></i>
+            <p class="mb-0 small">Loading team stats...</p>
+          </div>
+
+          <div class="mt-3" *ngIf="currentTeam">
+            <small class="text-info">
+              <i class="bx bx-group"></i>
+              Team: {{ currentTeam.type }}
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Team Leaderboard Section -->
+  <div class="row">
+    <div class="col-md-6 col-lg-4 col-xl-4 order-0 mb-4">
+      <div class="card h-100">
+        <div
+          class="card-header d-flex align-items-center justify-content-between pb-0"
+        >
+          <div class="card-title mb-0">
+            <h5 class="m-0 me-2">Team Leaderboard</h5>
+            <small class="text-muted">Current Performance Ranking</small>
+            <div class="mt-2" *ngIf="teamLeaderboard.length > 0">
+              <span class="badge bg-label-primary me-2"
+                >{{ teamLeaderboard.length }} Agents</span
+              >
+              <span class="badge bg-label-success me-2"
+                >Top Score: {{ getTopScore() }}%</span
+              >
+              <span class="badge bg-label-info"
+                >Avg: {{ getTeamAverageSentiment() }}%</span
+              >
+            </div>
+          </div>
+          <div class="dropdown">
+            <button
+              class="btn p-0"
+              type="button"
+              data-bs-toggle="dropdown"
+              aria-haspopup="true"
+              aria-expanded="false"
+            >
+              <i class="bx bx-dots-vertical-rounded"></i>
+            </button>
+            <div class="dropdown-menu dropdown-menu-end">
+              <a class="dropdown-item" href="javascript:void(0);">View All</a>
+              <a
+                class="dropdown-item"
+                href="javascript:void(0);"
+                (click)="loadTeamRanking()"
+                ><i class="bx bx-refresh me-2"></i>Refresh</a
+              >
+              <div class="dropdown-divider"></div>
+              <a
+                class="dropdown-item"
+                href="javascript:void(0);"
+                (click)="exportTeamRanking()"
+                ><i class="bx bx-download me-2"></i>Export Rankings</a
+              >
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <ul class="p-0 m-0 mt-4" *ngIf="teamLeaderboard.length > 0">
+            <li
+              class="d-flex mb-4 pb-3 border-bottom agent-leaderboard-item"
+              *ngFor="let member of teamLeaderboard; let i = index"
+              (click)="viewLeaderboardAgentDetails(member)"
+              style="
+                cursor: pointer;
+                border-radius: 8px;
+                padding: 12px;
+                margin: 0 -12px;
+              "
+              [class.bg-light]="false"
+            >
+              <div class="avatar flex-shrink-0 me-3">
+                <span
+                  class="avatar-initial rounded"
+                  [ngClass]="
+                    i === 0
+                      ? 'bg-label-success'
+                      : i === 1
+                      ? 'bg-label-warning'
+                      : i === 2
+                      ? 'bg-label-info'
+                      : 'bg-label-secondary'
+                  "
+                >
+                  <i class="bx" [ngClass]="getRankIcon(member.rank)"></i>
+                </span>
+              </div>
+              <div class="flex-grow-1">
+                <div
+                  class="d-flex justify-content-between align-items-start mb-2"
+                >
+                  <div>
+                    <h6
+                      class="mb-1"
+                      [ngClass]="
+                        i < 3 ? 'text-primary fw-bold' : 'text-dark fw-semibold'
+                      "
+                    >
+                      {{ getAgentDisplayName(member) }}
+                    </h6>
+                    <div class="d-flex align-items-center">
+                      <span
+                        class="badge"
+                        [ngClass]="getRankBadgeClass(member.rank)"
+                      >
+                        #{{ member.rank }} Rank
+                      </span>
+                      <small class="text-muted ms-2" *ngIf="member.userEmail">{{
+                        member.userEmail
+                      }}</small>
+                    </div>
+                  </div>
+                 
+                </div>
+
+                <!-- Additional Details Row -->
+                <div
+                  class="row text-center mt-2"
+                  *ngIf="
+                    member.callsCompleted !== undefined ||
+                    member.averageSentiment !== undefined ||
+                    member.totalScore !== undefined
+                  "
+                >
+                  <div
+                    class="col-4"
+                    *ngIf="member.callsCompleted !== undefined"
+                  >
+                    <div class="d-flex flex-column">
+                      <span class="fw-semibold text-primary">{{
+                        member.callsCompleted
+                      }}</span>
+                      <small class="text-muted">Calls Completed</small>
+                    </div>
+                  </div>
+                  <div
+                    class="col-4"
+                    *ngIf="member.averageSentiment !== undefined"
+                  >
+                    <div class="d-flex flex-column">
+                      <span
+                        class="fw-semibold"
+                        [ngClass]="getSentimentClass(member.averageSentiment)"
+                      >
+                        {{ getSentimentPercentage(member.averageSentiment) }}%
+                      </span>
+                      <small class="text-muted">Avg Sentiment</small>
+                    </div>
+                  </div>
+                  <div
+                    class="col-4"
+                    *ngIf="
+                      member.totalScore !== undefined &&
+                      member.totalScore !== null
+                    "
+                  >
+                    <div class="d-flex flex-column">
+                      <span class="fw-semibold text-info">{{
+                        (member.totalScore || 0).toFixed(1)
+                      }}</span>
+                      <small class="text-muted">Total Score</small>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Performance Progress Bar -->
+                <div
+                  class="progress mt-2"
+                  style="height: 4px"
+                  *ngIf="getEffectiveScore(member) > 0"
+                >
+                  <div
+                    class="progress-bar"
+                    [ngClass]="{
+                      'bg-success': getEffectiveScore(member) >= 85,
+                      'bg-warning':
+                        getEffectiveScore(member) >= 70 &&
+                        getEffectiveScore(member) < 85,
+                      'bg-danger': getEffectiveScore(member) < 70
+                    }"
+                    [style.width.%]="getEffectiveScore(member)"
+                    role="progressbar"
+                  ></div>
+                </div>
+              </div>
+            </li>
+          </ul>
+
+          <!-- No team data message -->
+          <div *ngIf="teamLeaderboard.length === 0" class="text-center p-4">
+            <i class="bx bx-info-circle display-4 text-muted"></i>
+            <p class="mt-2 text-muted">No team ranking data available</p>
+            <button
+              class="btn btn-sm btn-outline-primary"
+              (click)="loadTeamRanking()"
+            >
+              <i class="bx bx-refresh me-1"></i>Load Rankings
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Online Agents Summary -->
+    <div class="col-md-6 col-lg-4 order-1 mb-4">
+      <div class="card h-100">
+        <div
+          class="card-header d-flex align-items-center justify-content-between"
+        >
+          <h5 class="card-title m-0 me-2">Online Agents</h5>
+          <div class="d-flex align-items-center">
+            <span class="badge bg-success me-2"
+              >{{ onlineAgentsCount }} online</span
+            >
+            <div class="dropdown">
+              <button
+                class="btn p-0"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                <i class="bx bx-dots-vertical-rounded"></i>
+              </button>
+              <div class="dropdown-menu dropdown-menu-end">
+                <a
+                  class="dropdown-item"
+                  href="javascript:void(0);"
+                  (click)="loadOnlineAgents()"
+                  >Refresh</a
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <ul class="p-0 m-0" *ngIf="onlineAgentsList.length > 0">
+            <li class="d-flex mb-3 pb-1" *ngFor="let agent of onlineAgentsList">
+              <div class="avatar flex-shrink-0 me-3">
+                <span class="avatar-initial rounded bg-label-success">
+                  <i class="bx bx-user"></i>
+                </span>
+              </div>
+              <div
+                class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2"
+              >
+                <div class="me-2">
+                  <h6 class="mb-0">
+                    {{
+                      agent.firstname ||
+                        (agent.fullName || "").split(" ")[0] ||
+                        "Agent"
+                    }}
+                  </h6>
+                  <small class="text-muted">{{ agent.email }}</small>
+                </div>
+                <div class="text-end">
+                  <span class="badge bg-success">Online</span>
+                </div>
+              </div>
+            </li>
+          </ul>
+
+          <!-- No online agents message -->
+          <div *ngIf="onlineAgentsList.length === 0" class="text-center p-4">
+            <i class="bx bx-user-x display-4 text-muted"></i>
+            <p class="mt-2 text-muted">No agents currently online</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Agent Feedback Section -->
+  <div class="row">
+    <div class="col-12 mb-4">
+      <div class="card">
+        <div
+          class="card-header d-flex align-items-center justify-content-between"
+        >
+          <h5 class="card-title m-0 me-2">
+            <i class="bx bx-message-dots text-primary me-2"></i>
+            Agent Feedback Today
+          </h5>
+          <div class="d-flex align-items-center">
+            <span class="badge bg-success me-2"
+              >{{ totalFeedbackToday }} total</span
+            >
+            <div class="dropdown">
+              <button
+                class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                type="button"
+                id="feedbackDropdown"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                <i class="bx bx-dots-vertical-rounded"></i>
+              </button>
+              <ul class="dropdown-menu" aria-labelledby="feedbackDropdown">
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="#"
+                    (click)="loadAgentFeedback()"
+                  >
+                    <i class="bx bx-refresh me-1"></i>Refresh Feedback
+                  </a>
+                </li>
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="#"
+                    (click)="exportFeedbackData()"
+                  >
+                    <i class="bx bx-download me-1"></i>Export Data
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <!-- Feedback Statistics -->
+          <div class="row mb-4">
+            <div class="col-md-3 col-6">
+              <div class="d-flex align-items-center">
+                <div class="avatar flex-shrink-0 me-3">
+                  <span class="avatar-initial rounded bg-label-success">
+                    <i class="bx bx-like"></i>
+                  </span>
+                </div>
+                <div>
+                  <div class="fw-semibold">
+                    {{ getFeedbackCountByType("TECHNIQUE_SUGGESTION") }}
+                  </div>
+                  <small class="text-muted">Technique Tips</small>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3 col-6">
+              <div class="d-flex align-items-center">
+                <div class="avatar flex-shrink-0 me-3">
+                  <span class="avatar-initial rounded bg-label-warning">
+                    <i class="bx bx-emoticon-happy"></i>
+                  </span>
+                </div>
+                <div>
+                  <div class="fw-semibold">
+                    {{ getFeedbackCountByType("SENTIMENT_ALERT") }}
+                  </div>
+                  <small class="text-muted">Sentiment Alerts</small>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3 col-6">
+              <div class="d-flex align-items-center">
+                <div class="avatar flex-shrink-0 me-3">
+                  <span class="avatar-initial rounded bg-label-danger">
+                    <i class="bx bx-error-alt"></i>
+                  </span>
+                </div>
+                <div>
+                  <div class="fw-semibold">
+                    {{ getFeedbackCountByType("ESCALATION_RISK") }}
+                  </div>
+                  <small class="text-muted">Escalation Risks</small>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3 col-6">
+              <div class="d-flex align-items-center">
+                <div class="avatar flex-shrink-0 me-3">
+                  <span class="avatar-initial rounded bg-label-info">
+                    <i class="bx bx-shield-alt"></i>
+                  </span>
+                </div>
+                <div>
+                  <div class="fw-semibold">
+                    {{ getFeedbackCountByType("COMPETITOR_MENTION") }}
+                  </div>
+                  <small class="text-muted">Competitor Mentions</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Feedback List -->
+          <div class="row">
+            <div class="col-md-8">
+              <h6 class="text-muted">Recent Positive Feedback</h6>
+              <div
+                *ngIf="getRecentFeedback().length > 0; else noRecentFeedback"
+              >
+                <div
+                  *ngFor="
+                    let feedback of getRecentFeedback();
+                    trackBy: trackByFeedbackId
+                  "
+                  class="d-flex align-items-start mb-3 p-3 border rounded"
+                >
+                  <div class="avatar flex-shrink-0 me-3">
+                    <span
+                      class="avatar-initial rounded"
+                      [ngClass]="{
+                        'bg-label-success':
+                          feedback.type === 'TECHNIQUE_SUGGESTION',
+                        'bg-label-warning': feedback.type === 'SENTIMENT_ALERT',
+                        'bg-label-danger': feedback.type === 'ESCALATION_RISK',
+                        'bg-label-info': feedback.type === 'COMPETITOR_MENTION'
+                      }"
+                    >
+                      <i
+                        class="bx"
+                        [ngClass]="{
+                          'bx-like': feedback.type === 'TECHNIQUE_SUGGESTION',
+                          'bx-emoticon-happy':
+                            feedback.type === 'SENTIMENT_ALERT',
+                          'bx-error-alt': feedback.type === 'ESCALATION_RISK',
+                          'bx-shield-alt':
+                            feedback.type === 'COMPETITOR_MENTION'
+                        }"
+                      ></i>
+                    </span>
+                  </div>
+                  <div class="flex-grow-1">
+                    <div
+                      class="d-flex justify-content-between align-items-start"
+                    >
+                      <div>
+                        <h6 class="mb-1">{{ feedback.title }}</h6>
+                        <p class="mb-1 text-muted small">
+                          {{ feedback.message }}
+                        </p>
+                        <div class="d-flex align-items-center">
+                          <span class="badge bg-label-primary me-2">{{
+                            getAgentNameFromFeedback(feedback)
+                          }}</span>
+                          <span class="badge bg-label-secondary">{{
+                            feedback.type.replace("_", " ")
+                          }}</span>
+                        </div>
+                      </div>
+                      <small class="text-muted">
+                        {{
+                          getTimeAgo(
+                            feedback.acknowledgedAt || feedback.createdAt
+                          )
+                        }}
+                      </small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <ng-template #noRecentFeedback>
+                <div class="text-center p-4">
+                  <i class="bx bx-message display-4 text-muted"></i>
+                  <p class="mt-2 text-muted">No recent feedback available</p>
+                </div>
+              </ng-template>
+            </div>
+
+            <!-- Feedback Summary -->
+            <div class="col-md-4">
+              <h6 class="text-muted">Feedback Summary</h6>
+              <div class="card bg-light border-0">
+                <div class="card-body">
+                  <div
+                    class="d-flex justify-content-between align-items-center mb-2"
+                  >
+                    <span class="text-muted">Total Feedback Today</span>
+                    <span class="fw-bold text-primary">{{
+                      totalFeedbackToday
+                    }}</span>
+                  </div>
+                  <div
+                    class="d-flex justify-content-between align-items-center mb-2"
+                  >
+                    <span class="text-muted">Most Active Agent</span>
+                    <span class="fw-bold text-success">{{
+                      getMostActiveFeedbackAgent()
+                    }}</span>
+                  </div>
+                  <div
+                    class="d-flex justify-content-between align-items-center"
+                  >
+                    <span class="text-muted">Response Rate</span>
+                    <span class="fw-bold text-info">
+                      {{ totalFeedbackToday > 0 ? "100%" : "0%" }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Performance Analytics & Quick Actions -->
+  <div class="row">
+    <!-- Team Performance Chart -->
+    <div class="col-12 col-lg-8 order-2 order-md-3 order-lg-2 mb-4">
+      <div class="card">
+        <div class="row row-bordered g-0">
+          <div class="col-md-8">
+            <h5 class="card-header m-0 me-2 pb-3">
+              Team Performance Analytics
+            </h5>
+            <div class="px-3 pb-3" style="height: 400px">
+              <div
+                class="chart-wrapper"
+                style="position: relative; height: 360px"
+              >
+                <canvas #performanceChart></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card-body">
+              <div class="text-center">
+                <h6 class="text-primary mb-3">Today's Performance</h6>
+              </div>
+              <div class="mt-3">
+                <div class="mb-3" *ngFor="let metric of performanceMetrics">
+                  <div
+                    class="d-flex justify-content-between align-items-center mb-1"
+                  >
+                    <span class="text-muted">{{ metric.label }}</span>
+                    <span class="fw-semibold">{{ metric.value }}%</span>
+                  </div>
+                  <div class="progress" style="height: 6px">
+                    <div
+                      class="progress-bar"
+                      [ngClass]="metric.colorClass"
+                      [style.width.%]="metric.value"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+              <div class="text-center fw-semibold pt-3 mb-2">
+                {{ getOverallTeamScore() }}% Overall Score
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+ 
+  </div>
+
+  <!-- Quick Actions & Reports -->
+  <div class="row">
+ 
+
+    <!-- Quality Assurance -->
+    <div class="col-md-6 col-lg-4 order-1 mb-4">
+      <div class="card h-100">
+        <div class="card-header">
+          <ul class="nav nav-pills" role="tablist">
+            <li class="nav-item">
+              <button
+                type="button"
+                class="nav-link active"
+                role="tab"
+                data-bs-toggle="tab"
+                data-bs-target="#navs-qa"
+                aria-controls="navs-qa"
+                aria-selected="true"
+              >
+                QA Review
+              </button>
+            </li>
+            <li class="nav-item">
+              <button
+                type="button"
+                class="nav-link"
+                role="tab"
+                data-bs-toggle="tab"
+                data-bs-target="#navs-reports"
+                aria-controls="navs-reports"
+                aria-selected="false"
+              >
+                Reports
+              </button>
+            </li>
+          </ul>
+        </div>
+        <div class="card-body px-0">
+          <div class="tab-content p-0">
+            <div class="tab-pane fade show active" id="navs-qa" role="tabpanel">
+              <div class="p-4">
+                <div class="mb-3">
+                  <div
+                    class="d-flex justify-content-between align-items-center mb-2"
+                  >
+                    <span class="text-muted">Calls Reviewed Today</span>
+                    <span class="fw-semibold"
+                      >{{ qaStats.reviewedToday }}/{{
+                        qaStats.targetReviews
+                      }}</span
+                    >
+                  </div>
+                  <div class="progress mb-2" style="height: 6px">
+                    <div
+                      class="progress-bar bg-success"
+                      [style.width.%]="getQAProgress()"
+                    ></div>
+                  </div>
+                  <small class="text-success"
+                    >{{ getQAProgress() }}% of daily target</small
+                  >
+                </div>
+
+                <div class="d-grid gap-2">
+                  <button
+                    class="btn btn-primary btn-sm"
+                    (click)="startQAReview()"
+                  >
+                    <i class="bx bx-play-circle me-1"></i> Start QA Review
+                  </button>
+                  <button
+                    class="btn btn-outline-info btn-sm"
+                    (click)="viewQAQueue()"
+                  >
+                    <i class="bx bx-list-ul me-1"></i> Review Queue ({{
+                      qaStats.pendingReviews
+                    }})
+                  </button>
+                  <button
+                    class="btn btn-outline-secondary btn-sm"
+                    (click)="qaSettings()"
+                  >
+                    <i class="bx bx-cog me-1"></i> QA Settings
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="tab-pane fade" id="navs-reports" role="tabpanel">
+              <div class="p-4">
+                <div class="d-grid gap-2">
+                  <button
+                    class="btn btn-outline-primary btn-sm"
+                    (click)="generateDailyReport()"
+                  >
+                    <i class="bx bx-file-text me-1"></i> Daily Report
+                  </button>
+                  <button
+                    class="btn btn-outline-success btn-sm"
+                    (click)="generateWeeklyReport()"
+                  >
+                    <i class="bx bx-calendar-week me-1"></i> Weekly Summary
+                  </button>
+                  <button
+                    class="btn btn-outline-info btn-sm"
+                    (click)="exportTeamData()"
+                  >
+                    <i class="bx bx-export me-1"></i> Export Team Data
+                  </button>
+                  <button
+                    class="btn btn-outline-warning btn-sm"
+                    (click)="viewTrends()"
+                  >
+                    <i class="bx bx-trending-up me-1"></i> Performance Trends
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+ 
+  </div>
+</div>
+
+<!-- Live Coaching Modal -->
+<div
+  class="modal fade"
+  [class.show]="showCoachingModal"
+  [style.display]="showCoachingModal ? 'block' : 'none'"
+  tabindex="-1"
+  aria-labelledby="coachingModalLabel"
+  [attr.aria-hidden]="!showCoachingModal"
+>
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="coachingModalLabel">
+          <i class="bx bx-message-dots me-2"></i>Send Live Coaching Message
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          (click)="closeCoachingModal()"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body" *ngIf="selectedAgent">
+        <div class="row mb-3">
+          <div class="col-md-4">
+            <div class="text-center">
+              <div class="avatar avatar-xl mx-auto mb-2">
+                <span class="avatar-initial rounded-circle bg-label-primary">
+                  <i class="bx bx-user fs-3"></i>
+                </span>
+              </div>
+              <h6>{{ selectedAgent.name }}</h6>
+              <span class="badge bg-danger">{{ selectedAgent.alertType }}</span>
+            </div>
+          </div>
+          <div class="col-md-8">
+            <div class="mb-3">
+              <label class="form-label">Quick Coaching Tips</label>
+              <div class="d-flex flex-wrap gap-2">
+                <button
+                  class="btn btn-sm btn-outline-primary"
+                  *ngFor="let tip of quickCoachingTips"
+                  (click)="selectQuickTip(tip)"
+                >
+                  {{ tip }}
+                </button>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="coachingMessage" class="form-label"
+                >Custom Message</label
+              >
+              <textarea
+                class="form-control"
+                id="coachingMessage"
+                rows="4"
+                [(ngModel)]="coachingMessage"
+                placeholder="Type your coaching message here..."
+              ></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          (click)="closeCoachingModal()"
+        >
+          <i class="bx bx-x me-1"></i>Cancel
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="sendCoachingMessage()"
+        >
+          <i class="bx bx-send me-1"></i>Send Message
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Backdrop -->
+<div
+  class="modal-backdrop fade"
+  [class.show]="showCoachingModal"
+  *ngIf="showCoachingModal"
+></div>

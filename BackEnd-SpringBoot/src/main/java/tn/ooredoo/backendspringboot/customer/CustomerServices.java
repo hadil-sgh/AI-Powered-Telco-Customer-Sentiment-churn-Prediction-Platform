@@ -2,7 +2,6 @@ package tn.ooredoo.backendspringboot.customer;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 
@@ -12,7 +11,7 @@ public class CustomerServices {
 
     private final CustomerRepository customerRepository;
 
-    public Customer getCustomerById(@PathVariable Integer customerId) {
+    public Customer getCustomerById(Integer customerId) {
         return customerRepository.findById(customerId).orElse(null);
 
     }

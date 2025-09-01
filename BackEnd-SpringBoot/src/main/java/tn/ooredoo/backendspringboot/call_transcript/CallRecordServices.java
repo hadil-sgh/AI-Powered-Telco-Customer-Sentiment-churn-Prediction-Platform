@@ -14,6 +14,7 @@ public interface CallRecordServices {
     CallRecord updateCallRecord(CallRecord callRecord);
     CallRecord getCallRecordByCallId(Integer callId);
     List<CallRecord> getCallRecordByAgentId(String email);
+    List<CallRecord> getCallRecordByTeam(String email);
     String getTranscriptForAnalysis(Integer callId);
     void updateOutcomePostCall(Integer callId, Outcome outcome);
     Double getAverageCallDuration();

@@ -3,6 +3,7 @@ package tn.ooredoo.backendspringboot.sentiment;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -35,5 +36,15 @@ public class SentimentController {
     public Double getDailyAverageSentiment(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         return sentimentPointService.getDailyAverageSentiment(date);
+    }
+    @GetMapping("/team")
+    public ResponseEntity<List<SentimentPoint>> getSentimentsByTeam(@RequestParam String managerEmail) {
+        List<SentimentPoint> sentiments = sentimentPointService.getSentimentByTeam(managerEmail);
+
+        if (sentiments.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+
+        return ResponseEntity.ok(sentiments);
     }
 }

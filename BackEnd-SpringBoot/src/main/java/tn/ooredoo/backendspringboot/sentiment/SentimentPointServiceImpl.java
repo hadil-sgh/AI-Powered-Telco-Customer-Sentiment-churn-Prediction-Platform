@@ -2,12 +2,16 @@ package tn.ooredoo.backendspringboot.sentiment;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import tn.ooredoo.backendspringboot.audioprocessing.AudioAnalysisResponse;
 import tn.ooredoo.backendspringboot.audioprocessing.EmotionAnalysis;
 import tn.ooredoo.backendspringboot.call_transcript.CallRecord;
+import tn.ooredoo.backendspringboot.call_transcript.CallRecordRepository;
 import tn.ooredoo.backendspringboot.call_transcript.CallRecordServices;
+import tn.ooredoo.backendspringboot.team.Team;
 import tn.ooredoo.backendspringboot.user.User;
+import tn.ooredoo.backendspringboot.user.UserRepository;
 import tn.ooredoo.backendspringboot.user.UserService;
 
 import java.time.LocalDate;
@@ -20,6 +24,8 @@ public class SentimentPointServiceImpl implements SentimentPointService {
     private final SentimentPointRepository sentimentPointRepository;
     private final UserService userService;
     private final CallRecordServices callRecordService;
+    private final @Lazy UserRepository userRepository;
+    private final @Lazy CallRecordRepository callRecordRepository;
 
 
     @Override
@@ -74,6 +80,26 @@ public class SentimentPointServiceImpl implements SentimentPointService {
     public List<SentimentPoint> getSentimentPointsForAgent(String userEmail) {
         return sentimentPointRepository.findByAgentEmail(userEmail);
     }
+    @Override
+    public List<SentimentPoint> getSentimentByTeam(String userEmail) {
+        User manager = userService.findByEmail(userEmail);
+        if (manager == null || manager.getTeam() == null) {
+            return List.of(); // return empty if no manager or team
+        }
+
+        Team team = manager.getTeam();
+        List<User> teamMembers = userRepository.findByTeam(team);
+
+        // Fetch all call records for team members
+        List<CallRecord> teamCalls = callRecordRepository.findByAgentIn(teamMembers);
+
+        // Collect all sentiment points from these calls
+        return teamCalls.stream()
+                .map(CallRecord::getSentimentPoint)
+                .filter(sp -> sp != null)
+                .toList();
+    }
+
 
 
     private double mapEmotionToScore(String emotion) {

@@ -3,8 +3,10 @@ package tn.ooredoo.backendspringboot.call_transcript;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import tn.ooredoo.backendspringboot.user.User;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Repository
 public interface CallRecordRepository
@@ -12,5 +14,7 @@ public interface CallRecordRepository
     Integer countByAgent_IdAndCallDateTimeBetween(Long agentId, LocalDateTime start, LocalDateTime end);
     @Query("SELECT AVG(c.callDuration) FROM CallRecord c")
     Long getAverageCallDuration();
+    List<CallRecord> findByAgentIn(List<User> agents);
+
 
 }

@@ -14,11 +14,13 @@ import tn.ooredoo.backendspringboot.post_call_analysis.performanceagent.Performa
 import tn.ooredoo.backendspringboot.post_call_analysis.performanceagent.PerformanceRepository;
 import tn.ooredoo.backendspringboot.sentiment.SentimentPoint;
 import tn.ooredoo.backendspringboot.sentiment.SentimentPointRepository;
+import tn.ooredoo.backendspringboot.team.Team;
 import tn.ooredoo.backendspringboot.user.User;
 import tn.ooredoo.backendspringboot.user.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -126,6 +128,28 @@ public class CallRecordServicesImpl implements CallRecordServices {
 
         return callsBySession;
     }
+
+    @Override
+    public List<CallRecord> getCallRecordByTeam(String email) {
+        User manager = userRepository.findByEmail(email).orElse(null);
+        if (manager == null) {
+            return Collections.emptyList(); // or throw an exception
+        }
+
+        Team team = manager.getTeam();
+        if (team == null) {
+            return Collections.emptyList();
+        }
+
+        // Assuming you have a UserRepository method to get all users in a team
+        List<User> teamMembers = userRepository.findByTeam(team);
+
+        // Assuming CallRecordRepository has a method findByAgentIn(List<User> agents)
+        List<CallRecord> callsByTeam = callRecordRepository.findByAgentIn(teamMembers);
+
+        return callsByTeam;
+    }
+
 
     @Override
     public String getTranscriptForAnalysis(Integer callId) {

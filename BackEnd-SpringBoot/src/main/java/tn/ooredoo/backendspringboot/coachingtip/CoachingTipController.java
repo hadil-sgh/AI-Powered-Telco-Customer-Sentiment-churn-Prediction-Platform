@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/coaching-tips")
@@ -111,6 +112,10 @@ public class CoachingTipController {
         return ResponseEntity.ok(coachingTipService.getRecentTipsByUserEmail(email, days));
     }
 
+    @GetMapping("/user/{email}/ack-and-helpful-today")
+    public Map<String, List<CoachingTip>> getAckAndHelpfulTipsToday(@PathVariable String email) {
+        return coachingTipService.getAcknowledgedAndHelpfulTipsTodayByUserEmail(email);
+    }
+
+
 }
-
-
